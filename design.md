@@ -64,6 +64,47 @@ Gradio单页应用，3Agent（诊断+追问+生成），2-3种资源类型。开
 
 叠加Approach C的追问体验为加分项（流式输出思考过程、追问决策可视化、心流提示），在A的架构基础上做交互体验的精致打磨。
 
+## Agent精简方案 (工程设计优化)
+
+审查建议将9Agent合并为5Agent，减少集成复杂度60%：
+
+| 原Agent | 合并后 | 理由 |
+|---------|--------|------|
+| Diagnostician + Assessment | **Evaluator** | 共享概念图谱和错误模式库，诊断和评估本质是对称操作 |
+| Lecture Note + Reading | **Content Generator** | 都是长文本生成，prompt结构相同，资源类型用参数区分 |
+| Exercise + Mind Map | **Exercise Generator** | 都是结构化输出+SymPy验证，输出格式不同但生成管线相同 |
+| Orchestrator | **Orchestrator** (保留) | 意图路由 + Profile Builder逻辑合并到状态更新 |
+| Socratic Coach | **Socratic Coach** (保留) | 核心差异化，保持独立 |
+
+**对比**: 5Agent vs 9Agent — 集成边数从36条降到10条，每个Agent的调试时间翻倍但总数减半，总工期持平、风险更低。
+
+## SSE Protocol
+
+前后端通过SSE通信，以下事件类型覆盖全部交互场景：
+
+```
+event: message     — data: {"role": "system"|"coach"|"diagnostician"|"evaluator",
+                            "content": "sin x ≈ x 的条件是...",
+                            "agent": "socratic_coach"}
+event: token       — data: {"content": "当", "agent": "content_generator"}
+                     (流式逐token输出，前端累积后渲染)
+event: resource    — data: {"type": "lecture_note"|"exercise"|"mind_map"|"reading",
+                            "title": "泰勒展开讲义",
+                            "content": "..."}
+event: profile     — data: {"dimension": "knowledge",
+                            "concept": "limit",
+                            "score": 0.78,
+                            "trend": "+0.12"}
+event: status      — data: {"state": "diagnosing"|"coaching"|"generating"|"assessing",
+                            "agents_completed": 2,
+                            "agents_total": 4}
+event: error       — data: {"code": "LLM_TIMEOUT"|"LLM_DOWN"|"MATH_ERROR"|"KB_ERROR",
+                            "message": "正在切换备用模型，请稍候..."}
+event: done        — data: {"session_id": "..."}
+```
+
+前端`StreamingMarkdown.tsx`根据`event`类型分发渲染：`token`追加到当前消息buffer、`message`创建新消息气泡、`resource`渲染资源卡片、`status`更新进度条、`error`展示snackbar提示。
+
 ## Architecture Overview
 
 ```
@@ -100,6 +141,114 @@ User → FastAPI/SSE → Orchestrator (LangGraph Supervisor)
 | Assessment Agent | 作答评估、错误模式识别 | Spark Max |
 
 > **Quality Gate** 不作为独立Agent，而是请求管线中的过滤器组件——所有LLM输出经SymPy数学验证+安全过滤后再返回用户。
+
+## Agent I/O Contracts
+
+每个Agent的输入输出由Pydantic model约束，LangGraph state update类型安全。
+
+### Shared State Schema (LangGraph State)
+
+```python
+from typing import TypedDict, Literal, Annotated
+from langgraph.graph.message import add_messages
+
+class AgentState(TypedDict):
+    messages: Annotated[list, add_messages]    # 对话历史，自动追加
+    user_id: str
+    profile: LearningProfile                    # 3维画像
+    orchestrator_state: Literal["DIAGNOSE", "COACH", "GENERATE", "ASSESS", "DONE"]
+    diagnosis: DiagnosisResult | None           # 最新诊断结果
+    coach_round: int                            # 当前追问轮次
+    coach_target_concept: str | None            # 追问聚焦的概念
+    generated_resources: list[ResourceMeta]     # 已生成资源列表
+    errors: list[str]                           # 错误日志
+```
+
+### Orchestrator
+
+```
+输入: AgentState (完整)
+输出: {"orchestrator_state": "COACH" | "GENERATE" | ...}  (状态更新)
+职责: 不直接调用LLM，仅做状态路由。根据diagnosis和coach_round决定下一步状态。
+```
+
+### Diagnostician
+
+```python
+class DiagnosticianInput(TypedDict):
+    conversation_history: list[Message]          # 最近5轮对话
+    profile: LearningProfile
+
+class DiagnosticianOutput(TypedDict):
+    blind_spots: list[BlindSpot]
+    # BlindSpot = {concept: str, confidence: float, evidence: str,
+    #              bloom_level: int, misconception_type: str}
+
+class DiagnosticianResult(TypedDict):
+    diagnosis: DiagnosticianOutput
+    coach_target_concept: str                   # 最优先追问的概念
+```
+
+### Socratic Coach
+
+```python
+class SocraticCoachInput(TypedDict):
+    target_concept: str                         # 当前追问概念
+    blind_spot: BlindSpot                       # 诊断出的盲区
+    coach_round: int                            # 当前轮次
+    conversation_history: list[Message]
+    kb_context: str                             # 从知识库检索的相关内容
+
+class SocraticCoachOutput(TypedDict):
+    question: str                               # 追问问题
+    bloom_level: int                            # 当前追问层级(1-5)
+    expected_concepts: list[str]                # 正确答案应涉及的概念
+    rationale: str                              # 为什么问这个问题（调试用）
+```
+
+### Resource Agents (Lecture Note / Exercise / Mind Map / Reading)
+
+```python
+class ResourceAgentInput(TypedDict):
+    concept: str                                # 资源聚焦的概念
+    knowledge_nodes: list[KnowledgeNode]         # 从知识库检索的原始节点
+    user_level: int                             # 学生当前Bloom层(1-5)
+    resource_type: str                          # lecture_note | exercise | mind_map | reading
+
+class ResourceAgentOutput(TypedDict):
+    title: str
+    content: str                                # Markdown/LaTeX/Mermaid 内容
+    metadata: dict                              # {concept, type, difficulty, bloom_level}
+```
+
+### Assessment Agent
+
+```python
+class AssessmentInput(TypedDict):
+    question: str                               # 原问题
+    student_answer: str
+    expected_concepts: list[str]                # Socratic Coach的expectation
+    knowledge_nodes: list[KnowledgeNode]
+
+class AssessmentOutput(TypedDict):
+    is_correct: bool
+    grasped_concepts: list[str]
+    missed_concepts: list[str]
+    error_pattern: str                          # 概念错误/计算错误/符号错误/逻辑错误
+    bloom_level_score: int                      # 学生能回答对的最高Bloom层
+```
+
+### Profile Builder
+
+```
+不是独立LLM Agent，而是基于Diagnostician和Assessment产出的统计更新逻辑:
+  - 知识掌握度 = 贝叶斯更新: P(mastery | new_evidence)
+  - 易错点画像 = 错误频率累加
+  - 学习历史 = 追加当前session记录
+直接集成在 orchestrator.py 的 state update 中，无需API调用。
+```
+
+
 
 ## Orchestrator: Intent Routing State Machine
 
@@ -160,7 +309,23 @@ Orchestrator是LangGraph Supervisor的入口节点，负责将用户输入路由
 | `CHAT` | 闲聊、疑问 | 直接LLM回复（不经过Agent） |
 | `END` | 用户请求结束、超时 | Profile Builder更新画像后结束 |
 
-**状态转换决策**: Orchestrator根据当前`LearningProfile`和对话历史决定下一步。诊断完成后自动进入追问、追问发现根因后自动触发资源生成、资源生成后返回追问验证——形成自动流转闭环，无需用户手动切换。
+**状态转换决策（量化门控）**:
+
+| 转换 | 条件 | 门控逻辑 |
+|------|------|---------|
+| START → DIAGNOSE | 首次会话或`coach_round == 0` | 无条件 |
+| DIAGNOSE → COACH | `len(blind_spots) >= 1` AND 诊断轮次 ≥ 3 | 最少3轮对话才判定"已诊断" |
+| DIAGNOSE → DONE | 诊断轮次 ≥ 5 AND `len(blind_spots) == 0` | 5轮未发现盲区→放行 |
+| COACH → GENERATE | 学生同一Bloom层卡住 ≥ 2次 AND `coach_round >= 4` | 2次同层卡壳→确认根因 |
+| COACH → DONE | 学生L3+层连续正确 ≥ 2次 | 追问通过 |
+| COACH → DIAGNOSE | `coach_round > 10` | 兜底：10轮追问无结论→重新诊断 |
+| GENERATE → COACH | 所有Resource Agent完成 | 资源就绪→回到追问验证 |
+| GENERATE → DONE | 资源生成完成 AND 学生请求结束 | 手动退出 |
+
+**关键设计决策**: 
+- 诊断→追问→生成→追问 形成自循环，直到COACH→DONE或超时退出
+- Orchestrator本身不调用LLM，只做状态路由——避免小模型决策大流程的可靠性问题
+- `coach_round`超限(>10)回到DIAGNOSE而非DONE——确保学生即使卡住也有路径继续
 
 ## Socratic Coach: Questioning Algorithm
 

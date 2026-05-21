@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/31622/**)",
+      "Bash(pip list *)",
+      "Bash(python3 -c \"from PIL import Image; print\\('PIL available'\\)\")",
+      "Bash(python -c \"from PIL import Image; print\\('PIL available'\\)\")",
+      "Bash(python -c \"import pytesseract; print\\('pytesseract available'\\)\")",
+      "Bash(pip install *)",
+      "Bash(python -c \"from PIL import Image; print\\('Pillow available'\\)\")",
+      "Bash(powershell.exe -Command \"Get-Command python -ErrorAction SilentlyContinue | Select-Object Source\")",
+      "Bash(powershell.exe -Command \"Get-Command tesseract -ErrorAction SilentlyContinue; Get-Command pip3 -ErrorAction SilentlyContinue | Select-Object Source; pip3 list 2>&1 | Select-Object -First 30\")",
+      "Read(//c/ProgramData/**)",
+      "Bash(ls /c/Python*/python.exe)",
+      "Bash(npm --version)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"d:\\\\mathagentdevelop\\\\temp_ocr.ps1\")"
+    ]
+  }
+}
