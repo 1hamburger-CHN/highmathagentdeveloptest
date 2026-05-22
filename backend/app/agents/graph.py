@@ -50,9 +50,9 @@ def build_tutor_graph() -> StateGraph:
     workflow.add_conditional_edges(
         "profile_check",
         route_profile_check,
-        {"build_profile": "build_profile", "diagnose": "diagnose"},
+        {"build_profile": "build_profile", "diagnose": "diagnose", "coach": "coach"},
     )
-    workflow.add_edge("build_profile", "diagnose")
+    workflow.add_edge("build_profile", "coach")
     workflow.add_edge("diagnose", "coach")
     workflow.add_conditional_edges(
         "coach",
@@ -78,8 +78,12 @@ def route_safety(state: TutorState) -> str:
 
 
 def route_profile_check(state: TutorState) -> str:
+    # Already have profile → diagnose → coach
     if state.profile and state.profile.get("knowledge_mastery"):
         return "diagnose"
+    # Direct math question → skip both profile AND diagnose, straight to coach
+    if getattr(state, "_is_direct_question", False):
+        return "coach"
     return "build_profile"
 
 
@@ -112,7 +116,30 @@ def safety_check_node(state: TutorState) -> dict[str, Any]:
 
 def profile_check_node(state: TutorState) -> dict[str, Any]:
     has_profile = bool(state.profile and state.profile.get("knowledge_mastery"))
-    return {"current_state": AgentState.PROFILE_CHECK, "_has_profile": has_profile}
+    # Detect if user asked a direct math question — skip profile building to save time
+    user_msg = ""
+    for m in reversed(state.messages):
+        if m.get("role") == "user":
+            user_msg = m.get("content", "").strip()
+            break
+    is_direct_question = _is_direct_math_question(user_msg)
+    return {
+        "current_state": AgentState.PROFILE_CHECK,
+        "_has_profile": has_profile,
+        "_is_direct_question": is_direct_question,
+    }
+
+
+def _is_direct_math_question(text: str) -> bool:
+    """Check if this is a concrete math question that can skip profile building."""
+    indicators = [
+        "等于", "多少", "怎么算", "什么是", "是什么", "什么意思",
+        "帮我", "怎么证", "证明", "求", "计算", "解",
+        "?", "？", "+", "-", "*", "/", "=",
+    ]
+    score = sum(1 for ind in indicators if ind in text)
+    # Long messages or messages with math indicators are likely direct questions
+    return len(text) > 4 or score >= 1
 
 
 async def build_profile_node(state: TutorState) -> dict[str, Any]:
