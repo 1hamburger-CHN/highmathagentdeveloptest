@@ -54,7 +54,9 @@ async def chat_stream(payload: dict):
             final_state = None
             async for event in _tutor_graph.astream(initial_state, stream_mode="updates"):
                 for node_name, node_output in event.items():
-                    # Extract messages to stream to client
+                    # Always send node progress so frontend shows spinner
+                    yield {"event": "node", "data": json.dumps({"node": node_name})}
+
                     if isinstance(node_output, dict):
                         # Skip messages from background agents — only coach/generate speak to user
                         if node_name not in _SILENT_NODES:
@@ -68,13 +70,11 @@ async def chat_stream(payload: dict):
                                         "node": node_name,
                                     }, ensure_ascii=False),
                                 }
-                        # Stream assessment results
                         if node_output.get("assessment_result"):
                             yield {
                                 "event": "assessment",
                                 "data": json.dumps(node_output["assessment_result"], ensure_ascii=False),
                             }
-                        # Stream generated resources
                         if node_output.get("generated_resources"):
                             yield {
                                 "event": "resources",
