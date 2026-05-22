@@ -89,6 +89,23 @@ class SafetyPipeline:
             text = text.replace("{hello}", random.choice(cls.HELLOS))
         return text
 
+    # Common vague-but-valid math conversation responses
+    CONVERSATIONAL_RESPONSES = [
+        "不知道", "不太懂", "不明白", "不会", "不懂",
+        "还行", "差不多", "可能", "大概", "好像",
+        "是的", "对的", "没错", "不对",
+        "可以", "好的", "行", "没问题",
+        "再讲一遍", "没听懂", "再说一次",
+    ]
+
+    @classmethod
+    def is_conversational(cls, text: str) -> bool:
+        """Detect valid conversation continuations even if not math-related."""
+        stripped = text.strip()
+        if len(stripped) == 1 and stripped in cls.CONVERSATION_CHARS:
+            return True
+        return any(resp in stripped for resp in cls.CONVERSATIONAL_RESPONSES)
+
     @classmethod
     def has_injection_pattern(cls, text: str) -> bool:
         lower = text.lower()
@@ -141,6 +158,9 @@ class SafetyPipeline:
             return {"allowed": False, "content": cls._pick(cls.GREETING_RESPONSES), "reason": "greeting"}
         if cls.is_low_quality(content):
             return {"allowed": False, "content": cls._pick(cls.LOW_QUALITY_RESPONSES), "reason": "low_quality"}
+        # Allow conversational responses (single chars like 好/啊, vague answers like 不知道)
+        if cls.is_conversational(content):
+            return {"allowed": True, "content": content, "reason": "conversational"}
         if not cls.is_math_related(content):
             return {"allowed": False, "content": cls._pick(cls.NON_MATH_RESPONSES), "reason": "non_math"}
         return {"allowed": True, "content": content, "reason": ""}
