@@ -102,14 +102,16 @@ class SafetyPipeline:
 
     @classmethod
     def is_low_quality(cls, text: str) -> bool:
-        """Catch extremely short / meaningless input like '1', '?', 'ab'."""
+        """Catch extremely short / meaningless input."""
         stripped = text.strip()
         if len(stripped) > 2:
             return False
         if len(stripped) == 1 and stripped in cls.CONVERSATION_CHARS:
             return False
-        if stripped.isdigit():
-            return True
+        # Digits and negative numbers are valid math answers (e.g. "5", "-3")
+        if stripped.lstrip("-").isdigit():
+            return False
+        # Pure punctuation / gibberish
         if all(c in '.,;:?!@#$%^&*()+-=/\\|`~<>[]{} \t' for c in stripped):
             return True
         if len(stripped) == 2 and stripped.isascii() and not stripped.isalpha():
@@ -120,11 +122,13 @@ class SafetyPipeline:
     def is_math_related(cls, text: str) -> bool:
         if any(kw.lower() in text.lower() for kw in cls.MATH_KEYWORDS):
             return True
-        # Detect arithmetic: digits with + - * / = signs
         stripped = text.strip()
         has_digit = any(c.isdigit() for c in stripped)
         has_op = any(c in "+-*/=<>" for c in stripped)
         if has_digit and has_op:
+            return True
+        # Pure number (e.g. "5", "-3", "3.14") — valid math answer
+        if has_digit:
             return True
         return False
 
