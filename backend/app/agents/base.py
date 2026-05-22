@@ -1,4 +1,5 @@
-from langchain_core.language_models.chat_models import BaseChatModel
+from typing import Any
+
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from app.core.llm import ModelRouter
@@ -12,7 +13,7 @@ class BaseAgent:
         self.router = model_router
 
     @property
-    def llm(self) -> BaseChatModel:
+    def llm(self) -> Any:
         return self.router.get_model(self.name)
 
     def build_messages(self, system: str, user: str) -> list:
@@ -33,5 +34,5 @@ class BaseAgent:
     async def generate_stream(self, system: str, user: str):
         """Stream response tokens from system + user prompt."""
         messages = self.build_messages(system, user)
-        async for chunk in self.llm.astream(messages):
-            yield chunk.content
+        async for token in self.llm.astream(messages):
+            yield token
