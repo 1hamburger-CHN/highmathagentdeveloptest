@@ -16,11 +16,6 @@ langchain-community==0.3.2
 langgraph==0.2.38
 langgraph-checkpoint==2.0.2
 
-# Knowledge & Embedding
-chromadb==0.5.18
-sentence-transformers==3.1.1
-jieba==0.42.1
-
 # Math
 sympy==1.13.3
 
