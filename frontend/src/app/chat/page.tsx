@@ -206,7 +206,7 @@ export default function ChatPage() {
           ) : (
             <button
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={streaming}
               className="rounded-xl bg-primary-600 px-5 py-3 font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-40"
             >
               <Send className="w-5 h-5" />
