@@ -16,7 +16,8 @@ router = APIRouter()
 # Build the LangGraph graph once at module level
 _tutor_graph = build_tutor_graph()
 
-# Intermediate agents that work silently — only coach/generate/assess speak to user
+# Intermediate agents that work silently — their messages are hidden from user
+# and stripped from shared history so downstream agents don't reference them
 _SILENT_NODES = {"build_profile", "diagnose", "profile_check"}
 
 

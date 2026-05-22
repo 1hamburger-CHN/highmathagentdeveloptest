@@ -118,12 +118,16 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
 async def build_profile_node(state: TutorState) -> dict[str, Any]:
     result = await _profile_builder.run(state)
     result["current_state"] = AgentState.BUILD_PROFILE
+    # Strip messages — profile builder works silently in background
+    result.pop("messages", None)
     return result
 
 
 async def diagnose_node(state: TutorState) -> dict[str, Any]:
     result = await _diagnostician.run(state)
     result["current_state"] = AgentState.DIAGNOSE
+    # Strip messages — diagnostician works silently in background
+    result.pop("messages", None)
     return result
 
 
