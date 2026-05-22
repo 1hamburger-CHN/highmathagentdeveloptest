@@ -7,8 +7,8 @@ nodes:
   # 1.1 数列极限
   # ============================================================
 
-  - id: "limit-1.1.1"
-    title: "数列极限的定义 (ε-N语言)"
+  - id: 'limit-1.1.1'
+    title: '数列极限的定义 (ε-N语言)'
     difficulty: 3
     bloom_level: 2
     content:
@@ -20,43 +20,43 @@ nodes:
         **ε-N定义的逻辑结构**: $\forall \varepsilon > 0, \exists N \in \mathbb{N}^+, \forall n > N: |x_n - a| < \varepsilon$
       theorems: []
       examples:
-        - question: "用ε-N语言证明 $\lim\limits_{n \to \infty} \frac{1}{n} = 0$"
+        - question: '用ε-N语言证明 $\lim\limits_{n \to \infty} \frac{1}{n} = 0$'
           solution: |
             任给 $\varepsilon > 0$，要使 $|\frac{1}{n} - 0| = \frac{1}{n} < \varepsilon$，
             只要 $n > \frac{1}{\varepsilon}$。取 $N = \lfloor\frac{1}{\varepsilon}\rfloor + 1$，
             当 $n > N$ 时恒有 $|\frac{1}{n} - 0| < \varepsilon$。证毕。
       misconceptions:
-        - "ε必须是一个很小的数" — 错，ε是任意正数，关键在于"任意"
-        - "N找到了就结束了" — 错，N依赖于ε，ε改变则N可能改变
-        - "极限就是越来越接近" — 不准确，极限是"无限接近"而非"越来越"
+        - 'ε必须是一个很小的数“ — 错，ε是任意正数，关键在于”任意'
+        - 'N找到了就结束了 — 错，N依赖于ε，ε改变则N可能改变'
+        - '极限就是越来越接近“ — 不准确，极限是”无限接近“而非”越来越'
     prerequisites: []
     related: ["limit-1.2.1"]
 
-  - id: "limit-1.1.2"
-    title: "收敛数列的性质"
+  - id: 'limit-1.1.2'
+    title: '收敛数列的性质'
     difficulty: 2
     bloom_level: 2
     content:
       definition: ""
       theorems:
-        - statement: "唯一性: 若数列收敛，则极限唯一"
-          proof: "反证法: 若极限不唯一，设两个不同极限a和b，取ε=|a-b|/2可导出矛盾"
-        - statement: "有界性: 收敛数列必有界"
-          proof: "取ε=1，由定义N存在，N项之后|xn-a|<1，前N项取最大值即得有界"
-        - statement: "保号性: 若lim xn = a > 0，则存在N，当n>N时xn > 0"
+        - statement: '唯一性: 若数列收敛，则极限唯一'
+          proof: '反证法: 若极限不唯一，设两个不同极限a和b，取ε=|a-b|/2可导出矛盾'
+        - statement: '有界性: 收敛数列必有界'
+          proof: '取ε=1，由定义N存在，N项之后|xn-a|<1，前N项取最大值即得有界'
+        - statement: '保号性: 若lim xn = a > 0，则存在N，当n>N时xn > 0'
       examples:
-        - question: "数列 xn = (-1)^n 是否收敛？"
+        - question: '数列 xn = (-1)^n 是否收敛？'
           solution: |
             不收敛。假设收敛于a，取ε=1/2，|xn - a| < 1/2对充分大的n成立。
             但|x_{2k} - x_{2k+1}| = 2 > 1，与三角不等式矛盾。
       misconceptions:
-        - "有界数列一定收敛" — 错，反例: xn = (-1)^n 有界但不收敛
-        - "无界数列一定发散" — 对（逆否命题）
+        - '有界数列一定收敛 — 错，反例: xn = (-1)^n 有界但不收敛'
+        - '无界数列一定发散 — 对（逆否命题）'
     prerequisites: ["limit-1.1.1"]
     related: ["limit-1.1.3"]
 
-  - id: "limit-1.1.3"
-    title: "极限的四则运算法则"
+  - id: 'limit-1.1.3'
+    title: '极限的四则运算法则'
     difficulty: 2
     bloom_level: 3
     content:
@@ -66,19 +66,19 @@ nodes:
         - $\lim(x_n \cdot y_n) = A \cdot B$
         - $\lim\frac{x_n}{y_n} = \frac{A}{B}$（$B \neq 0$，且从某项起 $y_n \neq 0$）
       theorems:
-        - statement: "极限的线性性质: lim(ax_n + by_n) = a·lim x_n + b·lim y_n"
+        - statement: '极限的线性性质: lim(ax_n + by_n) = a·lim x_n + b·lim y_n'
       examples:
-        - question: "求 $\lim\limits_{n \to \infty} \frac{3n^2 + 2n}{n^2 + 1}$"
+        - question: '求 $\lim\limits_{n \to \infty} \frac{3n^2 + 2n}{n^2 + 1}$'
           solution: |
             分子分母同除 $n^2$: $\lim\frac{3 + 2/n}{1 + 1/n^2} = \frac{3+0}{1+0} = 3$
       misconceptions:
-        - "极限的加减可以拆开一定成立" — 前提是两个极限都存在（有限）
-        - "∞/∞型直接上下分别取极限" — 错，∞不是数，要先变形
+        - '极限的加减可以拆开一定成立 — 前提是两个极限都存在（有限）'
+        - '∞/∞型直接上下分别取极限 — 错，∞不是数，要先变形'
     prerequisites: ["limit-1.1.1"]
     related: ["limit-1.2.5"]
 
-  - id: "limit-1.1.4"
-    title: "夹逼准则"
+  - id: 'limit-1.1.4'
+    title: '夹逼准则'
     difficulty: 3
     bloom_level: 3
     content:
@@ -87,40 +87,40 @@ nodes:
         且 $\lim y_n = \lim z_n = a$，则 $\lim x_n = a$。
       theorems: []
       examples:
-        - question: "证明 $\lim\limits_{n \to \infty} \frac{\sin n}{n} = 0$"
+        - question: '证明 $\lim\limits_{n \to \infty} \frac{\sin n}{n} = 0$'
           solution: |
             $-\frac{1}{n} \leq \frac{\sin n}{n} \leq \frac{1}{n}$，两边极限均为0，由夹逼准则得证。
-        - question: "求 $\lim\limits_{n \to \infty} \sqrt[n]{n}$"
+        - question: '求 $\lim\limits_{n \to \infty} \sqrt[n]{n}$'
           solution: |
             设 $\sqrt[n]{n} = 1 + h_n\ (h_n > 0)$，则 $n = (1+h_n)^n \geq 1 + \frac{n(n-1)}{2}h_n^2$
             得 $h_n \leq \sqrt{\frac{2}{n}}$，由夹逼准则 $h_n \to 0$，故极限为1。
       misconceptions:
-        - "夹逼要求严格不等式" — 不严格也可以，≤足够
-        - "两边极限不相等就不能用" — 对，夹逼必须是同一个极限值
+        - '夹逼要求严格不等式 — 不严格也可以，≤足够'
+        - '两边极限不相等就不能用 — 对，夹逼必须是同一个极限值'
     prerequisites: ["limit-1.1.1", "limit-1.1.3"]
     related: ["limit-1.2.3"]
 
-  - id: "limit-1.1.5"
-    title: "单调有界定理"
+  - id: 'limit-1.1.5'
+    title: '单调有界定理'
     difficulty: 3
     bloom_level: 3
     content:
       definition: |
         单调递增(减)且有上(下)界的数列必收敛。这是实数完备性的等价命题之一。
       theorems:
-        - statement: "单调递增+上有界 → 收敛于它的上确界"
-        - statement: "单调递减+下有界 → 收敛于它的下确界"
+        - statement: '单调递增+上有界 → 收敛于它的上确界'
+        - statement: '单调递减+下有界 → 收敛于它的下确界'
       examples:
-        - question: "证明数列 $x_1 = 1, x_{n+1} = \sqrt{2 + x_n}$ 收敛并求极限"
+        - question: '证明数列 $x_1 = 1, x_{n+1} = \sqrt{2 + x_n}$ 收敛并求极限'
           solution: |
             先证单调递增: $x_1 = 1 < \sqrt{3} = x_2$，归纳证 $x_n < x_{n+1}$
             再证上有界: 归纳证 $x_n < 2$。由单调有界定理，极限存在。
             设极限为A，则 $A = \sqrt{2 + A}$，解得 $A = 2$（舍去-1）。
-        - question: "证明 $\lim\limits_{n \to \infty} (1 + \frac{1}{n})^n$ 存在"
-          solution: "用二项式展开证数列单调递增且上有界(界为3)，由单调有界定理极限存在。这个极限定义为e。"
+        - question: '证明 $\lim\limits_{n \to \infty} (1 + \frac{1}{n})^n$ 存在'
+          solution: '用二项式展开证数列单调递增且上有界(界为3)，由单调有界定理极限存在。这个极限定义为e。'
       misconceptions:
-        - "单调有界只能判断收敛，不能求极限值" — 对，需要额外手段（如设极限等式）
-        - "任何单调数列都有极限" — 错，还需要有界。xn=n单调递增但发散。
+        - '单调有界只能判断收敛，不能求极限值 — 对，需要额外手段（如设极限等式）'
+        - '任何单调数列都有极限 — 错，还需要有界。xn=n单调递增但发散。'
     prerequisites: ["limit-1.1.1", "limit-1.1.2"]
     related: ["limit-1.3.2"]
 
@@ -128,8 +128,8 @@ nodes:
   # 1.2 函数极限
   # ============================================================
 
-  - id: "limit-1.2.1"
-    title: "函数极限的定义 (ε-δ语言)"
+  - id: 'limit-1.2.1'
+    title: '函数极限的定义 (ε-δ语言)'
     difficulty: 4
     bloom_level: 2
     content:
@@ -141,19 +141,19 @@ nodes:
         **关键**: $0 < |x - x_0|$ 表示 $x \neq x_0$，极限与函数在 $x_0$ 处是否有定义、取值为何无关。
       theorems: []
       examples:
-        - question: "用ε-δ语言证明 $\lim\limits_{x \to 2} (3x - 1) = 5$"
+        - question: '用ε-δ语言证明 $\lim\limits_{x \to 2} (3x - 1) = 5$'
           solution: |
             任给 $\varepsilon > 0$，$|(3x-1) - 5| = 3|x - 2| < \varepsilon$
             只要 $|x - 2| < \frac{\varepsilon}{3}$。取 $\delta = \frac{\varepsilon}{3}$ 即可。
       misconceptions:
-        - "ε和δ中ε更重要" — 两者同等重要，δ依赖于ε
-        - "δ必须小于某个固定值" — δ只依赖于ε，没有绝对的"小"要求
-        - "连续就是极限存在" — 极限存在+极限值=函数值才是连续
+        - 'ε和δ中ε更重要 — 两者同等重要，δ依赖于ε'
+        - 'δ必须小于某个固定值 — δ只依赖于ε，没有绝对的“小”要求'
+        - '连续就是极限存在 — 极限存在+极限值=函数值才是连续'
     prerequisites: ["limit-1.1.1"]
     related: ["limit-1.1.1", "limit-1.2.3"]
 
-  - id: "limit-1.2.2"
-    title: "左右极限"
+  - id: 'limit-1.2.2'
+    title: '左右极限'
     difficulty: 3
     bloom_level: 2
     content:
@@ -163,25 +163,25 @@ nodes:
 
         极限存在的充要条件: $\lim\limits_{x \to x_0} f(x) = A \iff$ 左右极限都存在且相等。
       theorems:
-        - statement: "极限存在 ⇔ 左右极限都存在且相等"
+        - statement: '极限存在 ⇔ 左右极限都存在且相等'
       examples:
-        - question: "讨论 $f(x) = \frac{|x|}{x}$ 在 $x = 0$ 处的极限"
+        - question: '讨论 $f(x) = \frac{|x|}{x}$ 在 $x = 0$ 处的极限'
           solution: |
             $\lim_{x \to 0^-} f(x) = \lim_{x \to 0^-} \frac{-x}{x} = -1$
             $\lim_{x \to 0^+} f(x) = \lim_{x \to 0^+} \frac{x}{x} = 1$
             左右极限不相等，故极限不存在。
-        - question: "分段函数 $f(x) = \begin{cases} x^2 & x < 1 \\ 2x-1 & x \geq 1 \end{cases}$ 在x=1处极限？"
+        - question: '分段函数 $f(x) = \begin{cases} x^2 & x < 1 \\ 2x-1 & x \geq 1 \end{cases}$ 在x=1处极限？'
           solution: |
             左极限: $\lim_{x \to 1^-} x^2 = 1$，右极限: $\lim_{x \to 1^+} (2x-1) = 1$
             左右极限相等，$\lim_{x \to 1} f(x) = 1$（但f(1)=1，连续）
       misconceptions:
-        - "左右极限是x从正负两边趋近" — 对，关键是x在x0的哪一侧
-        - "分段函数一定没有极限" — 错，只要左右极限相等就有极限
+        - '左右极限是x从正负两边趋近 — 对，关键是x在x0的哪一侧'
+        - '分段函数一定没有极限 — 错，只要左右极限相等就有极限'
     prerequisites: ["limit-1.2.1"]
     related: ["limit-1.2.1"]
 
-  - id: "limit-1.2.3"
-    title: "无穷小"
+  - id: 'limit-1.2.3'
+    title: '无穷小'
     difficulty: 2
     bloom_level: 2
     content:
@@ -190,22 +190,22 @@ nodes:
 
         无穷小是一个以0为极限的变量，不是"很小的数"。
       theorems:
-        - statement: "有限个无穷小的和仍为无穷小"
-        - statement: "无穷小乘有界函数仍为无穷小"
-        - statement: "有限个无穷小的乘积仍为无穷小"
-        - statement: "$\lim f(x) = A \iff f(x) = A + \alpha$，其中α为无穷小"
+        - statement: '有限个无穷小的和仍为无穷小'
+        - statement: '无穷小乘有界函数仍为无穷小'
+        - statement: '有限个无穷小的乘积仍为无穷小'
+        - statement: '$\lim f(x) = A \iff f(x) = A + \alpha$，其中α为无穷小'
       examples:
-        - question: "证明 $x \cdot \sin\frac{1}{x}$ 在 $x \to 0$ 时为无穷小"
+        - question: '证明 $x \cdot \sin\frac{1}{x}$ 在 $x \to 0$ 时为无穷小'
           solution: |
             $\sin\frac{1}{x}$ 是有界函数 ($|\sin\frac{1}{x}| \leq 1$)，乘无穷小x仍为无穷小。由夹逼准则: $0 \leq |x\sin\frac{1}{x}| \leq |x| \to 0$
       misconceptions:
-        - "0是无穷小" — 对，常数0可以看作无穷小。但"很小的数如0.0001"不是无穷小
-        - "无穷小除以无穷小一定是1" — 错，结果可能是任何值（这就是极限的未定式）
+        - '0是无穷小 — 对，常数0可以看作无穷小。但“很小的数如0.0001”不是无穷小'
+        - '无穷小除以无穷小一定是1 — 错，结果可能是任何值（这就是极限的未定式）'
     prerequisites: ["limit-1.2.1"]
     related: ["limit-1.2.4", "limit-1.2.5", "limit-1.3.3"]
 
-  - id: "limit-1.2.4"
-    title: "无穷大"
+  - id: 'limit-1.2.4'
+    title: '无穷大'
     difficulty: 2
     bloom_level: 2
     content:
@@ -213,19 +213,19 @@ nodes:
         $\forall M > 0, \exists \delta > 0$，当 $0 < |x - x_0| < \delta$ 时 $|f(x)| > M$，
         则称 $f(x)$ 为 $x \to x_0$ 时的**无穷大**，记作 $\lim f(x) = \infty$。
       theorems:
-        - statement: "若f(x)为无穷大且f(x)≠0，则1/f(x)为无穷小"
-        - statement: "若f(x)为无穷小且f(x)≠0，则1/f(x)为无穷大"
+        - statement: '若f(x)为无穷大且f(x)≠0，则1/f(x)为无穷小'
+        - statement: '若f(x)为无穷小且f(x)≠0，则1/f(x)为无穷大'
       examples:
-        - question: "求 $\lim\limits_{x \to 0^+} \frac{1}{x}$"
-          solution: "任给M>0，取δ=1/M，当0<x<δ时1/x > M，故极限为正无穷。"
+        - question: '求 $\lim\limits_{x \to 0^+} \frac{1}{x}$'
+          solution: '任给M>0，取δ=1/M，当0<x<δ时1/x > M，故极限为正无穷。'
       misconceptions:
-        - "∞是一个数" — 错，∞是一个符号，表示无限增大的趋势
-        - "极限是∞就是极限不存在" — 极限值为∞是极限不存在的一种情况（另一种是振荡不存在）
+        - '∞是一个数 — 错，∞是一个符号，表示无限增大的趋势'
+        - '极限是∞就是极限不存在 — 极限值为∞是极限不存在的一种情况（另一种是振荡不存在）'
     prerequisites: ["limit-1.2.1", "limit-1.2.3"]
     related: ["limit-1.2.3"]
 
-  - id: "limit-1.2.5"
-    title: "无穷小的比较"
+  - id: 'limit-1.2.5'
+    title: '无穷小的比较'
     difficulty: 3
     bloom_level: 3
     content:
@@ -239,23 +239,23 @@ nodes:
         - **k阶无穷小**: $\lim \frac{\alpha}{\beta^k} = C \neq 0$
       theorems: []
       examples:
-        - question: "比较 $x \to 0$ 时 $x^2$ 和 $\sin x$ 的阶"
+        - question: '比较 $x \to 0$ 时 $x^2$ 和 $\sin x$ 的阶'
           solution: |
             $\lim_{x \to 0} \frac{x^2}{\sin x} = \lim_{x \to 0} \frac{x^2}{x} \cdot \frac{x}{\sin x} = 0 \cdot 1 = 0$
             故 $x^2$ 是比 $\sin x$ 更高阶的无穷小 ($x^2 = o(\sin x)$)。
-        - question: "当x→0时，1-cos x是x的几阶无穷小？"
+        - question: '当x→0时，1-cos x是x的几阶无穷小？'
           solution: |
             $\lim_{x \to 0} \frac{1-\cos x}{x^k} = \lim_{x \to 0} \frac{2\sin^2(x/2)}{x^k}$
             当k=2时极限为1/2≠0，故1-cos x是x的2阶无穷小。
       misconceptions:
-        - "高阶无穷小就是趋向0更快的无穷小" — 直观理解正确
-        - "等价无穷小就是相等的无穷小" — 错，比值趋近1，但不相等
-        - "高阶无穷小可以随便忽略" — 在极限运算中注意：α+o(α) ~ α 是对的，但不能在加减法中直接替换
+        - '高阶无穷小就是趋向0更快的无穷小 — 直观理解正确'
+        - '等价无穷小就是相等的无穷小 — 错，比值趋近1，但不相等'
+        - '高阶无穷小可以随便忽略 — 在极限运算中注意：α+o(α) ~ α 是对的，但不能在加减法中直接替换'
     prerequisites: ["limit-1.2.3"]
     related: ["limit-1.3.3", "limit-1.2.3"]
 
-  - id: "limit-1.2.6"
-    title: "函数极限运算法则"
+  - id: 'limit-1.2.6'
+    title: '函数极限运算法则'
     difficulty: 2
     bloom_level: 3
     content:
@@ -270,12 +270,12 @@ nodes:
         且在 $x_0$ 的某去心邻域内 $g(x) \neq u_0$，则 $\lim_{x \to x_0} f(g(x)) = A$。
       theorems: []
       examples:
-        - question: "求 $\lim\limits_{x \to 1} \frac{x^2 - 1}{x - 1}$"
+        - question: '求 $\lim\limits_{x \to 1} \frac{x^2 - 1}{x - 1}$'
           solution: |
             $\frac{x^2-1}{x-1} = x+1$（$x \neq 1$），$\lim_{x \to 1}(x+1) = 2$
       misconceptions:
-        - "只要分母极限为0就不能用除法法则" — 对，此时需要先变形（因式分解、有理化等）
-        - "0/0型一定有极限" — 错，0/0是未定式，可能有也可能没有极限
+        - '只要分母极限为0就不能用除法法则 — 对，此时需要先变形（因式分解、有理化等）'
+        - '0/0型一定有极限 — 错，0/0是未定式，可能有也可能没有极限'
     prerequisites: ["limit-1.2.1", "limit-1.1.3"]
     related: ["limit-1.1.3"]
 
@@ -283,8 +283,8 @@ nodes:
   # 1.3 两个重要极限
   # ============================================================
 
-  - id: "limit-1.3.1"
-    title: "第一个重要极限: lim sin x / x = 1"
+  - id: 'limit-1.3.1'
+    title: '第一个重要极限: lim sin x / x = 1'
     difficulty: 4
     bloom_level: 3
     content:
@@ -293,27 +293,27 @@ nodes:
 
         这是 $\frac{0}{0}$ 型未定式的重要结果。其证明依赖于几何不等式: $\sin x < x < \tan x$（$0 < x < \frac{\pi}{2}$），即 $\cos x < \frac{\sin x}{x} < 1$，由夹逼准则得证。
       theorems:
-        - statement: "lim sin x / x = 1 (x→0)"
+        - statement: 'lim sin x / x = 1 (x→0)'
           proof: |
             单位圆中，$0 < x < \pi/2$ 时，面积比较得 $\sin x < x < \tan x$
             除以 $\sin x$: $1 < \frac{x}{\sin x} < \frac{1}{\cos x}$
             取倒数: $\cos x < \frac{\sin x}{x} < 1$
             由夹逼准则 $x \to 0^+$ 时 $\frac{\sin x}{x} \to 1$，$x \to 0^-$ 由对称性同理。
       examples:
-        - question: "求 $\lim\limits_{x \to 0} \frac{\sin 3x}{x}$"
-          solution: "$\lim\frac{\sin 3x}{x} = \lim\frac{\sin 3x}{3x} \cdot 3 = 1 \cdot 3 = 3$"
-        - question: "求 $\lim\limits_{x \to 0} \frac{1 - \cos x}{x^2}$"
+        - question: '求 $\lim\limits_{x \to 0} \frac{\sin 3x}{x}$'
+          solution: '$\lim\frac{\sin 3x}{x} = \lim\frac{\sin 3x}{3x} \cdot 3 = 1 \cdot 3 = 3$'
+        - question: '求 $\lim\limits_{x \to 0} \frac{1 - \cos x}{x^2}$'
           solution: |
             $1-\cos x = 2\sin^2\frac{x}{2}$
             $\lim\frac{2\sin^2(x/2)}{x^2} = \lim\frac{2\sin^2(x/2)}{4(x/2)^2} = \frac{1}{2} \cdot 1^2 = \frac{1}{2}$
       misconceptions:
-        - "sin x / x 的极限在任何情况下都是1" — 错，仅x→0。x→∞时sin x / x → 0
-        - "证明中用到了sin x的导数" — 不，这是几何证明，不依赖洛必达法则（避免循环论证）
+        - 'sin x / x 的极限在任何情况下都是1 — 错，仅x→0。x→∞时sin x / x → 0'
+        - '证明中用到了sin x的导数 — 不，这是几何证明，不依赖洛必达法则（避免循环论证）'
     prerequisites: ["limit-1.2.5", "limit-1.1.4"]
     related: ["limit-1.3.3", "limit-1.2.5"]
 
-  - id: "limit-1.3.2"
-    title: "第二个重要极限: lim (1+1/x)^x = e"
+  - id: 'limit-1.3.2'
+    title: '第二个重要极限: lim (1+1/x)^x = e'
     difficulty: 4
     bloom_level: 3
     content:
@@ -324,22 +324,22 @@ nodes:
 
         这是 $1^\infty$ 型未定式最重要的结果。e ≈ 2.71828... 是一个无理数，也是自然对数的底。
       theorems:
-        - statement: "lim (1 + 1/n)^n = e (n→∞, n为自然数)"
-          proof: "用二项式定理展开，证数列单调递增且上有界（<3），由单调有界定理极限存在，定义为e。"
+        - statement: 'lim (1 + 1/n)^n = e (n→∞, n为自然数)'
+          proof: '用二项式定理展开，证数列单调递增且上有界（<3），由单调有界定理极限存在，定义为e。'
       examples:
-        - question: "求 $\lim\limits_{x \to \infty} \left(1 + \frac{2}{x}\right)^x$"
+        - question: '求 $\lim\limits_{x \to \infty} \left(1 + \frac{2}{x}\right)^x$'
           solution: |
             $\lim\left(1 + \frac{2}{x}\right)^x = \lim\left[\left(1 + \frac{2}{x}\right)^{\frac{x}{2}}\right]^2 = e^2$
-        - question: "求 $\lim\limits_{x \to 0} (1 + 3x)^{\frac{1}{x}}$"
-          solution: "$\lim(1 + 3x)^{\frac{1}{x}} = \lim[(1 + 3x)^{\frac{1}{3x}}]^3 = e^3$"
+        - question: '求 $\lim\limits_{x \to 0} (1 + 3x)^{\frac{1}{x}}$'
+          solution: '$\lim(1 + 3x)^{\frac{1}{x}} = \lim[(1 + 3x)^{\frac{1}{3x}}]^3 = e^3$'
       misconceptions:
-        - "1^∞型的结果一定是1" — 错！这是未定式，极限可能是e的任何次幂
-        - "记住公式就好了，推导不重要" — 如果理解了e的定义，所有1^∞型极限都是这个极限的变形
+        - '1^∞型的结果一定是1 — 错！这是未定式，极限可能是e的任何次幂'
+        - '记住公式就好了，推导不重要 — 如果理解了e的定义，所有1^∞型极限都是这个极限的变形'
     prerequisites: ["limit-1.1.5", "limit-1.2.6"]
     related: ["limit-1.3.3", "limit-1.1.5"]
 
-  - id: "limit-1.3.3"
-    title: "等价无穷小替换"
+  - id: 'limit-1.3.3'
+    title: '等价无穷小替换'
     difficulty: 4
     bloom_level: 3
     content:
@@ -359,21 +359,21 @@ nodes:
         - $(1+x)^a - 1 \sim ax$
         - $a^x - 1 \sim x\ln a$
       theorems:
-        - statement: "乘除可替换、加减不可替换（除非替换后的表达式不为0）"
+        - statement: '乘除可替换、加减不可替换（除非替换后的表达式不为0）'
       examples:
-        - question: "求 $\lim\limits_{x \to 0} \frac{\sin 2x}{\tan 3x}$"
+        - question: '求 $\lim\limits_{x \to 0} \frac{\sin 2x}{\tan 3x}$'
           solution: |
             $\sin 2x \sim 2x$, $\tan 3x \sim 3x$
             $\lim\frac{\sin 2x}{\tan 3x} = \frac{2x}{3x} = \frac{2}{3}$
-        - question: "求 $\lim\limits_{x \to 0} \frac{\sin x - x}{x^3}$ — 能替换吗？"
+        - question: '求 $\lim\limits_{x \to 0} \frac{\sin x - x}{x^3}$ — 能替换吗？'
           solution: |
             分子是加减法，不能直接用sin x ~ x替换！替换后得0/x^3 = 0（错误答案）
             正确做法: 用泰勒展开 $\sin x = x - \frac{x^3}{6} + o(x^3)$
             $\lim\frac{(x - x^3/6 + ...) - x}{x^3} = -\frac{1}{6}$
       misconceptions:
-        - "等价无穷小在任何情况下都可以替换" — 错！**加减法中替换是常见错误**（如上例）
-        - "sin x ~ x 所以 sin x ≈ x" — 近似成立，但在极限运算中"等于"和"等价"有严格差别
-        - "所有无穷小都能找到简单等价形式" — 不一定，需要满足比值为1的条件
+        - '等价无穷小在任何情况下都可以替换 — 错！**加减法中替换是常见错误**（如上例）'
+        - 'sin x ~ x 所以 sin x ≈ x — 近似成立，但在极限运算中“等于”和“等价”有严格差别'
+        - '所有无穷小都能找到简单等价形式 — 不一定，需要满足比值为1的条件'
     prerequisites: ["limit-1.2.5", "limit-1.3.1", "limit-1.2.6"]
     related: ["limit-1.2.5", "limit-1.3.1", "limit-1.5.1"]
 
@@ -381,8 +381,8 @@ nodes:
   # 1.5 极限的应用 (v1精选)
   # ============================================================
 
-  - id: "limit-1.5.1"
-    title: "渐近线"
+  - id: 'limit-1.5.1'
+    title: '渐近线'
     difficulty: 3
     bloom_level: 3
     content:
@@ -392,41 +392,41 @@ nodes:
         **斜渐近线**: 若 $\lim_{x \to \pm\infty} \frac{f(x)}{x} = k$ 且 $\lim_{x \to \pm\infty}[f(x) - kx] = b$，则 $y = kx + b$ 是斜渐近线。
       theorems: []
       examples:
-        - question: "求 $f(x) = \frac{x^2+1}{x-1}$ 的渐近线"
+        - question: '求 $f(x) = \frac{x^2+1}{x-1}$ 的渐近线'
           solution: |
             垂直: $\lim_{x \to 1^\pm} \frac{x^2+1}{x-1} = \pm\infty$，故x=1为垂直渐近线
             斜: $k = \lim\frac{f(x)}{x} = \lim\frac{x^2+1}{x(x-1)} = 1$
             $b = \lim[f(x) - x] = \lim(\frac{x^2+1}{x-1} - x) = \lim\frac{x+1}{x-1} = 1$
             故斜渐近线为 $y = x + 1$
       misconceptions:
-        - "每个函数都有渐近线" — 错，只有满足特定极限条件的函数才有
-        - "一次函数y=x的渐近线是它自己" — 有些教材认为斜渐近线必须不同于原函数
+        - '每个函数都有渐近线 — 错，只有满足特定极限条件的函数才有'
+        - '一次函数y=x的渐近线是它自己 — 有些教材认为斜渐近线必须不同于原函数'
     prerequisites: ["limit-1.2.1", "limit-1.2.4"]
     related: ["limit-1.2.1"]
 
-  - id: "limit-1.5.2"
-    title: "极限的存在性判别"
+  - id: 'limit-1.5.2'
+    title: '极限的存在性判别'
     difficulty: 3
     bloom_level: 3
     content:
       definition: ""
       theorems:
-        - statement: "单调有界准则: 单调且有界的函数(数列)极限必存在（有限或无穷）"
-        - statement: "柯西收敛准则: 函数(数列)收敛 ⇔ 当x1,x2充分接近时|f(x1)-f(x2)|可任意小"
-        - statement: "归结原则: lim_{x→x0} f(x)=A ⇔ 对任意满足xn→x0(xn≠x0)的数列{xn}，有lim f(xn)=A"
+        - statement: '单调有界准则: 单调且有界的函数(数列)极限必存在（有限或无穷）'
+        - statement: '柯西收敛准则: 函数(数列)收敛 ⇔ 当x1,x2充分接近时|f(x1)-f(x2)|可任意小'
+        - statement: '归结原则: lim_{x→x0} f(x)=A ⇔ 对任意满足xn→x0(xn≠x0)的数列{xn}，有lim f(xn)=A'
       examples:
-        - question: "证明 $\lim\limits_{x \to 0} \sin\frac{1}{x}$ 不存在"
+        - question: '证明 $\lim\limits_{x \to 0} \sin\frac{1}{x}$ 不存在'
           solution: |
             取两个子列: $x_n^{(1)} = \frac{1}{2n\pi}$ → $\sin(2n\pi)=0$
             $x_n^{(2)} = \frac{1}{2n\pi + \pi/2}$ → $\sin(2n\pi+\pi/2)=1$
             两个子列的极限不同，由归结原则极限不存在。
       misconceptions:
-        - "归结原则只能用来证明存在" — 错，也常用于证伪（找两个子列对应不同极限值）
+        - '归结原则只能用来证明存在 — 错，也常用于证伪（找两个子列对应不同极限值）'
     prerequisites: ["limit-1.1.5", "limit-1.1.4", "limit-1.2.2"]
     related: ["limit-1.1.5", "limit-1.2.2"]
 
-  - id: "limit-1.3.4"
-    title: "泰勒展开与等价无穷小的关系"
+  - id: 'limit-1.3.4'
+    title: '泰勒展开与等价无穷小的关系'
     difficulty: 4
     bloom_level: 4
     content:
@@ -443,25 +443,25 @@ nodes:
         **核心理解**: 等价无穷小替换本质上是泰勒展开的一阶近似！sin x ~ x 是因为 sin x = x + o(x)。
         当加减法中一阶项抵消时，就需要二阶、三阶展开。这就是为什么加减法中sin x不能直接替换为x。
       theorems:
-        - statement: "等价无穷小替换是泰勒一阶展开的特例"
+        - statement: '等价无穷小替换是泰勒一阶展开的特例'
       examples:
-        - question: "用泰勒展开证明 $\lim_{x\to0}\frac{\sin x - x}{x^3} = -\frac{1}{6}$"
+        - question: '用泰勒展开证明 $\lim_{x\to0}\frac{\sin x - x}{x^3} = -\frac{1}{6}$'
           solution: |
             泰勒展开: $\sin x = x - \frac{x^3}{6} + o(x^3)$
             $\frac{\sin x - x}{x^3} = \frac{x - x^3/6 + o(x^3) - x}{x^3} = -\frac{1}{6} + \frac{o(x^3)}{x^3} \to -\frac{1}{6}$
-        - question: "判断: sin(tan x) ~ x (x→0) 是否正确？"
+        - question: '判断: sin(tan x) ~ x (x→0) 是否正确？'
           solution: |
             正确。tan x ~ x，故 sin(tan x) ~ tan x ~ x
             可通过泰勒展开严格验证: tan x = x + x^3/3 + ... , sin(tan x) = tan x + ... = x + ...
       misconceptions:
-        - "等价无穷小替换和泰勒展开是两个独立的方法" — 错，前者是后者的特例
-        - "只要能替换就是对的" — 必须看场景：乘除安全，加减要验证替换后不为0
-        - "泰勒展开是高等技巧，不适合初学者" — 实际上泰勒展开是理解极限的最统一框架
+        - '等价无穷小替换和泰勒展开是两个独立的方法 — 错，前者是后者的特例'
+        - '只要能替换就是对的 — 必须看场景：乘除安全，加减要验证替换后不为0'
+        - '泰勒展开是高等技巧，不适合初学者 — 实际上泰勒展开是理解极限的最统一框架'
     prerequisites: ["limit-1.3.3", "limit-1.3.1"]
     related: ["limit-1.3.3", "limit-1.3.1", "limit-1.2.5"]
 
-  - id: "limit-1.2.7"
-    title: "洛必达法则"
+  - id: 'limit-1.2.7'
+    title: '洛必达法则'
     difficulty: 3
     bloom_level: 3
     content:
@@ -473,19 +473,19 @@ nodes:
 
         则: $\lim \frac{f(x)}{g(x)} = \lim \frac{f'(x)}{g'(x)}$
       theorems:
-        - statement: "洛必达法则适用于0/0和∞/∞型"
+        - statement: '洛必达法则适用于0/0和∞/∞型'
       examples:
-        - question: "求 $\lim_{x \to 0} \frac{\sin x - x}{x^3}$"
+        - question: '求 $\lim_{x \to 0} \frac{\sin x - x}{x^3}$'
           solution: |
             0/0型，洛必达: $\lim\frac{\cos x - 1}{3x^2}$，仍0/0
             再次洛必达: $\lim\frac{-\sin x}{6x} = \lim\frac{-1}{6} \cdot \frac{\sin x}{x} = -\frac{1}{6}$
-        - question: "求 $\lim_{x \to 0^+} x\ln x$"
+        - question: '求 $\lim_{x \to 0^+} x\ln x$'
           solution: |
             0·∞型，转化为∞/∞: $\lim\frac{\ln x}{1/x}$，洛必达: $\lim\frac{1/x}{-1/x^2} = \lim(-x) = 0$
       misconceptions:
-        - "洛必达法则是求极限的万能方法" — 错。有些极限洛必达后会变得更复杂，或不可导无法使用
-        - "洛必达可以无限次使用" — 每次使用前必须验证条件是否满足
-        - "跳过sin x / x的几何证明直接用洛必达求" — 循环论证！洛必达需要sin的导数=cos，而cos的推导依赖于sin x/x→1
+        - '洛必达法则是求极限的万能方法 — 错。有些极限洛必达后会变得更复杂，或不可导无法使用'
+        - '洛必达可以无限次使用 — 每次使用前必须验证条件是否满足'
+        - '跳过sin x / x的几何证明直接用洛必达求 — 循环论证！洛必达需要sin的导数=cos，而cos的推导依赖于sin x/x→1'
     prerequisites: ["limit-1.2.6", "limit-1.3.1"]
     related: ["limit-1.3.3", "limit-1.3.4"]
 
@@ -493,8 +493,8 @@ nodes:
   # 1.4 连续性 (v1最小覆盖)
   # ============================================================
 
-  - id: "limit-1.4.1"
-    title: "连续性的定义与间断点分类"
+  - id: 'limit-1.4.1'
+    title: '连续性的定义与间断点分类'
     difficulty: 2
     bloom_level: 2
     content:
@@ -508,15 +508,15 @@ nodes:
           - 跳跃间断点: 左右极限不相等
         - **第二类**: 左右极限至少有一个不存在（无穷间断点、振荡间断点等）
       theorems:
-        - statement: "初等函数在其定义域内处处连续"
+        - statement: '初等函数在其定义域内处处连续'
       examples:
-        - question: "讨论 $f(x) = \frac{\sin x}{x}$ 在 $x=0$ 处的连续性"
+        - question: '讨论 $f(x) = \frac{\sin x}{x}$ 在 $x=0$ 处的连续性'
           solution: |
             f(0)无定义，故x=0为间断点。
             但 $\lim_{x \to 0} \frac{\sin x}{x} = 1$，左右极限都存在且相等，
             故x=0为可去间断点（补充定义f(0)=1后连续）。
       misconceptions:
-        - "可去间断点可以忽略" — 虽然"可去"，但原函数在该点确实不连续
-        - "导函数不存在就不连续" — 错。连续和可导是两个概念。f(x)=|x|在x=0处连续但不可导
+        - '可去间断点可以忽略 — 虽然“可去”，但原函数在该点确实不连续'
+        - '导函数不存在就不连续 — 错。连续和可导是两个概念。f(x)=|x|在x=0处连续但不可导'
     prerequisites: ["limit-1.2.1", "limit-1.2.2"]
     related: ["limit-1.2.2", "limit-1.2.1"]

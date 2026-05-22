@@ -10,14 +10,17 @@ def load_curriculum(path: str) -> list[KnowledgeNode]:
 
     nodes = []
     for item in raw.get("nodes", []):
+        content = item.get("content", {})
         nodes.append(KnowledgeNode(
             id=item["id"],
             title=item["title"],
-            definition=item.get("definition", ""),
-            theorems=item.get("theorems", []),
-            examples=item.get("examples", []),
-            common_errors=item.get("common_errors", []),
+            definition=content.get("definition", ""),
+            theorems=content.get("theorems", []),
+            examples=content.get("examples", []),
+            misconceptions=content.get("misconceptions", []),
             prerequisites=item.get("prerequisites", []),
             related=item.get("related", []),
+            difficulty=item.get("difficulty", 1),
+            bloom_level=item.get("bloom_level", 1),
         ))
     return nodes
