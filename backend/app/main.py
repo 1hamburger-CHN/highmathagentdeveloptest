@@ -1,16 +1,27 @@
+import logging
+import time
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import assess, chat, generate, path_planner, profile
 from app.config import settings
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("tutor")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Init ChromaDB, load KB, warm up model connections
+    logger.info("Starting 苏格拉底教练 server...")
     yield
+    logger.info("Shutting down...")
 
 
 app = FastAPI(
@@ -26,6 +37,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    request_id = uuid4().hex[:8]
+    start = time.time()
+    response = await call_next(request)
+    elapsed = time.time() - start
+    logger.info(f"[{request_id}] {request.method} {request.url.path} → {response.status_code} ({elapsed:.2f}s)")
+    return response
+
 
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(profile.router, prefix="/api/profile", tags=["profile"])

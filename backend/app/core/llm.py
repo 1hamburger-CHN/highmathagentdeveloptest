@@ -56,6 +56,7 @@ class SparkChatModel:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             async with client.stream("POST", settings.spark_api_base, json=payload, headers=headers) as resp:
                 resp.raise_for_status()
+                parse_errors = 0
                 async for line in resp.aiter_lines():
                     if line.startswith("data: "):
                         chunk_data = line[6:]
@@ -66,8 +67,12 @@ class SparkChatModel:
                             delta = data["choices"][0].get("delta", {}).get("content", "")
                             if delta:
                                 yield delta
+                            parse_errors = 0
                         except (json.JSONDecodeError, KeyError, IndexError):
-                            continue
+                            parse_errors += 1
+                            if parse_errors > 10:
+                                yield "[流式传输中断]"
+                                break
 
     def _build_payload(self, messages: list, stream: bool) -> dict:
         return {
@@ -129,6 +134,7 @@ class DeepSeekChatModel:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             async with client.stream("POST", settings.deepseek_api_base, json=payload, headers=headers) as resp:
                 resp.raise_for_status()
+                parse_errors = 0
                 async for line in resp.aiter_lines():
                     if line.startswith("data: "):
                         chunk_data = line[6:]
@@ -139,8 +145,12 @@ class DeepSeekChatModel:
                             delta = data["choices"][0].get("delta", {}).get("content", "")
                             if delta:
                                 yield delta
+                            parse_errors = 0
                         except (json.JSONDecodeError, KeyError, IndexError):
-                            continue
+                            parse_errors += 1
+                            if parse_errors > 10:
+                                yield "[流式传输中断]"
+                                break
 
     def _build_payload(self, messages: list, stream: bool) -> dict:
         return {
@@ -191,7 +201,7 @@ class ModelRouter:
         if not self._spark_available:
             if self._deepseek_available:
                 return self._init_deepseek()
-            return _FallbackModel(f"[{tier.value}] SPARK_API_PASSWORD not configured")
+            return _FallbackModel(f"系统初始化中，请稍后再试")
 
         max_tok = 8192 if tier == ModelTier.MAX else 4096
         return SparkChatModel(
@@ -204,7 +214,7 @@ class ModelRouter:
 
     def _init_deepseek(self):
         if not settings.deepseek_api_key:
-            return _FallbackModel("DEEPSEEK_API_KEY not configured")
+            return _FallbackModel("系统初始化中，请稍后再试")
         return DeepSeekChatModel(
             api_key=settings.deepseek_api_key,
             temperature=0.5,

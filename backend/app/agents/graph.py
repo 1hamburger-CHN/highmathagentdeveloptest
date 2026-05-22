@@ -64,7 +64,9 @@ def build_tutor_graph() -> StateGraph:
 # --- Routing ---
 
 def route_profile_check(state: TutorState) -> str:
-    return "diagnose" if state.profile else "build_profile"
+    if state.profile and state.profile.get("knowledge_mastery"):
+        return "diagnose"
+    return "build_profile"
 
 
 def route_coach(state: TutorState) -> str:
@@ -78,7 +80,8 @@ def route_quality(state: TutorState) -> str:
 # --- Nodes ---
 
 def profile_check_node(state: TutorState) -> dict[str, Any]:
-    return {"current_state": AgentState.PROFILE_CHECK}
+    has_profile = bool(state.profile and state.profile.get("knowledge_mastery"))
+    return {"current_state": AgentState.PROFILE_CHECK, "_has_profile": has_profile}
 
 
 async def build_profile_node(state: TutorState) -> dict[str, Any]:

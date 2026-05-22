@@ -59,23 +59,23 @@ export default function ChatPage() {
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        // Parse SSE events from buffer
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
+        // Parse SSE events using \n\n as event delimiter
+        const events = buffer.split("\n\n");
+        buffer = events.pop() || "";
 
-        for (const line of lines) {
-          if (line.startsWith("event: ")) {
-            const eventType = line.slice(7).trim();
-            // Next line should be data
-            continue;
-          }
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              handleSSEEvent(data);
-            } catch {
-              // incomplete JSON, put back in buffer
-              buffer = line + "\n" + buffer;
+        for (const eventText of events) {
+          const lines = eventText.split("\n");
+          let eventType = "";
+          for (const line of lines) {
+            if (line.startsWith("event: ")) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                handleSSEEvent(data);
+              } catch {
+                // Malformed JSON, skip this event
+              }
             }
           }
         }

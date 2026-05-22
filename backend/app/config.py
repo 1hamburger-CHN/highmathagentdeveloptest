@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+_PROJECT_ROOT = Path(__file__).parent.parent
 
 
 class Settings(BaseSettings):
@@ -7,16 +11,16 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_api_base: str = "https://api.deepseek.com/v1/chat/completions"
 
-    chroma_persist_dir: str = "./data/chromadb"
+    chroma_persist_dir: str = str(_PROJECT_ROOT / "data" / "chromadb")
     embedding_model: str = "BAAI/bge-m3"
 
-    database_url: str = "sqlite:///./data/tutor.db"
+    database_url: str = f"sqlite:///{_PROJECT_ROOT}/data/tutor.db"
 
     max_retries: int = 2
     api_timeout: int = 120
     sympy_timeout: int = 5
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": str(_PROJECT_ROOT / ".env"), "env_file_encoding": "utf-8"}
 
 
 settings = Settings()

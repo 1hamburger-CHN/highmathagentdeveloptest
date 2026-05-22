@@ -1,4 +1,5 @@
 import json
+import logging
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
@@ -6,6 +7,8 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.agents.graph import build_tutor_graph
 from app.agents.state import AgentState, TutorState
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -66,7 +69,8 @@ async def chat_stream(payload: dict):
             yield {"event": "done", "data": json.dumps({"status": "complete", "session_id": session_id})}
 
         except Exception as e:
-            yield {"event": "error", "data": json.dumps({"message": str(e)})}
+            logger.error(f"Chat stream error (session={session_id}): {type(e).__name__}: {e}")
+            yield {"event": "error", "data": json.dumps({"message": "服务暂时不可用，请稍后重试"})}
 
     return EventSourceResponse(event_generator())
 
@@ -96,4 +100,5 @@ async def chat_send(payload: dict):
             "resources": final_state.get("generated_resources"),
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Chat send error (user={user_id}): {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail="服务暂时不可用，请稍后重试")
