@@ -1,6 +1,6 @@
 # Core
 python-dotenv==1.0.1
-pydantic-settings==2.3.4
+pydantic-settings==2.7.1
 
 # Web
 fastapi==0.115.0
