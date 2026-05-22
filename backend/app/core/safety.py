@@ -16,6 +16,7 @@ class SafetyPipeline:
         "limit", "derivative", "integral", "continuity", "function",
         "数学", "定义", "证明", "定理", "计算", "概念",
         "例子", "题目", "怎么做", "解释", "说明",
+        "等于", "等于几", "等于多少", "怎么算", "答案是", "是多少",
     ]
 
     GREETING_PATTERNS = [
@@ -117,7 +118,15 @@ class SafetyPipeline:
 
     @classmethod
     def is_math_related(cls, text: str) -> bool:
-        return any(kw.lower() in text.lower() for kw in cls.MATH_KEYWORDS)
+        if any(kw.lower() in text.lower() for kw in cls.MATH_KEYWORDS):
+            return True
+        # Detect arithmetic: digits with + - * / = signs
+        stripped = text.strip()
+        has_digit = any(c.isdigit() for c in stripped)
+        has_op = any(c in "+-*/=<>" for c in stripped)
+        if has_digit and has_op:
+            return True
+        return False
 
     @classmethod
     def filter(cls, content: str) -> dict:
