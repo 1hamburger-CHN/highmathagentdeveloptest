@@ -49,7 +49,7 @@ def build_tutor_graph() -> StateGraph:
         route_coach,
         {"generate": "generate", "assess": "assess"},
     )
-    workflow.add_edge("generate", "coach")
+    workflow.add_edge("generate", "respond")
     workflow.add_edge("assess", "quality_gate")
     workflow.add_conditional_edges(
         "quality_gate",

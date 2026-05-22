@@ -20,9 +20,9 @@ class ModelTier(str, Enum):
 
 
 SPARK_MODEL_MAP = {
-    ModelTier.LITE: "lite",
-    ModelTier.PRO: "generalv3",
-    ModelTier.MAX: "generalv3.5",
+    ModelTier.LITE: "generalv3.5",
+    ModelTier.PRO: "generalv3.5",
+    ModelTier.MAX: "4.0Ultra",
 }
 
 DEEPSEEK_MODEL = "deepseek-chat"
@@ -193,11 +193,12 @@ class ModelRouter:
                 return self._init_deepseek()
             return _FallbackModel(f"[{tier.value}] SPARK_API_PASSWORD not configured")
 
+        max_tok = 8192 if tier == ModelTier.MAX else 4096
         return SparkChatModel(
             api_password=settings.spark_api_password,
             model=SPARK_MODEL_MAP[tier],
             temperature=0.5,
-            max_tokens=4096,
+            max_tokens=max_tok,
             timeout=settings.api_timeout,
         )
 

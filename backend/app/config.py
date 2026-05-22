@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./data/tutor.db"
 
     max_retries: int = 2
-    api_timeout: int = 15
+    api_timeout: int = 120
     sympy_timeout: int = 5
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
