@@ -1,4 +1,5 @@
 """LangGraph Supervisor state graph for the Socratic Tutor system."""
+import logging
 from typing import Any
 
 from langgraph.graph import END, StateGraph
@@ -11,6 +12,9 @@ from app.agents.resource_generator import ResourceGeneratorAgent
 from app.agents.socratic_coach import SocraticCoachAgent
 from app.agents.state import AgentState, TutorState
 from app.core.llm import ModelRouter
+from app.core.safety import SafetyPipeline
+
+logger = logging.getLogger("tutor.graph")
 
 # Shared model router (initialized once at graph build time)
 _router = ModelRouter()
@@ -26,6 +30,7 @@ _quality_gate = QualityGateAgent(_router)
 def build_tutor_graph() -> StateGraph:
     workflow = StateGraph(TutorState)
 
+    workflow.add_node("safety_check", safety_check_node)
     workflow.add_node("profile_check", profile_check_node)
     workflow.add_node("build_profile", build_profile_node)
     workflow.add_node("diagnose", diagnose_node)
@@ -35,8 +40,13 @@ def build_tutor_graph() -> StateGraph:
     workflow.add_node("quality_gate", quality_gate_node)
     workflow.add_node("respond", respond_node)
 
-    workflow.set_entry_point("profile_check")
+    workflow.set_entry_point("safety_check")
 
+    workflow.add_conditional_edges(
+        "safety_check",
+        route_safety,
+        {"reject": "respond", "pass": "profile_check"},
+    )
     workflow.add_conditional_edges(
         "profile_check",
         route_profile_check,
@@ -63,6 +73,10 @@ def build_tutor_graph() -> StateGraph:
 
 # --- Routing ---
 
+def route_safety(state: TutorState) -> str:
+    return "reject" if state._safety_rejected else "pass"
+
+
 def route_profile_check(state: TutorState) -> str:
     if state.profile and state.profile.get("knowledge_mastery"):
         return "diagnose"
@@ -78,6 +92,23 @@ def route_quality(state: TutorState) -> str:
 
 
 # --- Nodes ---
+
+def safety_check_node(state: TutorState) -> dict[str, Any]:
+    user_msg = ""
+    for m in reversed(state.messages):
+        if m.get("role") == "user":
+            user_msg = m.get("content", "")
+            break
+
+    result = SafetyPipeline.filter(user_msg)
+    logger.info(f"Safety check: msg={user_msg!r} allowed={result['allowed']} reason={result['reason']}")
+    if not result["allowed"]:
+        return {
+            "_safety_rejected": True,
+            "messages": [{"role": "assistant", "content": result["content"]}],
+        }
+    return {"_safety_rejected": False}
+
 
 def profile_check_node(state: TutorState) -> dict[str, Any]:
     has_profile = bool(state.profile and state.profile.get("knowledge_mastery"))
@@ -121,4 +152,4 @@ async def quality_gate_node(state: TutorState) -> dict[str, Any]:
 
 
 def respond_node(state: TutorState) -> dict[str, Any]:
-    return {"current_state": AgentState.RESPOND}
+    return {"current_state": AgentState.RESPOND, "_safety_rejected": False}

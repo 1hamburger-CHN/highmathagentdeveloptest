@@ -7,6 +7,7 @@ from langgraph.graph import StateGraph
 
 class AgentState(str, Enum):
     INIT = "init"
+    SAFETY_CHECK = "safety_check"
     PROFILE_CHECK = "profile_check"
     BUILD_PROFILE = "build_profile"
     DIAGNOSE = "diagnose"
@@ -33,3 +34,4 @@ class TutorState:
     assessment_result: dict | None = None
     quality_retries: int = 0
     error: str | None = None
+    _safety_rejected: bool = False

@@ -7,6 +7,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.agents.graph import build_tutor_graph
 from app.agents.state import AgentState, TutorState
+from app.core.safety import SafetyPipeline
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,15 @@ async def chat_stream(payload: dict):
     user_id = payload.get("user_id", "anonymous")
     history = payload.get("history", [])
     existing_profile = payload.get("profile", None)
+
+    # Belt-and-suspenders: safety check at endpoint level
+    safety_result = SafetyPipeline.filter(user_message)
+    if not safety_result["allowed"]:
+        async def rejected_generator():
+            yield {"event": "start", "data": json.dumps({"session_id": session_id})}
+            yield {"event": "message", "data": json.dumps({"role": "assistant", "content": safety_result["content"], "node": "safety_check"}, ensure_ascii=False)}
+            yield {"event": "done", "data": json.dumps({"status": "complete", "session_id": session_id})}
+        return EventSourceResponse(rejected_generator())
 
     initial_state = TutorState(
         session_id=session_id,
@@ -82,6 +92,10 @@ async def chat_send(payload: dict):
     user_id = payload.get("user_id", "anonymous")
     history = payload.get("history", [])
     existing_profile = payload.get("profile", None)
+
+    safety_result = SafetyPipeline.filter(user_message)
+    if not safety_result["allowed"]:
+        return {"messages": [{"role": "assistant", "content": safety_result["content"]}], "rejected": True, "reason": safety_result["reason"]}
 
     initial_state = TutorState(
         session_id=uuid4().hex,

@@ -7,18 +7,18 @@ import { Send, Loader2, Brain, BookOpen, Sparkles } from "lucide-react";
 type Message = {
   role: "user" | "coach" | "system";
   content: string;
-  node?: string;
+  nodes?: string[];
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-const NODE_LABELS: Record<string, { label: string; icon: JSX.Element }> = {
-  build_profile: { label: "构建画像", icon: <Brain className="w-3 h-3" /> },
-  diagnose: { label: "诊断中", icon: <Sparkles className="w-3 h-3" /> },
-  coach: { label: "苏格拉底追问", icon: <BookOpen className="w-3 h-3" /> },
-  generate: { label: "生成资源", icon: <Sparkles className="w-3 h-3" /> },
-  assess: { label: "评估中", icon: <Brain className="w-3 h-3" /> },
-  quality_gate: { label: "质量把关", icon: <Sparkles className="w-3 h-3" /> },
+const NODE_LABELS: Record<string, { label: string; desc: string; icon: JSX.Element }> = {
+  build_profile: { label: "构建画像", desc: "评估知识掌握情况、盲区和学习行为", icon: <Brain className="w-3 h-3" /> },
+  diagnose: { label: "诊断错误", desc: "识别概念/计算/符号/逻辑/前置知识五类错误", icon: <Sparkles className="w-3 h-3" /> },
+  coach: { label: "苏格拉底追问", desc: "L1/L2/L3分层提问，引导自主发现答案", icon: <BookOpen className="w-3 h-3" /> },
+  generate: { label: "生成资源", desc: "生成讲义、练习题、思维导图或阅读材料", icon: <Sparkles className="w-3 h-3" /> },
+  assess: { label: "评估回答", desc: "评估正确性并识别错误模式", icon: <Brain className="w-3 h-3" /> },
+  quality_gate: { label: "质量把关", desc: "数学符号验证与内容安全检查", icon: <Sparkles className="w-3 h-3" /> },
 };
 
 export default function ChatPage() {
@@ -40,6 +40,7 @@ export default function ChatPage() {
     setStreaming(true);
     setStreamingContent("");
     streamingRef.current = "";
+    nodesRef.current = new Set();
     setDebug(`发送中: ${userMessage}`);
 
     const controller = new AbortController();
@@ -63,26 +64,52 @@ export default function ChatPage() {
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) { setDebug(`流结束, 共${chunkCount}块`); break; }
+        if (done) {
+          // Process any remaining data in buffer before breaking
+          if (buffer.trim()) {
+            const remaining = buffer.split("\n\n");
+            for (const eventText of remaining) {
+              if (!eventText.trim()) continue;
+              for (const line of eventText.split("\n")) {
+                if (line.startsWith("data: ")) {
+                  try {
+                    const data = JSON.parse(line.slice(6).trim());
+                    handleSSEEvent(data);
+                  } catch { /* skip */ }
+                }
+              }
+            }
+          }
+          setDebug(`流结束, 共${chunkCount}块, msgs=${streamingRef.current.length}字`);
+          // flush any remaining streaming content
+          if (streamingRef.current) {
+            setMessages((msgs) => [...msgs, { role: "coach", content: streamingRef.current, nodes: Array.from(nodesRef.current) }]);
+            streamingRef.current = "";
+            setStreamingContent("");
+            nodesRef.current = new Set();
+          }
+          break;
+        }
         chunkCount++;
-        buffer += decoder.decode(value, { stream: true });
+        const text = decoder.decode(value, { stream: true });
+        buffer += text;
+        setDebug(`块#${chunkCount}: +${text.length}B`);
 
         // Parse SSE events using \n\n as event delimiter
         const events = buffer.split("\n\n");
         buffer = events.pop() || "";
 
         for (const eventText of events) {
+          if (!eventText.trim()) continue;
           const lines = eventText.split("\n");
-          let eventType = "";
           for (const line of lines) {
-            if (line.startsWith("event: ")) {
-              eventType = line.slice(7).trim();
-            } else if (line.startsWith("data: ")) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("data: ")) {
               try {
-                const data = JSON.parse(line.slice(6));
+                const data = JSON.parse(trimmed.slice(6));
                 handleSSEEvent(data);
               } catch {
-                // Malformed JSON, skip this event
+                setDebug(`JSON解析失败: ${trimmed.slice(0, 60)}`);
               }
             }
           }
@@ -101,9 +128,13 @@ export default function ChatPage() {
   };
 
   const streamingRef = useRef("");
+  const nodesRef = useRef<Set<string>>(new Set());
 
   const handleSSEEvent = (data: any) => {
-    if (data.node) setActiveNode(data.node);
+    if (data.node) {
+      setActiveNode(data.node);
+      nodesRef.current.add(data.node);
+    }
     if (data.role && data.content) {
       streamingRef.current += data.content;
       setStreamingContent(streamingRef.current);
@@ -111,11 +142,13 @@ export default function ChatPage() {
     if (data.status === "complete") {
       setDebug(`完成, 总消息=${streamingRef.current.length}字`);
       const finalContent = streamingRef.current;
+      const finalNodes = Array.from(nodesRef.current);
       if (finalContent) {
-        setMessages((msgs) => [...msgs, { role: "coach", content: finalContent }]);
+        setMessages((msgs) => [...msgs, { role: "coach", content: finalContent, nodes: finalNodes }]);
       }
       streamingRef.current = "";
       setStreamingContent("");
+      nodesRef.current = new Set();
     }
   };
 
@@ -171,9 +204,29 @@ export default function ChatPage() {
               }`}
             >
               {m.role === "coach" ? (
-                <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800">
-                  <StreamingMarkdown content={m.content} />
-                </div>
+                <>
+                  <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800">
+                    <StreamingMarkdown content={m.content} />
+                  </div>
+                  {m.nodes && m.nodes.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-200">
+                      {m.nodes.map((n) => {
+                        const info = NODE_LABELS[n];
+                        if (!info) return null;
+                        return (
+                          <span
+                            key={n}
+                            title={info.desc}
+                            className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary-700 cursor-help"
+                          >
+                            {info.icon}
+                            <span>{info.label}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               ) : (
                 <p className="whitespace-pre-wrap">{m.content}</p>
               )}
