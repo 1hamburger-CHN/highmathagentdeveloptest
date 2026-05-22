@@ -16,6 +16,9 @@ router = APIRouter()
 # Build the LangGraph graph once at module level
 _tutor_graph = build_tutor_graph()
 
+# Intermediate agents that work silently — only coach/generate/assess speak to user
+_SILENT_NODES = {"build_profile", "diagnose", "profile_check"}
+
 
 @router.post("/stream")
 async def chat_stream(payload: dict):
@@ -52,16 +55,18 @@ async def chat_stream(payload: dict):
                 for node_name, node_output in event.items():
                     # Extract messages to stream to client
                     if isinstance(node_output, dict):
-                        msgs = node_output.get("messages", [])
-                        for msg in msgs:
-                            yield {
-                                "event": "message",
-                                "data": json.dumps({
-                                    "role": msg.get("role", "assistant"),
-                                    "content": msg.get("content", ""),
-                                    "node": node_name,
-                                }, ensure_ascii=False),
-                            }
+                        # Skip messages from background agents — only coach/generate speak to user
+                        if node_name not in _SILENT_NODES:
+                            msgs = node_output.get("messages", [])
+                            for msg in msgs:
+                                yield {
+                                    "event": "message",
+                                    "data": json.dumps({
+                                        "role": msg.get("role", "assistant"),
+                                        "content": msg.get("content", ""),
+                                        "node": node_name,
+                                    }, ensure_ascii=False),
+                                }
                         # Stream assessment results
                         if node_output.get("assessment_result"):
                             yield {
