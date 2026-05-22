@@ -1,3 +1,6 @@
+import random
+
+
 class SafetyPipeline:
     """Four-layer safety: greetings OK → block injection → catch low-quality → require math relevance."""
 
@@ -24,18 +27,66 @@ class SafetyPipeline:
     # Single CJK chars that work as conversation one-liners
     CONVERSATION_CHARS = set("嗯哦好对是不没有啊吧吗呢嗨嘿")
 
-    GREETING_RESPONSE = (
-        "嗨！很高兴见到你～ 我是你的数学辅导助手，专门陪你攻克**极限与连续**这块硬骨头！\n\n"
-        "你可以随便问我，比如：\n"
-        "- 「极限是什么？能帮我通俗地讲讲吗？」\n"
-        "- 「ε-δ定义我完全看不懂，救命！」\n"
-        "- 「连续和可导到底有什么区别？」\n\n"
-        "有听不懂的地方随时打断我，让我换个讲法。放轻松，慢慢来！"
-    )
+    # --- Varied greeting pools ---
 
-    FALLBACK_INJECTION = "嗨！这个请求我没法处理哦。咱们还是回到极限这个话题上吧，有什么数学问题尽管问我！"
-    FALLBACK_LOW_QUALITY = "嗨！你发的消息有点短，我没太明白你的意思～ 要不试试多说一点？比如告诉我你之前有没有学过极限，或者直接抛一个数学问题给我！"
-    FALLBACK_NON_MATH = "嗨！我目前主要帮大家学习极限与连续相关的数学。你刚才说的我不太确定怎么接～ 要不试试问我一个数学问题？比如「极限是什么」「怎么理解ε-δ定义」？我很乐意帮你！"
+    HELLOS = [
+        "嗨！", "你好呀！", "哈喽～", "嘿，你好！",
+        "你好！欢迎欢迎！", "嗨嗨嗨！",
+    ]
+
+    GREETING_RESPONSES = [
+        (
+            "{hello}很高兴见到你！我是你的数学辅导助手，专门陪你攻克极限与连续这块硬骨头！\n\n"
+            "你可以随便问我，比如：\n"
+            "- 「极限是什么？能帮我通俗地讲讲吗？」\n"
+            "- 「ε-δ定义我完全看不懂，救命！」\n"
+            "- 「连续和可导到底有什么区别？」\n\n"
+            "有听不懂的地方随时打断我，让我换个讲法。放轻松，慢慢来！"
+        ),
+        (
+            "{hello}欢迎来到数学世界！我是你的专属教练，主攻极限与连续。\n\n"
+            "不知道从哪开始？试试问：\n"
+            "- 「极限的ε-δ定义是什么意思？」\n"
+            "- 「能不能举个极限不存在的例子？」\n"
+            "- 「夹逼定理是什么鬼？」\n\n"
+            "任何问题都可以，没有蠢问题！一起加油吧！"
+        ),
+        (
+            "{hello}总算等到你了！我是你的数学陪练，专注极限与连续这块～\n\n"
+            "怎么玩都行：\n"
+            "- 直接甩一个概念让我讲（比如"极限"）\n"
+            "- 问个题目让我带你一起证\n"
+            "- 或者说「我啥都不懂」让我从头带你\n\n"
+            "我这儿不急不赶，随时等你开口！"
+        ),
+    ]
+
+    LOW_QUALITY_RESPONSES = [
+        "嗨！你发的消息有点短，我没太明白你的意思～ 不急，慢慢说，比如告诉我你之前有没有学过极限？",
+        "嗯？我没太看懂你发的～ 要不试试多说一点？比如问"极限是啥"或者"怎么证明极限存在"？",
+        "你好呀！消息有点短哦，我没法理解你想说什么。试试看直接问个数学问题？",
+        "哈喽～ 你发的这条有点短，我看不太懂。能再详细说说吗？没关系，随便聊！",
+    ]
+
+    NON_MATH_RESPONSES = [
+        "嗨！我目前主要帮大家学习极限与连续。要不试试问我一个数学问题？比如「极限是什么」「ε-δ怎么理解」？",
+        "你好呀！我这边专注数学辅导，尤其是极限和连续。有什么相关的题或者概念想聊聊吗？",
+        "哈喽～ 你说的这个我可能接不住，但如果你有极限相关的疑问，我很乐意帮忙！比如问个"连续和可导有什么区别"？",
+        "嘿！我主要擅长的是极限与连续这块的数学。换个相关问题试试？比如「帮我看看这道极限题」～",
+    ]
+
+    INJECTION_RESPONSES = [
+        "嗨！这个请求我没法处理哦。咱们还是回到极限这个话题上吧！",
+        "你好呀！那个方向我不太能聊～ 不如试试数学？极限、连续，随便问！",
+    ]
+
+    @classmethod
+    def _pick(cls, pool):
+        """Pick a random response from a pool. Supports {hello} placeholder."""
+        text = random.choice(pool)
+        if "{hello}" in text:
+            text = text.replace("{hello}", random.choice(cls.HELLOS))
+        return text
 
     @classmethod
     def has_injection_pattern(cls, text: str) -> bool:
@@ -72,11 +123,11 @@ class SafetyPipeline:
     def filter(cls, content: str) -> dict:
         """Returns {allowed: bool, content: str, reason: str}."""
         if cls.has_injection_pattern(content):
-            return {"allowed": False, "content": cls.FALLBACK_INJECTION, "reason": "injection"}
+            return {"allowed": False, "content": cls._pick(cls.INJECTION_RESPONSES), "reason": "injection"}
         if cls.is_greeting(content):
-            return {"allowed": False, "content": cls.GREETING_RESPONSE, "reason": "greeting"}
+            return {"allowed": False, "content": cls._pick(cls.GREETING_RESPONSES), "reason": "greeting"}
         if cls.is_low_quality(content):
-            return {"allowed": False, "content": cls.FALLBACK_LOW_QUALITY, "reason": "low_quality"}
+            return {"allowed": False, "content": cls._pick(cls.LOW_QUALITY_RESPONSES), "reason": "low_quality"}
         if not cls.is_math_related(content):
-            return {"allowed": False, "content": cls.FALLBACK_NON_MATH, "reason": "non_math"}
+            return {"allowed": False, "content": cls._pick(cls.NON_MATH_RESPONSES), "reason": "non_math"}
         return {"allowed": True, "content": content, "reason": ""}
