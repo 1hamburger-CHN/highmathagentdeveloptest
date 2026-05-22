@@ -29,13 +29,18 @@ export default function ChatPage() {
   const [streamingContent, setStreamingContent] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
+  const [debug, setDebug] = useState("");
+
   const handleSend = async () => {
-    if (!input.trim() || streaming) return;
+    if (!input.trim()) { setDebug("输入为空"); return; }
+    if (streaming) { setDebug("正在流式输出中"); return; }
     const userMessage = input.trim();
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setStreaming(true);
     setStreamingContent("");
+    streamingRef.current = "";
+    setDebug(`发送中: ${userMessage}`);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -48,15 +53,18 @@ export default function ChatPage() {
         signal: controller.signal,
       });
 
-      if (!resp.ok || !resp.body) throw new Error("Connection failed");
+      setDebug(`连接成功, status=${resp.status}`);
+      if (!resp.ok || !resp.body) throw new Error(`Connection failed: ${resp.status}`);
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let chunkCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) { setDebug(`流结束, 共${chunkCount}块`); break; }
+        chunkCount++;
         buffer += decoder.decode(value, { stream: true });
 
         // Parse SSE events using \n\n as event delimiter
@@ -82,29 +90,32 @@ export default function ChatPage() {
       }
     } catch (err: any) {
       if (err.name !== "AbortError") {
+        setDebug(`错误: ${err.message}`);
         setMessages((prev) => [...prev, { role: "system", content: `连接失败: ${err.message}` }]);
       }
     } finally {
       setStreaming(false);
       setActiveNode(null);
-      setStreamingContent("");
       abortRef.current = null;
     }
   };
 
+  const streamingRef = useRef("");
+
   const handleSSEEvent = (data: any) => {
     if (data.node) setActiveNode(data.node);
     if (data.role && data.content) {
-      setStreamingContent((prev) => prev + data.content);
+      streamingRef.current += data.content;
+      setStreamingContent(streamingRef.current);
     }
     if (data.status === "complete") {
-      // Flush streaming content as a message
-      setStreamingContent((prev) => {
-        if (prev) {
-          setMessages((msgs) => [...msgs, { role: "coach", content: prev }]);
-        }
-        return "";
-      });
+      setDebug(`完成, 总消息=${streamingRef.current.length}字`);
+      const finalContent = streamingRef.current;
+      if (finalContent) {
+        setMessages((msgs) => [...msgs, { role: "coach", content: finalContent }]);
+      }
+      streamingRef.current = "";
+      setStreamingContent("");
     }
   };
 
@@ -135,6 +146,13 @@ export default function ChatPage() {
           </div>
         )}
       </header>
+
+      {/* Debug bar */}
+      {debug && (
+        <div className="bg-yellow-100 px-4 py-1 text-xs text-yellow-800 font-mono">
+          DEBUG: {debug}
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
