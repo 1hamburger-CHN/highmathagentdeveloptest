@@ -50,7 +50,7 @@ def build_tutor_graph() -> StateGraph:
     workflow.add_conditional_edges(
         "profile_check",
         route_profile_check,
-        {"build_profile": "build_profile", "diagnose": "diagnose", "coach": "coach"},
+        {"build_profile": "build_profile", "diagnose": "diagnose", "coach": "coach", "generate": "generate"},
     )
     workflow.add_edge("build_profile", "coach")
     workflow.add_edge("diagnose", "coach")
@@ -78,6 +78,9 @@ def route_safety(state: TutorState) -> str:
 
 
 def route_profile_check(state: TutorState) -> str:
+    # Resource request → skip everything, go straight to generate
+    if getattr(state, "_is_resource_request", False):
+        return "generate"
     # Already have profile → diagnose → coach
     if state.profile and state.profile.get("knowledge_mastery"):
         return "diagnose"
@@ -123,10 +126,12 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
             user_msg = m.get("content", "").strip()
             break
     is_direct_question = _is_direct_math_question(user_msg)
+    is_resource_request = _is_resource_request(user_msg)
     return {
         "current_state": AgentState.PROFILE_CHECK,
         "_has_profile": has_profile,
         "_is_direct_question": is_direct_question,
+        "_is_resource_request": is_resource_request,
     }
 
 
@@ -140,6 +145,18 @@ def _is_direct_math_question(text: str) -> bool:
     score = sum(1 for ind in indicators if ind in text)
     # Long messages or messages with math indicators are likely direct questions
     return len(text) > 4 or score >= 1
+
+
+def _is_resource_request(text: str) -> bool:
+    """Check if user is explicitly asking for a learning resource."""
+    resource_keywords = [
+        "生成", "帮我做", "帮我画", "帮我写", "帮我整理", "给我",
+        "思维导图", "脑图", "导图", "知识图谱",
+        "讲义", "课件", "教程", "笔记", "总结", "归纳",
+        "练习题", "习题", "题目", "出题", "试卷",
+        "阅读材料", "拓展", "资料",
+    ]
+    return any(kw in text for kw in resource_keywords)
 
 
 async def build_profile_node(state: TutorState) -> dict[str, Any]:
