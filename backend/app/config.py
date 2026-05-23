@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Turso (managed libsql/SQLite)
     turso_url: str = "libsql://socratic-tutor-1hamburger-chn.aws-ap-northeast-1.turso.io"
-    turso_token: str = ""
+    turso_token: str = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJnaWQiOiJjNDEwZjEwYi04YjNkLTRhOTMtYmRlYS03YTA4OGU1MDBlZGIiLCJpYXQiOjE3Nzk1MTIyMjEsInJpZCI6IjkzMjFlNTFhLTZlYTAtNDNlMi1hMWM0LWIzMWYxMzhlNDhiNSJ9.abzbqgkAWMMyvDU2hlrpXfzsub-cFJasUI3nLev2d4qyoLhxEdQEOQWAOLtACo0rFKq81ir2xVG1x8akzhIeCw"
 
     max_retries: int = 2
     api_timeout: int = 120
