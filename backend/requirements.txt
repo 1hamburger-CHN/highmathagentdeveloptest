@@ -20,7 +20,7 @@ langgraph-checkpoint==2.0.2
 sympy==1.13.3
 
 # Database
-sqlalchemy==2.0.35
+libsql-client>=0.1
 
 # Data
 pyyaml==6.0.2

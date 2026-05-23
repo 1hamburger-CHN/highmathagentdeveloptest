@@ -9,7 +9,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.agents.graph import build_tutor_graph
 from app.agents.state import AgentState, TutorState
 from app.core.safety import SafetyPipeline
-from app.models.db_models import Session, SessionLocal, User
+from app.models.db_models import upsert_session, upsert_user
 
 logger = logging.getLogger(__name__)
 
@@ -23,30 +23,13 @@ _SILENT_NODES = {"build_profile", "diagnose", "profile_check"}
 
 
 def _save_profile_and_session(user_id: str, session_id: str, profile: dict, messages: list[dict]):
-    """Persist profile and session messages to SQLite."""
-    db = SessionLocal()
+    """Persist profile and session messages to Turso."""
     try:
-        # Upsert user profile
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user:
-            user = User(id=user_id, name="", profile_json="{}")
-            db.add(user)
-        user.profile_json = json.dumps(profile, ensure_ascii=False)
-
-        # Save session messages
-        sess = db.query(Session).filter(Session.id == session_id).first()
-        if not sess:
-            sess = Session(id=session_id, user_id=user_id, messages_json="[]")
-            db.add(sess)
-        sess.messages_json = json.dumps(messages, ensure_ascii=False)
-
-        db.commit()
+        upsert_user(user_id, json.dumps(profile, ensure_ascii=False))
+        upsert_session(session_id, user_id, json.dumps(messages, ensure_ascii=False))
         logger.info(f"Saved profile+session for user={user_id} session={session_id}")
     except Exception as e:
-        db.rollback()
         logger.error(f"Failed to save profile+session for {user_id}: {e}")
-    finally:
-        db.close()
 
 
 @router.post("/stream")

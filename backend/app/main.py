@@ -8,8 +8,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-import os
-
 from app.api import assess, chat, generate, path_planner, profile, sessions
 from app.config import settings
 from app.models.db_models import init_db
@@ -25,9 +23,8 @@ logger = logging.getLogger("tutor")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting 苏格拉底教练 server...")
-    os.makedirs(settings.data_dir, exist_ok=True)
     init_db()
-    logger.info(f"Database initialized at {settings.database_url}")
+    logger.info(f"Turso database ready at {settings.turso_url}")
     yield
     logger.info("Shutting down...")
 
