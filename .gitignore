@@ -9,3 +9,5 @@ chromadb/
 *.db
 .DS_Store
 .gstack/
+frontend/out/
+issue1.*
