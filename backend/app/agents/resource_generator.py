@@ -134,9 +134,13 @@ class ResourceGeneratorAgent(BaseAgent):
             content = content.replace("\\n", "\n").replace("\r\n", "\n")
 
             if rtype == "mindmap":
+                if ask_mindmap:
+                    footer = "\n\n---\n\n需要我帮你详细讲解吗？回复\"帮我讲解\"即可。"
+                else:
+                    footer = ""
                 messages.append({
                     "role": "assistant",
-                    "content": f"### {title}\n```mermaid\n{content}\n```",
+                    "content": f"### {title}\n```mermaid\n{content}\n```{footer}",
                 })
             else:
                 plaintext_parts.append(f"{title}\n\n{content}")
@@ -147,14 +151,6 @@ class ResourceGeneratorAgent(BaseAgent):
 
         if not messages:
             messages.append({"role": "assistant", "content": "资源生成完成，但内容为空。请再试一次。", "plaintext": True})
-
-        # If user asked for a mindmap, offer to explain
-        if ask_mindmap:
-            messages.append({
-                "role": "assistant",
-                "content": "\n\n---\n\n需要我帮你详细讲解吗？回复\"帮我讲解\"即可。",
-                "plaintext": True,
-            })
 
         return {
             "generated_resources": resources,
