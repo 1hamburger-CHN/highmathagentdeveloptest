@@ -36,10 +36,10 @@ export default function MermaidBlock({ code }: Props) {
         if (!cancelled && containerRef.current) {
           containerRef.current.innerHTML = svg;
         }
-      } catch (e) {
+      } catch (e: any) {
         if (!cancelled) {
-          setError("Mermaid 渲染异常");
-          console.error("Mermaid render error:", e);
+          const msg = e?.message || String(e);
+          setError(`Mermaid 渲染异常: ${msg}`);
         }
       }
     };
@@ -51,7 +51,14 @@ export default function MermaidBlock({ code }: Props) {
     return (
       <div className="my-2 p-3 bg-red-50 rounded-lg border border-red-200">
         <p className="text-xs text-red-600 mb-2">{error}</p>
-        <pre className="text-xs text-gray-600 overflow-x-auto">{code}</pre>
+        <details className="text-xs text-gray-500">
+          <summary className="cursor-pointer">原始代码</summary>
+          <pre className="mt-1 text-xs text-gray-600 overflow-x-auto">{code}</pre>
+        </details>
+        <details className="text-xs text-gray-500">
+          <summary className="cursor-pointer">处理后代码</summary>
+          <pre className="mt-1 text-xs text-gray-600 overflow-x-auto">{sanitizeMermaid(code)}</pre>
+        </details>
       </div>
     );
   }
