@@ -9,7 +9,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 _TURSO_HOST = settings.turso_url.replace("libsql://", "https://")
-_available = False
+_available = True  # Tables pre-created in Turso; init_db is best-effort
 
 
 def _pipeline(requests: list[dict]) -> list[dict]:
