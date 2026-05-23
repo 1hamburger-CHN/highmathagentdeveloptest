@@ -1,96 +1,95 @@
-"""Turso/libsql database client — persistent storage for profiles and sessions."""
+"""Turso database client via HTTP API — persistent storage for profiles and sessions."""
+import json
 import logging
 
-import libsql_client
+import httpx
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-_client: libsql_client.Client | None = None
+# Turso HTTP API base URL (strip libsql:// prefix, use https://)
+_TURSO_HOST = settings.turso_url.replace("libsql://", "https://")
 
 
-def get_db() -> libsql_client.Client:
-    global _client
-    if _client is None:
-        _client = libsql_client.create_client(
-            url=settings.turso_url,
-            auth_token=settings.turso_token or None,
-        )
-    return _client
+def _pipeline(requests: list[dict]) -> list[dict]:
+    """Send a batch of SQL statements to Turso via HTTP pipeline API."""
+    if not settings.turso_token:
+        raise RuntimeError("TURSO_TOKEN is not set")
+
+    url = f"{_TURSO_HOST}/v2/pipeline"
+    headers = {
+        "Authorization": f"Bearer {settings.turso_token}",
+        "Content-Type": "application/json",
+    }
+    body = {"requests": requests}
+
+    resp = httpx.post(url, json=body, headers=headers, timeout=30)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def _execute(sql: str, params: list | None = None) -> dict:
+    """Execute a single SQL statement with optional parameters."""
+    stmt = {"sql": sql}
+    if params:
+        stmt["args"] = [{"type": "text", "value": str(p)} for p in params]
+
+    results = _pipeline([{"type": "execute", "stmt": stmt}])
+    return results[0]["result"]
 
 
 def init_db():
     """Create tables if they don't exist."""
-    db = get_db()
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            name TEXT DEFAULT '',
-            profile_json TEXT DEFAULT '{}'
-        )
-    """)
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS sessions (
-            id TEXT PRIMARY KEY,
-            user_id TEXT,
-            messages_json TEXT DEFAULT '[]'
-        )
-    """)
-    # Index for listing sessions by user
-    db.execute("""
-        CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)
-    """)
+    _execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT DEFAULT '', profile_json TEXT DEFAULT '{}')")
+    _execute("CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT, messages_json TEXT DEFAULT '[]')")
+    _execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)")
     logger.info("Turso database tables ready")
 
 
 # --- User / Profile helpers ---
 
 def get_user(user_id: str) -> dict | None:
-    db = get_db()
-    result = db.execute("SELECT id, name, profile_json FROM users WHERE id = ?", [user_id])
-    rows = result.rows
+    result = _execute("SELECT id, name, profile_json FROM users WHERE id = ?", [user_id])
+    rows = result.get("rows", [])
     if not rows:
         return None
-    return {"id": rows[0][0], "name": rows[0][1], "profile_json": rows[0][2]}
+    row = rows[0]
+    return {"id": row[0]["value"], "name": row[1]["value"], "profile_json": row[2]["value"]}
 
 
 def upsert_user(user_id: str, profile_json: str):
-    db = get_db()
-    db.execute(
+    _execute(
         "INSERT INTO users (id, profile_json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET profile_json = excluded.profile_json",
         [user_id, profile_json],
     )
 
 
 def delete_user(user_id: str):
-    db = get_db()
-    db.execute("DELETE FROM users WHERE id = ?", [user_id])
+    _execute("DELETE FROM users WHERE id = ?", [user_id])
 
 
 # --- Session helpers ---
 
 def get_latest_session(user_id: str) -> dict | None:
-    db = get_db()
-    result = db.execute(
+    result = _execute(
         "SELECT id, user_id, messages_json FROM sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1",
         [user_id],
     )
-    rows = result.rows
+    rows = result.get("rows", [])
     if not rows:
         return None
-    return {"id": rows[0][0], "user_id": rows[0][1], "messages_json": rows[0][2]}
+    row = rows[0]
+    return {"id": row[0]["value"], "user_id": row[1]["value"], "messages_json": row[2]["value"]}
 
 
 def upsert_session(session_id: str, user_id: str, messages_json: str):
-    db = get_db()
-    db.execute(
+    _execute(
         "INSERT INTO sessions (id, user_id, messages_json) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET messages_json = excluded.messages_json",
         [session_id, user_id, messages_json],
     )
 
 
 def delete_sessions_for_user(user_id: str) -> int:
-    db = get_db()
-    result = db.execute("DELETE FROM sessions WHERE user_id = ?", [user_id])
-    return result.rows_affected or 0
+    result = _execute("DELETE FROM sessions WHERE user_id = ?", [user_id])
+    return result.get("rows_affected", 0) or 0

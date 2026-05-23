@@ -19,8 +19,7 @@ langgraph-checkpoint==2.0.2
 # Math
 sympy==1.13.3
 
-# Database
-libsql-client>=0.1
+# Database — using Turso HTTP API via httpx
 
 # Data
 pyyaml==6.0.2
