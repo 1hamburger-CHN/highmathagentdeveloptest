@@ -85,13 +85,10 @@ def get_user(user_id: str) -> dict | None:
 def upsert_user(user_id: str, profile_json: str):
     if not _available:
         return
-    try:
-        _execute(
-            "INSERT INTO users (id, profile_json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET profile_json = excluded.profile_json",
-            [user_id, profile_json],
-        )
-    except Exception as e:
-        logger.error(f"upsert_user failed: {e}")
+    _execute(
+        "INSERT INTO users (id, profile_json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET profile_json = excluded.profile_json",
+        [user_id, profile_json],
+    )
 
 
 def delete_user(user_id: str):
@@ -126,13 +123,10 @@ def get_latest_session(user_id: str) -> dict | None:
 def upsert_session(session_id: str, user_id: str, messages_json: str):
     if not _available:
         return
-    try:
-        _execute(
-            "INSERT INTO sessions (id, user_id, messages_json) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET messages_json = excluded.messages_json",
-            [session_id, user_id, messages_json],
-        )
-    except Exception as e:
-        logger.error(f"upsert_session failed: {e}")
+    _execute(
+        "INSERT INTO sessions (id, user_id, messages_json) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET messages_json = excluded.messages_json",
+        [session_id, user_id, messages_json],
+    )
 
 
 def delete_sessions_for_user(user_id: str) -> int:

@@ -49,7 +49,7 @@ async def save_profile(user_id: str, payload: ProfileUpdatePayload):
         return {"user_id": user_id, "status": "saved"}
     except Exception as e:
         logger.error(f"Failed to save profile for {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to save profile")
+        raise HTTPException(status_code=500, detail=f"Failed to save profile: {e}")
 
 
 @router.delete("/{user_id}")
