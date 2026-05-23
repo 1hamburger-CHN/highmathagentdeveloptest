@@ -113,16 +113,15 @@ class ResourceGeneratorAgent(BaseAgent):
             rtype = r.get("type", "")
             title = r.get("title", "")
             content = r.get("content", "")
-            # LLM JSON may escape newlines as literal \n strings
             content = content.replace("\\n", "\n").replace("\r\n", "\n")
+
             if rtype == "mindmap":
                 summary_parts.append(f"### {title}\n```mermaid\n{content}\n```\n")
-            elif rtype == "lecture":
-                summary_parts.append(f"### {title}\n{content}\n")
-            elif rtype == "exercise":
-                summary_parts.append(f"### {title}\n{content}\n")
-            elif rtype == "reading":
-                summary_parts.append(f"### {title}\n{content}\n")
+            else:
+                # Strip # markers from content — use bold-only formatting
+                import re
+                content = re.sub(r"^#{1,4} ", "", content, flags=re.MULTILINE)
+                summary_parts.append(f"**{title}**\n{content}\n")
 
         message_text = "\n".join(summary_parts) if summary_parts else "资源生成完成，但内容为空。请再试一次。"
 
