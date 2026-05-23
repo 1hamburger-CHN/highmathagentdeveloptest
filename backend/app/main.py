@@ -64,10 +64,13 @@ app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
 @app.get("/api/debug/turso")
 async def debug_turso():
     """Diagnostic: test Turso connectivity."""
+    import os
+    import traceback as tb
     from app.config import settings
     from app.models.db_models import _available, _TURSO_HOST, _pipeline
 
     token_len = len(settings.turso_token) if settings.turso_token else 0
+    proxy_vars = {k: os.environ.get(k, "") for k in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "NO_PROXY", "no_proxy"]}
     try:
         result = _pipeline([{"type": "execute", "stmt": {"sql": "SELECT 1 as test"}}])
         rows = result[0]["result"]["rows"]
@@ -76,6 +79,7 @@ async def debug_turso():
             "token_len": token_len,
             "available": _available,
             "query_result": str(rows),
+            "proxy_vars": proxy_vars,
             "status": "ok",
         }
     except Exception as e:
@@ -84,6 +88,9 @@ async def debug_turso():
             "token_len": token_len,
             "available": _available,
             "error": str(e),
+            "error_type": type(e).__name__,
+            "traceback": tb.format_exc()[-500:],
+            "proxy_vars": proxy_vars,
             "status": "error",
         }
 
