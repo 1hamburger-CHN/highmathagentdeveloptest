@@ -93,11 +93,27 @@ class ResourceGeneratorAgent(BaseAgent):
         if not concept and user_request:
             concept = user_request
 
+        # Detect what type of resource the user wants
+        ask_mindmap = any(kw in user_request for kw in ["思维导图", "脑图", "导图", "知识图谱", "知识地图"])
+        ask_exercise = any(kw in user_request for kw in ["练习题", "习题", "题目", "出题", "试卷", "练习"])
+        ask_lecture = any(kw in user_request for kw in ["讲义", "课件", "教程", "讲解", "笔记", "总结", "归纳"])
+        ask_specific = ask_mindmap or ask_exercise or ask_lecture
+
+        if ask_specific:
+            wanted = []
+            if ask_mindmap: wanted.append("mindmap")
+            if ask_exercise: wanted.append("exercise")
+            if ask_lecture: wanted.append("lecture")
+            type_instruction = f"只生成{'和'.join(wanted)}类型，不要生成其他类型。"
+        else:
+            type_instruction = "至少1-2种类型。"
+
         user_prompt = f"""学生的请求：{user_request}
 目标概念：{concept}
 已诊断的盲区：{blind_spots}
 
-{'学生直接请求生成资源，请根据请求内容生成。' if user_request and not blind_spots else '请针对以上盲区生成个性化学习资源。'}至少1-2种类型。返回JSON。"""
+{type_instruction}
+{'学生直接请求生成资源，请根据请求内容生成。' if user_request and not blind_spots else '请针对以上盲区生成个性化学习资源。'}返回JSON。"""
 
         response = await self.generate(RESOURCE_GENERATOR_PROMPT, user_prompt)
         try:
@@ -110,6 +126,7 @@ class ResourceGeneratorAgent(BaseAgent):
         # Build messages: mindmaps as markdown, everything else as one plaintext block
         messages: list[dict] = []
         plaintext_parts: list[str] = []
+        has_mindmap = False
 
         for r in resources:
             rtype = r.get("type", "")
@@ -118,6 +135,7 @@ class ResourceGeneratorAgent(BaseAgent):
             content = content.replace("\\n", "\n").replace("\r\n", "\n")
 
             if rtype == "mindmap":
+                has_mindmap = True
                 messages.append({
                     "role": "assistant",
                     "content": f"### {title}\n```mermaid\n{content}\n```",
@@ -131,6 +149,14 @@ class ResourceGeneratorAgent(BaseAgent):
 
         if not messages:
             messages.append({"role": "assistant", "content": "资源生成完成，但内容为空。请再试一次。", "plaintext": True})
+
+        # If only mindmap was generated, offer to explain
+        if has_mindmap and not plaintext_parts:
+            messages.append({
+                "role": "assistant",
+                "content": "需要我帮你详细讲解吗？回复\"帮我讲解\"即可。",
+                "plaintext": True,
+            })
 
         return {
             "generated_resources": resources,
