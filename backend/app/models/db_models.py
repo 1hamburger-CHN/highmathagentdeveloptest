@@ -1,8 +1,8 @@
 """Turso database client via HTTP API — persistent storage for profiles and sessions."""
 import json
 import logging
-
-import httpx
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 
 from app.config import settings
 
@@ -18,20 +18,28 @@ def _pipeline(requests: list[dict]) -> list[dict]:
         raise RuntimeError("TURSO_TOKEN is not set")
 
     url = f"{_TURSO_HOST}/v2/pipeline"
-    headers = {
-        "Authorization": f"Bearer {settings.turso_token}",
-        "Content-Type": "application/json",
-    }
-    body = {"requests": requests}
+    body = json.dumps({"requests": requests}).encode("utf-8")
+    req = Request(
+        url,
+        data=body,
+        headers={
+            "Authorization": f"Bearer {settings.turso_token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
 
-    resp = httpx.post(url, json=body, headers=headers, timeout=30)
-    resp.raise_for_status()
-    return resp.json()
+    try:
+        with urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except URLError as e:
+        logger.error(f"Turso API error: {e}")
+        raise
 
 
 def _execute(sql: str, params: list | None = None) -> dict:
     """Execute a single SQL statement with optional parameters."""
-    stmt = {"sql": sql}
+    stmt: dict = {"sql": sql}
     if params:
         stmt["args"] = [{"type": "text", "value": str(p)} for p in params]
 
