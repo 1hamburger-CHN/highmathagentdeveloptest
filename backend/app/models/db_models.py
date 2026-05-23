@@ -46,14 +46,23 @@ def init_db():
     """Create tables if they don't exist. Non-fatal on failure."""
     global _available
     try:
-        _execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT DEFAULT '', profile_json TEXT DEFAULT '{}')")
-        _execute("CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT, messages_json TEXT DEFAULT '[]')")
-        _execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)")
+        _execute_raw("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT DEFAULT '', profile_json TEXT DEFAULT '{}')")
+        _execute_raw("CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT, messages_json TEXT DEFAULT '[]')")
+        _execute_raw("CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)")
         _available = True
         logger.info("Turso database ready")
     except Exception as e:
         _available = False
         logger.warning(f"Turso unavailable — running without persistence: {e}")
+
+
+def _execute_raw(sql: str, params: list | None = None) -> dict:
+    """Execute SQL bypassing the _available check (for init_db)."""
+    stmt: dict = {"sql": sql}
+    if params:
+        stmt["args"] = [{"type": "text", "value": str(p)} for p in params]
+    results = _pipeline([{"type": "execute", "stmt": stmt}])
+    return results[0]["result"]
 
 
 # --- User helpers ---
