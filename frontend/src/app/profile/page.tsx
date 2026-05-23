@@ -134,9 +134,11 @@ export default function ProfilePage() {
                 <div>
                   <span className="text-gray-500">回答风格</span>
                   <p className="font-medium text-gray-800 mt-0.5">
-                    {profile.behavior?.response_style === "exploratory"
+                    {!profile.behavior?.response_style
+                      ? "暂无数据"
+                      : profile.behavior.response_style === "exploratory"
                       ? "探索型"
-                      : profile.behavior?.response_style === "impulsive"
+                      : profile.behavior.response_style === "impulsive"
                       ? "冲动型"
                       : "谨慎型"}
                   </p>
@@ -144,9 +146,11 @@ export default function ProfilePage() {
                 <div>
                   <span className="text-gray-500">资源偏好</span>
                   <p className="font-medium text-gray-800 mt-0.5">
-                    {profile.behavior?.resource_preference === "visual"
+                    {!profile.behavior?.resource_preference
+                      ? "暂无数据"
+                      : profile.behavior.resource_preference === "visual"
                       ? "可视化"
-                      : profile.behavior?.resource_preference === "interactive"
+                      : profile.behavior.resource_preference === "interactive"
                       ? "互动式"
                       : "文本型"}
                   </p>
