@@ -328,7 +328,7 @@ export default function ChatPage() {
           >
             <div className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                className={`max-w-[75%] rounded-2xl px-4 py-3 break-words overflow-x-auto ${
                   m.role === "user"
                     ? "bg-primary-600 text-white"
                     : m.role === "system"

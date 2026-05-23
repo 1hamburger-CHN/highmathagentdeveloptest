@@ -113,9 +113,8 @@ class ResourceGeneratorAgent(BaseAgent):
             rtype = r.get("type", "")
             title = r.get("title", "")
             content = r.get("content", "")
-            # Fix literal \n strings that should be real newlines
-            content = content.replace("\\n", "\n")
-            title = title.replace("\\n", "\n")
+            # Normalize newlines from LLM output
+            content = content.replace("\r\n", "\n")
             if rtype == "mindmap":
                 summary_parts.append(f"### {title}\n```mermaid\n{content}\n```\n")
             elif rtype == "lecture":
