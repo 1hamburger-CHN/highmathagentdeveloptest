@@ -14,7 +14,10 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = str(_PROJECT_ROOT / "data" / "chromadb")
     embedding_model: str = "BAAI/bge-m3"
 
-    database_url: str = f"sqlite:///{_PROJECT_ROOT}/data/tutor.db"
+    # Railway mounts the persistent volume at /app/data.
+    # Override DATA_DIR env var to change this (e.g. for local dev).
+    data_dir: str = "/app/data"
+    database_url: str = "sqlite:///app/data/tutor.db"
 
     max_retries: int = 2
     api_timeout: int = 120
