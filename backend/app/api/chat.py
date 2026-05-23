@@ -72,7 +72,6 @@ async def chat_stream(payload: dict):
                     yield {"event": "node", "data": json.dumps({"node": node_name})}
 
                     if isinstance(node_output, dict):
-                        # Collect profile from any node that returns one
                         if node_output.get("profile"):
                             accumulated_profile = node_output["profile"]
 
@@ -99,9 +98,6 @@ async def chat_stream(payload: dict):
                             }
                     last_node_output = node_output
 
-            # Persist profile + all messages for next visit
-            _save_profile_and_session(user_id, session_id, accumulated_profile or {}, all_messages)
-
             yield {
                 "event": "done",
                 "data": json.dumps({
@@ -114,6 +110,9 @@ async def chat_stream(payload: dict):
         except Exception as e:
             logger.error(f"Chat stream error (session={session_id}): {type(e).__name__}: {e}")
             yield {"event": "error", "data": json.dumps({"message": "服务暂时不可用，请稍后重试"})}
+        finally:
+            # Always persist — even if the stream errored, save what we have
+            _save_profile_and_session(user_id, session_id, accumulated_profile or {}, all_messages)
 
     return EventSourceResponse(event_generator())
 
