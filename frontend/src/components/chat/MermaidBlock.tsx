@@ -24,10 +24,15 @@ const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.2;
 
 export default function MermaidBlock({ code }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [svg, setSvg] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  // Drag state via refs — avoids re-renders during drag
+  const dragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const offsetRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     let cancelled = false;
@@ -40,6 +45,8 @@ export default function MermaidBlock({ code }: Props) {
         if (!cancelled) {
           setSvg(result.svg);
           setZoom(1);
+          setOffset({ x: 0, y: 0 });
+          offsetRef.current = { x: 0, y: 0 };
         }
       } catch (e: any) {
         if (!cancelled) setError(e?.message || String(e));
@@ -51,12 +58,35 @@ export default function MermaidBlock({ code }: Props) {
 
   const zoomIn = useCallback(() => setZoom((z) => Math.min(z + ZOOM_STEP, MAX_ZOOM)), []);
   const zoomOut = useCallback(() => setZoom((z) => Math.max(z - ZOOM_STEP, MIN_ZOOM)), []);
-  const zoomReset = useCallback(() => setZoom(1), []);
+  const zoomReset = useCallback(() => {
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+    offsetRef.current = { x: 0, y: 0 };
+  }, []);
 
-  // Mouse wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z - e.deltaY * 0.001)));
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return; // left button only
+    dragging.current = true;
+    dragStart.current = { x: e.clientX - offsetRef.current.x, y: e.clientY - offsetRef.current.y };
+    (e.target as HTMLElement).style.cursor = "grabbing";
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!dragging.current) return;
+    const x = e.clientX - dragStart.current.x;
+    const y = e.clientY - dragStart.current.y;
+    offsetRef.current = { x, y };
+    setOffset({ x, y });
+  }, []);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    dragging.current = false;
+    (e.target as HTMLElement).style.cursor = "";
   }, []);
 
   if (error) {
@@ -70,9 +100,8 @@ export default function MermaidBlock({ code }: Props) {
 
   return (
     <div className="my-2 bg-white rounded-lg border border-gray-200">
-      {/* Zoom controls */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-gray-100 bg-gray-50 rounded-t-lg">
-        <span className="text-xs text-gray-500">思维导图 {Math.round(zoom * 100)}%</span>
+        <span className="text-xs text-gray-500">思维导图 {Math.round(zoom * 100)}% · 拖拽移动</span>
         <div className="flex items-center gap-0.5">
           <button onClick={zoomOut} disabled={zoom <= MIN_ZOOM}
             className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 transition-colors" title="缩小">
@@ -88,18 +117,25 @@ export default function MermaidBlock({ code }: Props) {
           </button>
         </div>
       </div>
-      {/* Scrollable + zoomable SVG area */}
-      <div className="overflow-auto max-h-[500px]" onWheel={handleWheel}>
+      <div
+        className="overflow-hidden max-h-[500px] cursor-grab"
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
         {svg ? (
           <div
-            className="flex justify-center p-4 min-w-max"
-            style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}
+            className="flex justify-center p-4 min-w-max select-none"
+            style={{
+              transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+              transformOrigin: "top left",
+            }}
             dangerouslySetInnerHTML={{ __html: svg }}
           />
         ) : (
-          <div ref={containerRef} className="flex justify-center p-4 text-sm text-gray-400">
-            渲染中...
-          </div>
+          <div className="flex justify-center p-4 text-sm text-gray-400">渲染中...</div>
         )}
       </div>
     </div>
