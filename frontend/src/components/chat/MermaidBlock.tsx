@@ -6,18 +6,22 @@ interface Props {
   code: string;
 }
 
-/** Quote all Mermaid node labels so special characters don't break the parser. */
+/** Strip markdown fence markers and quote all Mermaid node labels. */
 function sanitizeMermaid(input: string): string {
-  return input.replace(/\[([^\]]+?)\]/g, (_, label: string) => {
-    // Already quoted — leave as-is
+  // Strip leading ```mermaid / ``` fence if react-markdown passes it through
+  let code = input.replace(/^```mermaid\s*\n?/i, "").replace(/\n?```\s*$/, "");
+
+  // Quote all node labels so special characters don't break the parser
+  code = code.replace(/\[([^\]]+?)\]/g, (_, label: string) => {
     const trimmed = label.trim();
     if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
         (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
       return `[${label}]`;
     }
-    // Wrap in double quotes, escape existing double quotes
     return `["${label.replace(/"/g, '\\"')}"]`;
   });
+
+  return code;
 }
 
 export default function MermaidBlock({ code }: Props) {
