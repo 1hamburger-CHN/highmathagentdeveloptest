@@ -29,10 +29,31 @@ export default function MermaidBlock({ code }: Props) {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-  // Drag state via refs — avoids re-renders during drag
+  const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const offsetRef = useRef({ x: 0, y: 0 });
+
+  // Global drag listeners — capture mouse events outside the container
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragging.current) return;
+      const x = e.clientX - dragStart.current.x;
+      const y = e.clientY - dragStart.current.y;
+      offsetRef.current = { x, y };
+      setOffset({ x, y });
+    };
+    const onUp = () => {
+      dragging.current = false;
+      if (containerRef.current) containerRef.current.style.cursor = "grab";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,23 +91,11 @@ export default function MermaidBlock({ code }: Props) {
   }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return; // left button only
+    if (e.button !== 0) return;
+    e.preventDefault();
     dragging.current = true;
     dragStart.current = { x: e.clientX - offsetRef.current.x, y: e.clientY - offsetRef.current.y };
-    (e.target as HTMLElement).style.cursor = "grabbing";
-  }, []);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragging.current) return;
-    const x = e.clientX - dragStart.current.x;
-    const y = e.clientY - dragStart.current.y;
-    offsetRef.current = { x, y };
-    setOffset({ x, y });
-  }, []);
-
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    dragging.current = false;
-    (e.target as HTMLElement).style.cursor = "";
+    if (containerRef.current) containerRef.current.style.cursor = "grabbing";
   }, []);
 
   if (error) {
@@ -118,12 +127,10 @@ export default function MermaidBlock({ code }: Props) {
         </div>
       </div>
       <div
+        ref={containerRef}
         className="overflow-hidden max-h-[500px] cursor-grab"
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
       >
         {svg ? (
           <div
