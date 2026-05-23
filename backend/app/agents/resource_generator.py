@@ -158,7 +158,7 @@ class ResourceGeneratorAgent(BaseAgent):
 
             if rtype == "mindmap":
                 if ask_mindmap:
-                    footer = "\n\n---\n\n需要我帮你详细讲解吗？回复\"帮我讲解\"即可。"
+                    footer = "\n\n> 需要我帮你详细讲解吗？回复\"帮我讲解\"即可。"
                 else:
                     footer = ""
                 messages.append({
