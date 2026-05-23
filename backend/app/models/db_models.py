@@ -1,4 +1,4 @@
-"""Turso database client via HTTP API — persistent storage for profiles and sessions."""
+"""Database abstraction — Turso via HTTP API with graceful fallback."""
 import json
 import logging
 from urllib.request import Request, urlopen
@@ -8,8 +8,8 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Turso HTTP API base URL (strip libsql:// prefix, use https://)
 _TURSO_HOST = settings.turso_url.replace("libsql://", "https://")
+_available = False
 
 
 def _pipeline(requests: list[dict]) -> list[dict]:
@@ -28,76 +28,110 @@ def _pipeline(requests: list[dict]) -> list[dict]:
         },
         method="POST",
     )
-
-    try:
-        with urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except URLError as e:
-        logger.error(f"Turso API error: {e}")
-        raise
+    with urlopen(req, timeout=30) as resp:
+        return json.loads(resp.read().decode("utf-8"))
 
 
-def _execute(sql: str, params: list | None = None) -> dict:
-    """Execute a single SQL statement with optional parameters."""
+def _execute(sql: str, params: list | None = None) -> dict | None:
+    if not _available:
+        return None
     stmt: dict = {"sql": sql}
     if params:
         stmt["args"] = [{"type": "text", "value": str(p)} for p in params]
-
     results = _pipeline([{"type": "execute", "stmt": stmt}])
     return results[0]["result"]
 
 
 def init_db():
-    """Create tables if they don't exist."""
-    _execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT DEFAULT '', profile_json TEXT DEFAULT '{}')")
-    _execute("CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT, messages_json TEXT DEFAULT '[]')")
-    _execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)")
-    logger.info("Turso database tables ready")
+    """Create tables if they don't exist. Non-fatal on failure."""
+    global _available
+    try:
+        _execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT DEFAULT '', profile_json TEXT DEFAULT '{}')")
+        _execute("CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT, messages_json TEXT DEFAULT '[]')")
+        _execute("CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)")
+        _available = True
+        logger.info("Turso database ready")
+    except Exception as e:
+        _available = False
+        logger.warning(f"Turso unavailable — running without persistence: {e}")
 
 
-# --- User / Profile helpers ---
+# --- User helpers ---
 
 def get_user(user_id: str) -> dict | None:
-    result = _execute("SELECT id, name, profile_json FROM users WHERE id = ?", [user_id])
-    rows = result.get("rows", [])
-    if not rows:
+    if not _available:
         return None
-    row = rows[0]
-    return {"id": row[0]["value"], "name": row[1]["value"], "profile_json": row[2]["value"]}
+    try:
+        result = _execute("SELECT id, name, profile_json FROM users WHERE id = ?", [user_id])
+        rows = result.get("rows", []) if result else []
+        if not rows:
+            return None
+        row = rows[0]
+        return {"id": row[0]["value"], "name": row[1]["value"], "profile_json": row[2]["value"]}
+    except Exception as e:
+        logger.error(f"get_user failed: {e}")
+        return None
 
 
 def upsert_user(user_id: str, profile_json: str):
-    _execute(
-        "INSERT INTO users (id, profile_json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET profile_json = excluded.profile_json",
-        [user_id, profile_json],
-    )
+    if not _available:
+        return
+    try:
+        _execute(
+            "INSERT INTO users (id, profile_json) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET profile_json = excluded.profile_json",
+            [user_id, profile_json],
+        )
+    except Exception as e:
+        logger.error(f"upsert_user failed: {e}")
 
 
 def delete_user(user_id: str):
-    _execute("DELETE FROM users WHERE id = ?", [user_id])
+    if not _available:
+        return
+    try:
+        _execute("DELETE FROM users WHERE id = ?", [user_id])
+    except Exception as e:
+        logger.error(f"delete_user failed: {e}")
 
 
 # --- Session helpers ---
 
 def get_latest_session(user_id: str) -> dict | None:
-    result = _execute(
-        "SELECT id, user_id, messages_json FROM sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1",
-        [user_id],
-    )
-    rows = result.get("rows", [])
-    if not rows:
+    if not _available:
         return None
-    row = rows[0]
-    return {"id": row[0]["value"], "user_id": row[1]["value"], "messages_json": row[2]["value"]}
+    try:
+        result = _execute(
+            "SELECT id, user_id, messages_json FROM sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+            [user_id],
+        )
+        rows = result.get("rows", []) if result else []
+        if not rows:
+            return None
+        row = rows[0]
+        return {"id": row[0]["value"], "user_id": row[1]["value"], "messages_json": row[2]["value"]}
+    except Exception as e:
+        logger.error(f"get_latest_session failed: {e}")
+        return None
 
 
 def upsert_session(session_id: str, user_id: str, messages_json: str):
-    _execute(
-        "INSERT INTO sessions (id, user_id, messages_json) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET messages_json = excluded.messages_json",
-        [session_id, user_id, messages_json],
-    )
+    if not _available:
+        return
+    try:
+        _execute(
+            "INSERT INTO sessions (id, user_id, messages_json) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET messages_json = excluded.messages_json",
+            [session_id, user_id, messages_json],
+        )
+    except Exception as e:
+        logger.error(f"upsert_session failed: {e}")
 
 
 def delete_sessions_for_user(user_id: str) -> int:
-    result = _execute("DELETE FROM sessions WHERE user_id = ?", [user_id])
-    return result.get("rows_affected", 0) or 0
+    if not _available:
+        return 0
+    try:
+        result = _execute("DELETE FROM sessions WHERE user_id = ?", [user_id])
+        return result.get("rows_affected", 0) or 0 if result else 0
+    except Exception as e:
+        logger.error(f"delete_sessions_for_user failed: {e}")
+        return 0
