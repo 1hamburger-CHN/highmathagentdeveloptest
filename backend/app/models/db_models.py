@@ -25,7 +25,7 @@ def _pipeline(requests_list: list[dict]) -> list[dict]:
         timeout=30,
     )
     resp.raise_for_status()
-    return resp.json()
+    return resp.json()["results"]
 
 
 def _execute(sql: str, params: list | None = None) -> dict | None:
