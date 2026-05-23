@@ -326,7 +326,7 @@ export default function ChatPage() {
             key={i}
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
           >
-            <div className="group relative">
+            <div className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
               <div
                 className={`max-w-[75%] rounded-2xl px-4 py-3 ${
                   m.role === "user"
@@ -364,19 +364,18 @@ export default function ChatPage() {
                   <p className="whitespace-pre-wrap">{m.content}</p>
                 )}
               </div>
-              {/* Copy button */}
+              {/* Copy button — always visible below the bubble */}
               <button
                 onClick={() => handleCopy(m.content, i)}
-                className={`absolute top-2 ${m.role === "user" ? "-left-9" : "-right-9"} p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 hover:bg-gray-200 ${
-                  m.role === "user" ? "text-white hover:text-gray-700" : "text-gray-400"
-                }`}
+                className="flex items-center gap-1 mt-1 px-2 py-1 rounded-md text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 title="复制"
               >
                 {copiedIndex === i ? (
-                  <Check className="w-4 h-4 text-green-500" />
+                  <Check className="w-3.5 h-3.5 text-green-500" />
                 ) : (
-                  <Copy className="w-4 h-4" />
+                  <Copy className="w-3.5 h-3.5" />
                 )}
+                {copiedIndex === i ? "已复制" : "复制"}
               </button>
             </div>
           </div>
