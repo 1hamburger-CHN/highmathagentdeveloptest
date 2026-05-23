@@ -10,7 +10,7 @@ type Message = {
   nodes?: string[];
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const NODE_LABELS: Record<string, { label: string; desc: string; icon: JSX.Element }> = {
   build_profile: { label: "构建画像", desc: "评估知识掌握情况、盲区和学习行为", icon: <Brain className="w-3 h-3" /> },

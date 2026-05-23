@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Brain, Target, Activity, ArrowLeft, TrendingUp, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 type Profile = {
   knowledge_mastery: { concept_id: string; score: number; confidence: number }[];
