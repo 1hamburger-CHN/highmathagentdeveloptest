@@ -126,7 +126,6 @@ class ResourceGeneratorAgent(BaseAgent):
         # Build messages: mindmaps as markdown, everything else as one plaintext block
         messages: list[dict] = []
         plaintext_parts: list[str] = []
-        has_mindmap = False
 
         for r in resources:
             rtype = r.get("type", "")
@@ -135,7 +134,6 @@ class ResourceGeneratorAgent(BaseAgent):
             content = content.replace("\\n", "\n").replace("\r\n", "\n")
 
             if rtype == "mindmap":
-                has_mindmap = True
                 messages.append({
                     "role": "assistant",
                     "content": f"### {title}\n```mermaid\n{content}\n```",
@@ -150,8 +148,8 @@ class ResourceGeneratorAgent(BaseAgent):
         if not messages:
             messages.append({"role": "assistant", "content": "资源生成完成，但内容为空。请再试一次。", "plaintext": True})
 
-        # If only mindmap was generated, offer to explain
-        if has_mindmap and not plaintext_parts:
+        # If user asked for a mindmap, offer to explain
+        if ask_mindmap:
             messages.append({
                 "role": "assistant",
                 "content": "需要我帮你详细讲解吗？回复\"帮我讲解\"即可。",
