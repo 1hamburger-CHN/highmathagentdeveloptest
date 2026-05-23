@@ -107,8 +107,10 @@ class ResourceGeneratorAgent(BaseAgent):
 
         resources = result.get("resources", [])
 
-        # Build a text message summarizing the generated resources
-        summary_parts = ["已为你生成以下学习资源：\n"]
+        # Build messages: mindmaps as markdown, everything else as one plaintext block
+        messages: list[dict] = []
+        plaintext_parts: list[str] = []
+
         for r in resources:
             rtype = r.get("type", "")
             title = r.get("title", "")
@@ -116,16 +118,21 @@ class ResourceGeneratorAgent(BaseAgent):
             content = content.replace("\\n", "\n").replace("\r\n", "\n")
 
             if rtype == "mindmap":
-                summary_parts.append(f"### {title}\n```mermaid\n{content}\n```\n")
+                messages.append({
+                    "role": "assistant",
+                    "content": f"### {title}\n```mermaid\n{content}\n```",
+                })
             else:
-                # Strip # markers from content — use bold-only formatting
-                import re
-                content = re.sub(r"^#{1,4} ", "", content, flags=re.MULTILINE)
-                summary_parts.append(f"**{title}**\n{content}\n")
+                plaintext_parts.append(f"{title}\n\n{content}")
 
-        message_text = "\n".join(summary_parts) if summary_parts else "资源生成完成，但内容为空。请再试一次。"
+        if plaintext_parts:
+            text = "\n\n---\n\n".join(plaintext_parts)
+            messages.append({"role": "assistant", "content": text, "plaintext": True})
+
+        if not messages:
+            messages.append({"role": "assistant", "content": "资源生成完成，但内容为空。请再试一次。", "plaintext": True})
 
         return {
             "generated_resources": resources,
-            "messages": [{"role": "assistant", "content": message_text}],
+            "messages": messages,
         }

@@ -81,6 +81,7 @@ async def chat_stream(payload: dict):
                             for msg in msgs:
                                 content = msg.get("content", "")
                                 role = msg.get("role", "assistant")
+                                plaintext = msg.get("plaintext", False)
                                 full_transcript.append({"role": role, "content": content})
                                 yield {
                                     "event": "message",
@@ -88,6 +89,7 @@ async def chat_stream(payload: dict):
                                         "role": role,
                                         "content": content,
                                         "node": node_name,
+                                        "plaintext": plaintext,
                                     }, ensure_ascii=False),
                                 }
                         if node_output.get("assessment_result"):
