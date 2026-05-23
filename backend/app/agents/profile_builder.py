@@ -1,6 +1,6 @@
 import json
 
-from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent, safe_json_parse
 from app.agents.state import TutorState
 
 PROFILE_BUILDER_PROMPT = """你是"苏格拉底教练"系统中的学习画像构建专家。你的工作在后台静默进行——学生看不到你的消息，只有 Coach 会和学生对话。你只需要根据对话历史分析学生，更新画像数据。
@@ -43,7 +43,7 @@ class ProfileBuilderAgent(BaseAgent):
 
         response = await self.generate(PROFILE_BUILDER_PROMPT, user_prompt)
         try:
-            result = json.loads(response)
+            result = safe_json_parse(response)
         except json.JSONDecodeError:
             result = {
                 "knowledge_mastery": [],

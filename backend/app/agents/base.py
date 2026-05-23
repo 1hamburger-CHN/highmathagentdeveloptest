@@ -1,4 +1,6 @@
+import json
 import logging
+import re
 import time
 from typing import Any
 
@@ -7,6 +9,26 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from app.core.llm import ModelRouter
 
 logger = logging.getLogger("tutor")
+
+
+def repair_latex_json(text: str) -> str:
+    """Fix unescaped LaTeX backslashes inside JSON strings.
+
+    Many LLMs output raw LaTeX (e.g. \\lim, \\frac) inside JSON strings without
+    escaping the backslash.  JSON requires \\\\, so we double single backslashes
+    that start LaTeX command names (2+ letters) while leaving JSON's own escapes
+    (\\n, \\r, \\t, etc.) alone.
+    """
+    return re.sub(r"(?<!\\)\\([a-zA-Z]{2,})", r"\\\\\1", text)
+
+
+def safe_json_parse(text: str) -> Any:
+    """Parse JSON with fallback repair for unescaped LaTeX backslashes."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        repaired = repair_latex_json(text)
+        return json.loads(repaired)
 
 
 class BaseAgent:

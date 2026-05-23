@@ -1,6 +1,6 @@
 import json
 
-from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent, safe_json_parse
 from app.agents.state import TutorState
 from app.services.math_service import MathService
 
@@ -61,7 +61,7 @@ SymPy自动验证结果（如有错误需人工复核）：
 
         response = await self.generate(QUALITY_GATE_PROMPT, user_prompt)
         try:
-            result = json.loads(response)
+            result = safe_json_parse(response)
         except json.JSONDecodeError:
             result = {"passed": True, "issues": [], "filtered_content": ""}
 

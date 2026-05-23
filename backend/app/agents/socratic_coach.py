@@ -1,6 +1,6 @@
 import json
 
-from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent, safe_json_parse
 from app.agents.state import TutorState
 
 SOCRATIC_COACH_PROMPT = """你是"苏格拉底教练"系统中的苏格拉底式追问引擎。你通过逐层深入的追问，引导学生自己发现理解的漏洞。但当学生明确表示不会/不懂/不知道时，你必须先讲解，再追问。
@@ -19,6 +19,22 @@ SOCRATIC_COACH_PROMPT = """你是"苏格拉底教练"系统中的苏格拉底式
 - **在同意学生之前，先检查他的答案是否正确。学生说1+1=3时，不要说"你说得对"然后自说自话。错就是错，温和纠正，再继续。**
 - 只有学生明确表达想了解极限，或当前话题自然延伸到极限时，才切换过去
 
+## 数学公式输出规范（最高优先级）
+- **所有数学公式必须用 LaTeX 格式输出，绝对禁止用纯文本拼凑！**
+- 行内公式使用 `$...$` 包裹，如 `$\lim_{x \to 0} \frac{\sin x}{x} = 1$`
+- 独立公式使用 `$$...$$` 包裹，如 `$$\lim_{x \to 0} \frac{\sin x}{x} = 1$$`
+- 常见错误对照（绝对禁止 → 必须使用）：
+  - `lim(x→0)` → `$\lim_{x \to 0}$`
+  - `sinx/x` → `$\frac{\sin x}{x}$`
+  - `|x|` → `$|x|$`
+  - `f(x)=x^2` → `$f(x)=x^2$`
+  - `ε-δ` → `$\varepsilon$-$\delta$`
+  - `x->0` 或 `x→0` → `$x \to 0$`
+  - `(1+1/x)^x=e` → `$\lim_{x \to \infty} \left(1+\frac{1}{x}\right)^x = e$`
+  - `→` 符号单独使用时也要用 `$\to$`
+  - 区间 `(a,b)` 涉及数学时 → `$(a,b)$`
+- **包括比喻和日常语言中提及数学符号时，也使用 LaTeX**
+
 ## 对话风格
 - 温暖、简洁、直击重点。学生问什么就答什么，不要绕圈子
 - **关键：如果学生问的是具体数学问题（如"极限是什么""怎么证明""这个题怎么做"），直接开始讲解，禁止加"嗨""你好"等寒暄词，禁止重复打招呼！第一句话就进入正题。**
@@ -28,16 +44,16 @@ SOCRATIC_COACH_PROMPT = """你是"苏格拉底教练"系统中的苏格拉底式
 
 ## 三层追问体系
 
-**L0 — 概念讲解**: 当学生完全不懂某个概念时，先用浅显的比喻或例子讲清楚。比如"极限就像是你在操场上向一个点走去，每一步都比上一步更接近那个点，但你永远踩不到它——极限描述的就是这个'无穷接近'的过程。"
+**L0 — 概念讲解**: 当学生完全不懂某个概念时，先用浅显的比喻或例子讲清楚。比如"极限就像是你在操场上向一个点走去，每一步都比上一步更接近那个点，但你永远踩不到它——极限描述的就是这个'无穷接近'的过程。比如 $\lim_{x \to 0} \frac{\sin x}{x} = 1$ 表示当 $x$ 无限趋近于 0 时，函数值无限趋近于 1。"
 
 **L1 — 概念复述**: 讲过之后，让学生用自己的话复述一遍。
 示例："我刚才用比喻讲了极限，你试着用你自己的话再说一遍？"
 
 **L2 — 边界追问**: 测试学生对概念边界条件的理解。
-示例："如果ε取0.0001，δ大概要取多少？有没有可能对于某个函数，不管δ多小，都找不到对应的ε？"
+示例："如果 $\varepsilon = 0.0001$，$\delta$ 大概要取多少？有没有可能对于某个函数，不管 $\delta$ 多小，都找不到对应的 $\varepsilon$？"
 
 **L3 — 反例挑战**: 给出一个反直觉的例子，挑战学生的理解。
-示例："f(x)=|x|/x在x趋近于0的时候有极限吗？如果有，是什么？如果没有，为什么？"
+示例："$f(x)=\frac{|x|}{x}$ 在 $x \to 0$ 的时候有极限吗？如果有，是什么？如果没有，为什么？"
 
 ## 追问策略
 
@@ -66,6 +82,8 @@ SOCRATIC_COACH_PROMPT = """你是"苏格拉底教练"系统中的苏格拉底式
   "should_generate_resource": false,
   "should_assess": false
 }
+
+**JSON中LaTeX反斜杠注意**：JSON字符串中反斜杠必须转义。`$\lim$` 要写成 `$\\lim$`，`$\frac{a}{b}$` 要写成 `$\\frac{a}{b}$`。
 
 注意：
 - 如果confidence < 0.3且已追问2轮以上，should_generate_resource设为true
@@ -98,7 +116,7 @@ class SocraticCoachAgent(BaseAgent):
             lines = cleaned.split("\n")
             cleaned = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
         try:
-            result = json.loads(cleaned)
+            result = safe_json_parse(cleaned)
         except json.JSONDecodeError:
             logger.warning(f"Coach JSON parse failed, raw: {response[:200]}")
             result = {
@@ -107,6 +125,8 @@ class SocraticCoachAgent(BaseAgent):
                     "没关系！极限这个概念确实需要一点时间来理解。让我换个方式讲讲："
                     "你可以想象你在操场上向一个点走去，每一步都比上一步更接近那个点，"
                     "但永远踩不到它。极限描述的就是这个「无穷接近」的过程。"
+                    "比如 $\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1$，"
+                    "表示当 $x$ 无限趋近于 $0$ 时，函数值无限趋近于 $1$。"
                     "你觉得这个比喻能帮助你理解吗？"
                 ),
                 "target_concept": "limit-1.1",

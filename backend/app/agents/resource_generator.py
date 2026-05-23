@@ -1,9 +1,27 @@
 import json
+import re
 
-from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent, safe_json_parse
 from app.agents.state import TutorState
 
 RESOURCE_GENERATOR_PROMPT = """你是"苏格拉底教练"系统中的学习资源生成专家。当学生被诊断出知识盲区后，你负责生成针对性的补救材料。
+
+## 数学公式输出规范（最高优先级）
+- **所有数学公式必须用 LaTeX 格式输出，绝对禁止用纯文本拼凑！**
+- 行内公式使用 `$...$` 包裹，如 `$\lim_{x \to 0} \frac{\sin x}{x} = 1$`
+- 独立公式使用 `$$...$$` 包裹，如 `$$\lim_{x \to 0} \frac{\sin x}{x} = 1$$`
+- 常见错误对照（绝对禁止 → 必须使用）：
+  - `lim(x→0)` → `$\lim_{x \to 0}$`
+  - `sinx/x` → `$\frac{\sin x}{x}$`
+  - `|x|` → `$|x|$`
+  - `f(x)=x^2` → `$f(x)=x^2$`
+  - `ε-δ` → `$\varepsilon$-$\delta$`
+  - `x->0` 或 `x→0` → `$x \to 0$`
+  - `(1+1/x)^x=e` → `$\lim_{x \to \infty} \left(1+\frac{1}{x}\right)^x = e$`
+  - `→` 符号单独使用时也要用 `$\to$`
+  - 区间 `(a,b)` 涉及数学时 → `$(a,b)$`
+- **包括比喻和日常语言中提及数学符号时，也使用 LaTeX**
+- **绝对不要在 LaTeX 外再出现纯文本拼凑的数学公式**
 
 你可以生成4种类型的学习资源：
 
@@ -71,7 +89,9 @@ graph LR
   ]
 }
 
-针对学生的盲区概念，生成1-2种最需要的资源类型。资源精准针对学生的具体误解，篇幅精简（每种资源300字以内）。"""
+针对学生的盲区概念，生成1-2种最需要的资源类型。资源精准针对学生的具体误解，篇幅精简（每种资源300字以内）。
+
+**JSON中LaTeX反斜杠注意**：JSON字符串中反斜杠必须转义。`$\lim$` 要写成 `$\\lim$`，`$\frac{a}{b}$` 要写成 `$\\frac{a}{b}$`。"""
 
 
 class ResourceGeneratorAgent(BaseAgent):
@@ -117,21 +137,23 @@ class ResourceGeneratorAgent(BaseAgent):
 
         response = await self.generate(RESOURCE_GENERATOR_PROMPT, user_prompt)
         try:
-            result = json.loads(response)
+            result = safe_json_parse(response)
         except json.JSONDecodeError:
             result = {"resources": []}
 
         resources = result.get("resources", [])
 
-        # Build messages: mindmaps as markdown, everything else as one plaintext block
+        # Build messages: mindmaps with mermaid fence, others as markdown
         messages: list[dict] = []
-        plaintext_parts: list[str] = []
+        md_parts: list[str] = []
 
         for r in resources:
             rtype = r.get("type", "")
             title = r.get("title", "")
             content = r.get("content", "")
             content = content.replace("\\n", "\n").replace("\r\n", "\n")
+            # Strip markdown heading markers the LLM may have injected
+            content = re.sub(r"^#{1,4}\s+", "", content, flags=re.MULTILINE)
 
             if rtype == "mindmap":
                 if ask_mindmap:
@@ -143,14 +165,14 @@ class ResourceGeneratorAgent(BaseAgent):
                     "content": f"### {title}\n```mermaid\n{content}\n```{footer}",
                 })
             else:
-                plaintext_parts.append(f"{title}\n\n{content}")
+                md_parts.append(f"### {title}\n\n{content}")
 
-        if plaintext_parts:
-            text = "\n\n---\n\n".join(plaintext_parts)
-            messages.append({"role": "assistant", "content": text, "plaintext": True})
+        if md_parts:
+            text = "\n\n---\n\n".join(md_parts)
+            messages.append({"role": "assistant", "content": text})
 
         if not messages:
-            messages.append({"role": "assistant", "content": "资源生成完成，但内容为空。请再试一次。", "plaintext": True})
+            messages.append({"role": "assistant", "content": "资源生成完成，但内容为空。请再试一次。"})
 
         return {
             "generated_resources": resources,

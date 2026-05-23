@@ -1,6 +1,6 @@
 import json
 
-from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent, safe_json_parse
 from app.agents.state import TutorState
 
 ASSESSOR_PROMPT = """你是"苏格拉底教练"系统中的评估专家。当学生完成一轮苏格拉底追问后，你负责评估他们的表现并识别错误模式。
@@ -57,7 +57,7 @@ class AssessorAgent(BaseAgent):
 
         response = await self.generate(ASSESSOR_PROMPT, user_prompt)
         try:
-            result = json.loads(response)
+            result = safe_json_parse(response)
         except json.JSONDecodeError:
             result = {"correct": True, "score": 0.5, "error_patterns": [], "recommendation": "pass", "summary": ""}
 

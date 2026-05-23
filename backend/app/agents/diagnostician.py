@@ -1,6 +1,6 @@
 import json
 
-from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent, safe_json_parse
 from app.agents.state import TutorState
 
 DIAGNOSTICIAN_PROMPT = """你是"苏格拉底教练"系统中的学习诊断专家。你的任务是通过对话分析，精准定位学生的知识盲区。
@@ -63,7 +63,7 @@ class DiagnosticianAgent(BaseAgent):
 
         response = await self.generate(DIAGNOSTICIAN_PROMPT, user_prompt)
         try:
-            result = json.loads(response)
+            result = safe_json_parse(response)
         except json.JSONDecodeError:
             result = {"blind_spots": [], "mastered_concepts": [], "current_level": "L1", "summary": "无法完成诊断"}
 
