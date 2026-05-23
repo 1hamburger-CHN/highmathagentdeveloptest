@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
-import { Send, Loader2, Brain, BookOpen, Sparkles, History, Trash2 } from "lucide-react";
+import { Send, Loader2, Brain, BookOpen, Sparkles, History, Trash2, Copy, Check } from "lucide-react";
 
 type Message = {
   role: "user" | "coach" | "system";
@@ -52,6 +52,14 @@ export default function ChatPage() {
   const abortRef = useRef<AbortController | null>(null);
 
   const [debug, setDebug] = useState("");
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  const handleCopy = useCallback((text: string, index: number) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 1500);
+    });
+  }, []);
 
   // --- init: load identity, profile, and history on mount ---
   useEffect(() => {
@@ -318,42 +326,58 @@ export default function ChatPage() {
             key={i}
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
           >
-            <div
-              className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                m.role === "user"
-                  ? "bg-primary-600 text-white"
-                  : m.role === "system"
-                  ? "bg-red-50 text-red-700 text-sm"
-                  : "bg-gray-100 text-gray-900"
-              }`}
-            >
-              {m.role === "coach" ? (
-                <>
-                  <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800">
-                    <StreamingMarkdown content={m.content} />
-                  </div>
-                  {m.nodes && m.nodes.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-200">
-                      {m.nodes.map((n) => {
-                        const info = NODE_LABELS[n];
-                        if (!info) return null;
-                        return (
-                          <span
-                            key={n}
-                            title={info.desc}
-                            className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary-700 cursor-help"
-                          >
-                            {info.icon}
-                            <span>{info.label}</span>
-                          </span>
-                        );
-                      })}
+            <div className="group relative">
+              <div
+                className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                  m.role === "user"
+                    ? "bg-primary-600 text-white"
+                    : m.role === "system"
+                    ? "bg-red-50 text-red-700 text-sm"
+                    : "bg-gray-100 text-gray-900"
+                }`}
+              >
+                {m.role === "coach" ? (
+                  <>
+                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800">
+                      <StreamingMarkdown content={m.content} />
                     </div>
-                  )}
-                </>
-              ) : (
-                <p className="whitespace-pre-wrap">{m.content}</p>
-              )}
+                    {m.nodes && m.nodes.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-200">
+                        {m.nodes.map((n) => {
+                          const info = NODE_LABELS[n];
+                          if (!info) return null;
+                          return (
+                            <span
+                              key={n}
+                              title={info.desc}
+                              className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs text-primary-700 cursor-help"
+                            >
+                              {info.icon}
+                              <span>{info.label}</span>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="whitespace-pre-wrap">{m.content}</p>
+                )}
+              </div>
+              {/* Copy button */}
+              <button
+                onClick={() => handleCopy(m.content, i)}
+                className={`absolute top-2 ${m.role === "user" ? "-left-9" : "-right-9"} p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 hover:bg-gray-200 ${
+                  m.role === "user" ? "text-white hover:text-gray-700" : "text-gray-400"
+                }`}
+                title="复制"
+              >
+                {copiedIndex === i ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
         ))}
