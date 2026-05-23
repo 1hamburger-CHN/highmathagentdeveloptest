@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import assess, chat, generate, path_planner, profile, sessions
 from app.config import settings
+from app.models.db_models import init_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,6 +23,8 @@ logger = logging.getLogger("tutor")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting 苏格拉底教练 server...")
+    init_db()
+    logger.info("Database initialized")
     yield
     logger.info("Shutting down...")
 
