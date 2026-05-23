@@ -76,10 +76,22 @@ class ResourceGeneratorAgent(BaseAgent):
         blind_spots = json.dumps(state.blind_spots, ensure_ascii=False)
         concept = state.current_concept
 
-        user_prompt = f"""学生需要补救的概念：{concept}
+        # Get the user's actual request from the last message
+        user_request = ""
+        for m in reversed(state.messages):
+            if m.get("role") == "user":
+                user_request = m.get("content", "")
+                break
+
+        # If user explicitly asked for a resource, prioritize their request
+        if not concept and user_request:
+            concept = user_request
+
+        user_prompt = f"""学生的请求：{user_request}
+目标概念：{concept}
 已诊断的盲区：{blind_spots}
 
-请针对以上盲区生成个性化学习资源。至少2种类型。返回JSON。"""
+{'学生直接请求生成资源，请根据请求内容生成。' if user_request and not blind_spots else '请针对以上盲区生成个性化学习资源。'}至少1-2种类型。返回JSON。"""
 
         response = await self.generate(RESOURCE_GENERATOR_PROMPT, user_prompt)
         try:
