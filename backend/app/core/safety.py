@@ -17,6 +17,8 @@ class SafetyPipeline:
         "数学", "定义", "证明", "定理", "计算", "概念",
         "例子", "题目", "怎么做", "解释", "说明",
         "等于", "等于几", "等于多少", "怎么算", "答案是", "是多少",
+        "题", "练习", "出题", "试卷",
+        "生成", "帮我", "给我", "做一下", "讲一下",
     ]
 
     GREETING_PATTERNS = [
@@ -88,6 +90,13 @@ class SafetyPipeline:
         if "{hello}" in text:
             text = text.replace("{hello}", random.choice(cls.HELLOS))
         return text
+
+    RESOURCE_KEYWORDS = [
+        "生成", "思维导图", "脑图", "导图", "知识图谱",
+        "讲义", "课件", "教程", "笔记", "总结", "归纳",
+        "练习题", "习题", "出题", "试卷", "题目",
+        "阅读材料", "拓展", "资料", "帮我", "给我",
+    ]
 
     # Common vague-but-valid math conversation responses
     CONVERSATIONAL_RESPONSES = [
@@ -161,6 +170,9 @@ class SafetyPipeline:
         # Allow conversational responses (single chars like 好/啊, vague answers like 不知道)
         if cls.is_conversational(content):
             return {"allowed": True, "content": content, "reason": "conversational"}
+        # Resource generation requests (思维导图, 练习题, etc.) — always allowed
+        if any(kw in content for kw in cls.RESOURCE_KEYWORDS):
+            return {"allowed": True, "content": content, "reason": "resource_request"}
         if not cls.is_math_related(content):
             return {"allowed": False, "content": cls._pick(cls.NON_MATH_RESPONSES), "reason": "non_math"}
         return {"allowed": True, "content": content, "reason": ""}
