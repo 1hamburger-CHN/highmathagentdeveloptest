@@ -262,6 +262,7 @@ export default function ChatPage() {
       if (data.profile) {
         setProfile(data.profile as Record<string, unknown>);
       }
+      setDebug("");
     }
   };
 
