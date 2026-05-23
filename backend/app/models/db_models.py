@@ -1,43 +1,31 @@
 """Database abstraction — Turso via HTTP API with graceful fallback."""
 import json
 import logging
-from http.client import HTTPSConnection
-from urllib.parse import urlparse
+
+import requests
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 _TURSO_HOST = settings.turso_url.replace("libsql://", "https://")
-_parsed = urlparse(_TURSO_HOST)
-_TURSO_NETLOC = _parsed.netloc  # e.g. "socratic-tutor-xxx.turso.io"
 _available = True  # Tables pre-created in Turso; init_db is best-effort
 
 
-def _pipeline(requests: list[dict]) -> list[dict]:
+def _pipeline(requests_list: list[dict]) -> list[dict]:
     """Send a batch of SQL statements to Turso via HTTP pipeline API."""
     if not settings.turso_token:
         raise RuntimeError("TURSO_TOKEN is not set")
 
-    body = json.dumps({"requests": requests})
-    conn = HTTPSConnection(_TURSO_NETLOC, timeout=30)
-    try:
-        conn.request(
-            "POST",
-            "/v2/pipeline",
-            body=body.encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {settings.turso_token}",
-                "Content-Type": "application/json",
-            },
-        )
-        resp = conn.getresponse()
-        data = resp.read().decode("utf-8")
-        if resp.status != 200:
-            raise RuntimeError(f"Turso HTTP {resp.status}: {data[:200]}")
-        return json.loads(data)
-    finally:
-        conn.close()
+    url = f"{_TURSO_HOST}/v2/pipeline"
+    resp = requests.post(
+        url,
+        json={"requests": requests_list},
+        headers={"Authorization": f"Bearer {settings.turso_token}"},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json()
 
 
 def _execute(sql: str, params: list | None = None) -> dict | None:
@@ -65,7 +53,6 @@ def init_db():
 
 
 def _execute_raw(sql: str, params: list | None = None) -> dict:
-    """Execute SQL bypassing the _available check (for init_db)."""
     stmt: dict = {"sql": sql}
     if params:
         stmt["args"] = [{"type": "text", "value": str(p)} for p in params]
