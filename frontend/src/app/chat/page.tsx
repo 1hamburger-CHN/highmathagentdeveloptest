@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
-import { Send, Loader2, Brain, BookOpen, Sparkles } from "lucide-react";
+import { Send, Loader2, Brain, BookOpen, Sparkles, History, Trash2 } from "lucide-react";
 
 type Message = {
   role: "user" | "coach" | "system";
@@ -21,7 +21,29 @@ const NODE_LABELS: Record<string, { label: string; desc: string; icon: JSX.Eleme
   quality_gate: { label: "质量把关", desc: "数学符号验证与内容安全检查", icon: <Sparkles className="w-3 h-3" /> },
 };
 
+// --- user identity helpers ---
+
+function getUserId(): string {
+  if (typeof window === "undefined") return "";
+  let uid = localStorage.getItem("tutor_user_id");
+  if (!uid) {
+    uid = crypto.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem("tutor_user_id", uid);
+  }
+  return uid;
+}
+
+function getSessionId(): string {
+  return crypto.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
 export default function ChatPage() {
+  const [userId, setUserId] = useState("");
+  const [sessionId, setSessionId] = useState("");
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [hasHistory, setHasHistory] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -31,9 +53,87 @@ export default function ChatPage() {
 
   const [debug, setDebug] = useState("");
 
+  // --- init: load identity, profile, and history on mount ---
+  useEffect(() => {
+    const uid = getUserId();
+    setUserId(uid);
+    setSessionId(getSessionId());
+
+    // Load profile from backend
+    fetch(`${API_BASE}/api/profile/${uid}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.profile) {
+          setProfile(data.profile);
+        }
+      })
+      .catch(() => {});
+
+    // Check if there's saved history
+    fetch(`${API_BASE}/api/sessions/${uid}/latest`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.has_history) {
+          setHasHistory(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // --- load saved history ---
+  const handleLoadHistory = useCallback(async () => {
+    if (!userId) return;
+    setDebug("加载历史对话中...");
+    try {
+      const resp = await fetch(`${API_BASE}/api/sessions/${userId}/latest`);
+      const data = await resp.json();
+      if (data.messages && data.messages.length > 0) {
+        const msgs: Message[] = data.messages.map((m: { role: string; content: string }) => ({
+          role: m.role === "user" ? "user" : "coach",
+          content: m.content,
+        }));
+        setMessages(msgs);
+        setHistoryLoaded(true);
+        setHasHistory(false); // hide the load button after loading
+        setDebug(`已加载 ${msgs.length} 条历史消息`);
+      } else {
+        setDebug("没有可加载的历史对话");
+        setHasHistory(false);
+      }
+    } catch {
+      setDebug("加载历史对话失败");
+    }
+  }, [userId]);
+
+  // --- delete all records ---
+  const handleDeleteAll = useCallback(async () => {
+    if (!userId) return;
+    if (!confirm("确认清除全部聊天记录和学习画像？此操作不可撤销。")) return;
+
+    setDebug("清除中...");
+    try {
+      await fetch(`${API_BASE}/api/profile/${userId}`, { method: "DELETE" });
+      await fetch(`${API_BASE}/api/sessions/${userId}`, { method: "DELETE" });
+
+      // Reset local state
+      localStorage.removeItem("tutor_user_id");
+      const newUid = crypto.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem("tutor_user_id", newUid);
+      setUserId(newUid);
+      setSessionId(getSessionId());
+      setProfile(null);
+      setMessages([]);
+      setHasHistory(false);
+      setHistoryLoaded(false);
+      setDebug("已清除全部记录");
+    } catch {
+      setDebug("清除失败");
+    }
+  }, [userId]);
+
+  // --- send message ---
   const handleSend = async () => {
-    if (!input.trim()) { setDebug("输入为空"); return; }
-    if (streaming) { setDebug("正在流式输出中"); return; }
+    if (!input.trim() || streaming) return;
     const userMessage = input.trim();
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
@@ -47,14 +147,22 @@ export default function ChatPage() {
     abortRef.current = controller;
 
     try {
+      // Build request: include identity, profile, and conversation history
+      const body: Record<string, unknown> = {
+        message: userMessage,
+        user_id: userId,
+        session_id: sessionId,
+        profile: profile,
+        history: messages.map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content })),
+      };
+
       const resp = await fetch(`${API_BASE}/api/chat/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
 
-      setDebug(`连接成功, status=${resp.status}`);
       if (!resp.ok || !resp.body) throw new Error(`Connection failed: ${resp.status}`);
 
       const reader = resp.body.getReader();
@@ -65,7 +173,6 @@ export default function ChatPage() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          // Process any remaining data in buffer before breaking
           if (buffer.trim()) {
             const remaining = buffer.split("\n\n");
             for (const eventText of remaining) {
@@ -80,8 +187,7 @@ export default function ChatPage() {
               }
             }
           }
-          setDebug(`流结束, 共${chunkCount}块, msgs=${streamingRef.current.length}字`);
-          // flush any remaining streaming content
+          // Flush remaining streaming content
           if (streamingRef.current) {
             setMessages((msgs) => [...msgs, { role: "coach", content: streamingRef.current, nodes: Array.from(nodesRef.current) }]);
             streamingRef.current = "";
@@ -93,30 +199,24 @@ export default function ChatPage() {
         chunkCount++;
         const text = decoder.decode(value, { stream: true });
         buffer += text;
-        setDebug(`块#${chunkCount}: +${text.length}B`);
 
-        // Parse SSE events using \n\n as event delimiter
         const events = buffer.split("\n\n");
         buffer = events.pop() || "";
 
         for (const eventText of events) {
           if (!eventText.trim()) continue;
-          const lines = eventText.split("\n");
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith("data: ")) {
+          for (const line of eventText.split("\n")) {
+            if (line.startsWith("data: ")) {
               try {
-                const data = JSON.parse(trimmed.slice(6));
+                const data = JSON.parse(line.slice(6).trim());
                 handleSSEEvent(data);
-              } catch {
-                setDebug(`JSON解析失败: ${trimmed.slice(0, 60)}`);
-              }
+              } catch { /* skip */ }
             }
           }
         }
       }
-    } catch (err: any) {
-      if (err.name !== "AbortError") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name !== "AbortError") {
         setDebug(`错误: ${err.message}`);
         setMessages((prev) => [...prev, { role: "system", content: `连接失败: ${err.message}` }]);
       }
@@ -130,17 +230,16 @@ export default function ChatPage() {
   const streamingRef = useRef("");
   const nodesRef = useRef<Set<string>>(new Set());
 
-  const handleSSEEvent = (data: any) => {
+  const handleSSEEvent = (data: Record<string, unknown>) => {
     if (data.node) {
-      setActiveNode(data.node);
-      nodesRef.current.add(data.node);
+      setActiveNode(data.node as string);
+      nodesRef.current.add(data.node as string);
     }
     if (data.role && data.content) {
-      streamingRef.current += data.content;
+      streamingRef.current += data.content as string;
       setStreamingContent(streamingRef.current);
     }
     if (data.status === "complete") {
-      setDebug(`完成, 总消息=${streamingRef.current.length}字`);
       const finalContent = streamingRef.current;
       const finalNodes = Array.from(nodesRef.current);
       if (finalContent) {
@@ -149,6 +248,11 @@ export default function ChatPage() {
       streamingRef.current = "";
       setStreamingContent("");
       nodesRef.current = new Set();
+
+      // Persist updated profile from backend
+      if (data.profile) {
+        setProfile(data.profile as Record<string, unknown>);
+      }
     }
   };
 
@@ -171,13 +275,33 @@ export default function ChatPage() {
           <h1 className="text-lg font-semibold text-primary-900">苏格拉底教练</h1>
           <p className="text-xs text-gray-500">高等数学 · 极限与连续</p>
         </div>
-        {activeNode && NODE_LABELS[activeNode] && (
-          <div className="flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs text-primary-700">
-            {NODE_LABELS[activeNode].icon}
-            <span>{NODE_LABELS[activeNode].label}</span>
-            <Loader2 className="w-3 h-3 animate-spin" />
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Load history button */}
+          {hasHistory && !historyLoaded && (
+            <button
+              onClick={handleLoadHistory}
+              className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-100 transition-colors"
+            >
+              <History className="w-3.5 h-3.5" />
+              加载历史对话
+            </button>
+          )}
+          {/* Delete all button */}
+          <button
+            onClick={handleDeleteAll}
+            className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            清除全部记录
+          </button>
+          {activeNode && NODE_LABELS[activeNode] && (
+            <div className="flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs text-primary-700">
+              {NODE_LABELS[activeNode].icon}
+              <span>{NODE_LABELS[activeNode].label}</span>
+              <Loader2 className="w-3 h-3 animate-spin" />
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Debug bar */}

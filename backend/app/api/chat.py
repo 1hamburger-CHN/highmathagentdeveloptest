@@ -1,3 +1,4 @@
+"""Chat API — SSE streaming and non-streaming endpoints with profile persistence."""
 import json
 import logging
 from uuid import uuid4
@@ -8,6 +9,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.agents.graph import build_tutor_graph
 from app.agents.state import AgentState, TutorState
 from app.core.safety import SafetyPipeline
+from app.models.db_models import Session, SessionLocal, User
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +19,34 @@ router = APIRouter()
 _tutor_graph = build_tutor_graph()
 
 # Intermediate agents that work silently — their messages are hidden from user
-# and stripped from shared history so downstream agents don't reference them
 _SILENT_NODES = {"build_profile", "diagnose", "profile_check"}
+
+
+def _save_profile_and_session(user_id: str, session_id: str, profile: dict, messages: list[dict]):
+    """Persist profile and session messages to SQLite."""
+    db = SessionLocal()
+    try:
+        # Upsert user profile
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            user = User(id=user_id, name="", profile_json="{}")
+            db.add(user)
+        user.profile_json = json.dumps(profile, ensure_ascii=False)
+
+        # Save session messages
+        sess = db.query(Session).filter(Session.id == session_id).first()
+        if not sess:
+            sess = Session(id=session_id, user_id=user_id, messages_json="[]")
+            db.add(sess)
+        sess.messages_json = json.dumps(messages, ensure_ascii=False)
+
+        db.commit()
+        logger.info(f"Saved profile+session for user={user_id} session={session_id}")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to save profile+session for {user_id}: {e}")
+    finally:
+        db.close()
 
 
 @router.post("/stream")
@@ -39,11 +67,14 @@ async def chat_stream(payload: dict):
             yield {"event": "done", "data": json.dumps({"status": "complete", "session_id": session_id})}
         return EventSourceResponse(rejected_generator())
 
+    # Build message list: history + current message
+    all_messages = history + [{"role": "user", "content": user_message}]
+
     initial_state = TutorState(
         session_id=session_id,
         user_id=user_id,
         current_state=AgentState.INIT,
-        messages=history + [{"role": "user", "content": user_message}],
+        messages=all_messages,
         profile=existing_profile,
     )
 
@@ -52,13 +83,12 @@ async def chat_stream(payload: dict):
 
         try:
             final_state = None
+            last_node_output = None
             async for event in _tutor_graph.astream(initial_state, stream_mode="updates"):
                 for node_name, node_output in event.items():
-                    # Always send node progress so frontend shows spinner
                     yield {"event": "node", "data": json.dumps({"node": node_name})}
 
                     if isinstance(node_output, dict):
-                        # Skip messages from background agents — only coach/generate speak to user
                         if node_name not in _SILENT_NODES:
                             msgs = node_output.get("messages", [])
                             for msg in msgs:
@@ -80,9 +110,25 @@ async def chat_stream(payload: dict):
                                 "event": "resources",
                                 "data": json.dumps(node_output["generated_resources"], ensure_ascii=False),
                             }
-                    final_state = node_output
+                    last_node_output = node_output
 
-            yield {"event": "done", "data": json.dumps({"status": "complete", "session_id": session_id})}
+            # After the graph completes, extract the final profile and save
+            # The last node contains the merged TutorState
+            updated_profile = existing_profile
+            if isinstance(last_node_output, dict):
+                updated_profile = last_node_output.get("profile", existing_profile)
+
+            # Persist profile + all messages for next visit
+            _save_profile_and_session(user_id, session_id, updated_profile or {}, all_messages)
+
+            yield {
+                "event": "done",
+                "data": json.dumps({
+                    "status": "complete",
+                    "session_id": session_id,
+                    "profile": updated_profile,
+                }, ensure_ascii=False),
+            }
 
         except Exception as e:
             logger.error(f"Chat stream error (session={session_id}): {type(e).__name__}: {e}")
@@ -96,26 +142,39 @@ async def chat_send(payload: dict):
     """Non-streaming endpoint: send a message and get the full response."""
     user_message = payload.get("message", "")
     user_id = payload.get("user_id", "anonymous")
+    session_id = payload.get("session_id", uuid4().hex)
     history = payload.get("history", [])
     existing_profile = payload.get("profile", None)
 
     safety_result = SafetyPipeline.filter(user_message)
     if not safety_result["allowed"]:
-        return {"messages": [{"role": "assistant", "content": safety_result["content"]}], "rejected": True, "reason": safety_result["reason"]}
+        return {
+            "messages": [{"role": "assistant", "content": safety_result["content"]}],
+            "rejected": True,
+            "reason": safety_result["reason"],
+        }
+
+    all_messages = history + [{"role": "user", "content": user_message}]
 
     initial_state = TutorState(
-        session_id=uuid4().hex,
+        session_id=session_id,
         user_id=user_id,
         current_state=AgentState.INIT,
-        messages=history + [{"role": "user", "content": user_message}],
+        messages=all_messages,
         profile=existing_profile,
     )
 
     try:
         final_state = await _tutor_graph.ainvoke(initial_state)
+        updated_profile = final_state.get("profile", existing_profile)
+
+        # Persist for next visit
+        _save_profile_and_session(user_id, session_id, updated_profile or {}, all_messages)
+
         return {
             "messages": final_state.get("messages", []),
-            "profile": final_state.get("profile"),
+            "profile": updated_profile,
+            "session_id": session_id,
             "assessment": final_state.get("assessment_result"),
             "resources": final_state.get("generated_resources"),
         }
