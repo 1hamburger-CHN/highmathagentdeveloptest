@@ -35,3 +35,6 @@ class TutorState:
     quality_retries: int = 0
     error: str | None = None
     _safety_rejected: bool = False
+    _has_profile: bool = False
+    _is_direct_question: bool = False
+    _is_resource_request: bool = False
