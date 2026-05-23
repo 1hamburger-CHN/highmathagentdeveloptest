@@ -6,6 +6,21 @@ interface Props {
   code: string;
 }
 
+/** Wrap Mermaid node labels containing special characters in quotes so the parser doesn't choke. */
+function sanitizeMermaid(input: string): string {
+  // Fix unquoted square-bracket labels like A[lim(x→0) sinx/x = 1]
+  // Replace [...] with ["..."] if the content has special chars and isn't already quoted
+  return input.replace(/\[([^\]]+)\]/g, (_, label: string) => {
+    // Already quoted with double or single quotes — leave as-is
+    if (/^["'].*["']$/.test(label.trim())) return `[${label}]`;
+    // Contains special characters that break Mermaid parsing
+    if (/[(){}<>→εδαβγλθ∞πσΣΩ≈≠≤≥±×÷√∫∮∂∇∏∑←↑↓↔⇒⇔∀∃¬∧∨∩∪⊂⊃∈∉∥⊥∠△◻]/.test(label)) {
+      return `["${label.replace(/"/g, '\\"')}"]`;
+    }
+    return `[${label}]`;
+  });
+}
+
 export default function MermaidBlock({ code }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -16,14 +31,16 @@ export default function MermaidBlock({ code }: Props) {
     const renderDiagram = async () => {
       try {
         const mermaid = (await import("mermaid")).default;
-        mermaid.initialize({ startOnLoad: false, theme: "default" });
-        const { svg } = await mermaid.render(idRef.current, code);
+        mermaid.initialize({ startOnLoad: false, theme: "default", securityLevel: "loose" });
+        const sanitized = sanitizeMermaid(code);
+        const { svg } = await mermaid.render(idRef.current, sanitized);
         if (!cancelled && containerRef.current) {
           containerRef.current.innerHTML = svg;
         }
-      } catch {
+      } catch (e) {
         if (!cancelled) {
           setError("Mermaid 渲染异常");
+          console.error("Mermaid render error:", e);
         }
       }
     };
