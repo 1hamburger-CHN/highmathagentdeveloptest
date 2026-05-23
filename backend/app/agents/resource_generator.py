@@ -99,4 +99,26 @@ class ResourceGeneratorAgent(BaseAgent):
         except json.JSONDecodeError:
             result = {"resources": []}
 
-        return {"generated_resources": result.get("resources", [])}
+        resources = result.get("resources", [])
+
+        # Build a text message summarizing the generated resources
+        summary_parts = ["已为你生成以下学习资源：\n"]
+        for r in resources:
+            rtype = r.get("type", "")
+            title = r.get("title", "")
+            content = r.get("content", "")
+            if rtype == "mindmap":
+                summary_parts.append(f"### {title}\n```mermaid\n{content}\n```\n")
+            elif rtype == "lecture":
+                summary_parts.append(f"### {title}\n{content}\n")
+            elif rtype == "exercise":
+                summary_parts.append(f"### {title}\n{content}\n")
+            elif rtype == "reading":
+                summary_parts.append(f"### {title}\n{content}\n")
+
+        message_text = "\n".join(summary_parts) if summary_parts else "资源生成完成，但内容为空。请再试一次。"
+
+        return {
+            "generated_resources": resources,
+            "messages": [{"role": "assistant", "content": message_text}],
+        }
