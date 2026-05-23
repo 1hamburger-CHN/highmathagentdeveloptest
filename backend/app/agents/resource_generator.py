@@ -152,7 +152,7 @@ class ResourceGeneratorAgent(BaseAgent):
         if ask_mindmap:
             messages.append({
                 "role": "assistant",
-                "content": "需要我帮你详细讲解吗？回复\"帮我讲解\"即可。",
+                "content": "\n\n---\n\n需要我帮你详细讲解吗？回复\"帮我讲解\"即可。",
                 "plaintext": True,
             })
 
