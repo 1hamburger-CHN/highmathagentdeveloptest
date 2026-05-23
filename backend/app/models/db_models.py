@@ -35,7 +35,7 @@ def _execute(sql: str, params: list | None = None) -> dict | None:
     if params:
         stmt["args"] = [{"type": "text", "value": str(p)} for p in params]
     results = _pipeline([{"type": "execute", "stmt": stmt}])
-    return results[0]["result"]
+    return results[0]["response"]["result"]
 
 
 def init_db():
@@ -57,7 +57,7 @@ def _execute_raw(sql: str, params: list | None = None) -> dict:
     if params:
         stmt["args"] = [{"type": "text", "value": str(p)} for p in params]
     results = _pipeline([{"type": "execute", "stmt": stmt}])
-    return results[0]["result"]
+    return results[0]["response"]["result"]
 
 
 # --- User helpers ---

@@ -73,7 +73,7 @@ async def debug_turso():
     proxy_vars = {k: os.environ.get(k, "") for k in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "NO_PROXY", "no_proxy"]}
     try:
         result = _pipeline([{"type": "execute", "stmt": {"sql": "SELECT 1 as test"}}])
-        rows = result[0]["result"]["rows"]
+        rows = result[0]["response"]["result"]["rows"]
         return {
             "turso_host": _TURSO_HOST,
             "token_len": token_len,
