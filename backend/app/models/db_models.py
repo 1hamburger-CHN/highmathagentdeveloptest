@@ -1,35 +1,43 @@
 """Database abstraction — Turso via HTTP API with graceful fallback."""
 import json
 import logging
-import subprocess
+from http.client import HTTPSConnection
+from urllib.parse import urlparse
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 _TURSO_HOST = settings.turso_url.replace("libsql://", "https://")
+_parsed = urlparse(_TURSO_HOST)
+_TURSO_NETLOC = _parsed.netloc  # e.g. "socratic-tutor-xxx.turso.io"
 _available = True  # Tables pre-created in Turso; init_db is best-effort
 
 
 def _pipeline(requests: list[dict]) -> list[dict]:
-    """Send a batch of SQL statements to Turso via HTTP pipeline API using curl."""
+    """Send a batch of SQL statements to Turso via HTTP pipeline API."""
     if not settings.turso_token:
         raise RuntimeError("TURSO_TOKEN is not set")
 
-    url = f"{_TURSO_HOST}/v2/pipeline"
     body = json.dumps({"requests": requests})
-
-    result = subprocess.run(
-        ["curl", "-s", "-X", "POST", url,
-         "-H", f"Authorization: Bearer {settings.turso_token}",
-         "-H", "Content-Type: application/json",
-         "-d", body,
-         "--connect-timeout", "30", "--max-time", "30"],
-        capture_output=True, text=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"curl failed: {result.stderr.strip()}")
-    return json.loads(result.stdout)
+    conn = HTTPSConnection(_TURSO_NETLOC, timeout=30)
+    try:
+        conn.request(
+            "POST",
+            "/v2/pipeline",
+            body=body.encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {settings.turso_token}",
+                "Content-Type": "application/json",
+            },
+        )
+        resp = conn.getresponse()
+        data = resp.read().decode("utf-8")
+        if resp.status != 200:
+            raise RuntimeError(f"Turso HTTP {resp.status}: {data[:200]}")
+        return json.loads(data)
+    finally:
+        conn.close()
 
 
 def _execute(sql: str, params: list | None = None) -> dict | None:
