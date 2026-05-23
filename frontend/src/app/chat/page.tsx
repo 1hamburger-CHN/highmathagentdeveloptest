@@ -282,7 +282,12 @@ export default function ChatPage() {
       {/* Header */}
       <header className="flex items-center justify-between border-b px-6 py-3">
         <div>
-          <h1 className="text-lg font-semibold text-primary-900">苏格拉底教练</h1>
+          <h1 className="text-lg font-semibold text-primary-900">
+            苏格拉底教练
+            <span className="ml-2 inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 align-middle">
+              测试版
+            </span>
+          </h1>
           <p className="text-xs text-gray-500">高等数学 · 极限与连续</p>
         </div>
         <div className="flex items-center gap-2">

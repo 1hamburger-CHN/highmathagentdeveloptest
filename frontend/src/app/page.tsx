@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Brain, BookOpen, MessageCircle, TrendingUp } from "lucide-react";
+import { Brain, BookOpen, MessageCircle, TrendingUp, FileText } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -10,6 +10,9 @@ export default function LandingPage() {
         </div>
         <h1 className="mb-3 text-5xl font-bold tracking-tight text-primary-900">
           苏格拉底教练
+          <span className="ml-3 inline-flex rounded-lg bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700 align-middle">
+            测试版
+          </span>
         </h1>
         <p className="mb-2 text-xl text-primary-700">多智能体高等数学辅导系统</p>
         <p className="mb-12 text-gray-500">
@@ -50,6 +53,17 @@ export default function LandingPage() {
             <h3 className="font-semibold text-gray-900 text-sm">靶向补救</h3>
             <p className="text-xs text-gray-500 mt-1">针对盲区自动生成讲义、练习、思维导图</p>
           </div>
+        </div>
+
+        {/* Changelog link */}
+        <div className="mt-12">
+          <Link
+            href="/changelog"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-primary-500 transition-colors"
+          >
+            <FileText className="w-4 h-4" />
+            更新日志
+          </Link>
         </div>
       </div>
     </main>
