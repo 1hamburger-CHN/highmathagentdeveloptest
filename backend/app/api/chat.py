@@ -65,13 +65,17 @@ async def chat_stream(payload: dict):
         yield {"event": "start", "data": json.dumps({"session_id": session_id})}
 
         try:
-            final_state = None
+            accumulated_profile = existing_profile
             last_node_output = None
             async for event in _tutor_graph.astream(initial_state, stream_mode="updates"):
                 for node_name, node_output in event.items():
                     yield {"event": "node", "data": json.dumps({"node": node_name})}
 
                     if isinstance(node_output, dict):
+                        # Collect profile from any node that returns one
+                        if node_output.get("profile"):
+                            accumulated_profile = node_output["profile"]
+
                         if node_name not in _SILENT_NODES:
                             msgs = node_output.get("messages", [])
                             for msg in msgs:
@@ -95,21 +99,15 @@ async def chat_stream(payload: dict):
                             }
                     last_node_output = node_output
 
-            # After the graph completes, extract the final profile and save
-            # The last node contains the merged TutorState
-            updated_profile = existing_profile
-            if isinstance(last_node_output, dict):
-                updated_profile = last_node_output.get("profile", existing_profile)
-
             # Persist profile + all messages for next visit
-            _save_profile_and_session(user_id, session_id, updated_profile or {}, all_messages)
+            _save_profile_and_session(user_id, session_id, accumulated_profile or {}, all_messages)
 
             yield {
                 "event": "done",
                 "data": json.dumps({
                     "status": "complete",
                     "session_id": session_id,
-                    "profile": updated_profile,
+                    "profile": accumulated_profile,
                 }, ensure_ascii=False),
             }
 
