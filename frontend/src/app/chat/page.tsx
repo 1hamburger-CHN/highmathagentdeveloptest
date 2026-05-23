@@ -338,7 +338,7 @@ export default function ChatPage() {
               >
                 {m.role === "coach" ? (
                   <>
-                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800">
+                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900">
                       <StreamingMarkdown content={m.content} />
                     </div>
                     {m.nodes && m.nodes.length > 0 && (
