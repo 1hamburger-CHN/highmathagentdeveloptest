@@ -6,18 +6,17 @@ interface Props {
   code: string;
 }
 
-/** Wrap Mermaid node labels containing special characters in quotes so the parser doesn't choke. */
+/** Quote all Mermaid node labels so special characters don't break the parser. */
 function sanitizeMermaid(input: string): string {
-  // Fix unquoted square-bracket labels like A[lim(x→0) sinx/x = 1]
-  // Replace [...] with ["..."] if the content has special chars and isn't already quoted
-  return input.replace(/\[([^\]]+)\]/g, (_, label: string) => {
-    // Already quoted with double or single quotes — leave as-is
-    if (/^["'].*["']$/.test(label.trim())) return `[${label}]`;
-    // Contains special characters that break Mermaid parsing
-    if (/[(){}<>→εδαβγλθ∞πσΣΩ≈≠≤≥±×÷√∫∮∂∇∏∑←↑↓↔⇒⇔∀∃¬∧∨∩∪⊂⊃∈∉∥⊥∠△◻]/.test(label)) {
-      return `["${label.replace(/"/g, '\\"')}"]`;
+  return input.replace(/\[([^\]]+?)\]/g, (_, label: string) => {
+    // Already quoted — leave as-is
+    const trimmed = label.trim();
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      return `[${label}]`;
     }
-    return `[${label}]`;
+    // Wrap in double quotes, escape existing double quotes
+    return `["${label.replace(/"/g, '\\"')}"]`;
   });
 }
 
