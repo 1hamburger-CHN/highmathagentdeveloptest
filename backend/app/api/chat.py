@@ -51,13 +51,14 @@ async def chat_stream(payload: dict):
         return EventSourceResponse(rejected_generator())
 
     # Build message list: history + current message
-    all_messages = history + [{"role": "user", "content": user_message}]
+    # We'll append assistant responses during streaming, then save the full transcript
+    full_transcript: list[dict] = history + [{"role": "user", "content": user_message}]
 
     initial_state = TutorState(
         session_id=session_id,
         user_id=user_id,
         current_state=AgentState.INIT,
-        messages=all_messages,
+        messages=list(full_transcript),
         profile=existing_profile,
     )
 
@@ -78,11 +79,14 @@ async def chat_stream(payload: dict):
                         if node_name not in _SILENT_NODES:
                             msgs = node_output.get("messages", [])
                             for msg in msgs:
+                                content = msg.get("content", "")
+                                role = msg.get("role", "assistant")
+                                full_transcript.append({"role": role, "content": content})
                                 yield {
                                     "event": "message",
                                     "data": json.dumps({
-                                        "role": msg.get("role", "assistant"),
-                                        "content": msg.get("content", ""),
+                                        "role": role,
+                                        "content": content,
                                         "node": node_name,
                                     }, ensure_ascii=False),
                                 }
@@ -112,7 +116,7 @@ async def chat_stream(payload: dict):
             yield {"event": "error", "data": json.dumps({"message": "服务暂时不可用，请稍后重试"})}
         finally:
             # Always persist — even if the stream errored, save what we have
-            _save_profile_and_session(user_id, session_id, accumulated_profile or {}, all_messages)
+            _save_profile_and_session(user_id, session_id, accumulated_profile or {}, full_transcript)
 
     return EventSourceResponse(event_generator())
 
@@ -134,13 +138,13 @@ async def chat_send(payload: dict):
             "reason": safety_result["reason"],
         }
 
-    all_messages = history + [{"role": "user", "content": user_message}]
+    full_transcript = history + [{"role": "user", "content": user_message}]
 
     initial_state = TutorState(
         session_id=session_id,
         user_id=user_id,
         current_state=AgentState.INIT,
-        messages=all_messages,
+        messages=list(full_transcript),
         profile=existing_profile,
     )
 
@@ -148,11 +152,16 @@ async def chat_send(payload: dict):
         final_state = await _tutor_graph.ainvoke(initial_state)
         updated_profile = final_state.get("profile", existing_profile)
 
-        # Persist for next visit
-        _save_profile_and_session(user_id, session_id, updated_profile or {}, all_messages)
+        # Collect the full transcript including assistant responses
+        result_messages = final_state.get("messages", [])
+        full_transcript.extend(
+            {"role": m.get("role", "assistant"), "content": m.get("content", "")}
+            for m in result_messages[len(full_transcript):]
+        )
+        _save_profile_and_session(user_id, session_id, updated_profile or {}, full_transcript)
 
         return {
-            "messages": final_state.get("messages", []),
+            "messages": result_messages,
             "profile": updated_profile,
             "session_id": session_id,
             "assessment": final_state.get("assessment_result"),
