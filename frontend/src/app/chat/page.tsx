@@ -391,7 +391,7 @@ export default function ChatPage() {
         {streamingContent && (
           <div className="flex justify-start">
             <div className="max-w-[75%] rounded-2xl bg-gray-100 px-4 py-3">
-              <div className="prose prose-sm max-w-none">
+              <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900">
                 <StreamingMarkdown content={streamingContent} />
               </div>
             </div>
