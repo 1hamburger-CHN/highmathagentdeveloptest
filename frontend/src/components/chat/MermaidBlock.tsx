@@ -60,7 +60,12 @@ export default function MermaidBlock({ code }: Props) {
     const renderDiagram = async () => {
       try {
         const mermaid = (await import("mermaid")).default;
-        mermaid.initialize({ startOnLoad: false, theme: "default", securityLevel: "loose" });
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "default",
+          securityLevel: "loose",
+          flowchart: { useMaxWidth: false, htmlLabels: true, curve: "basis", nodeSpacing: 60, rankSpacing: 80 },
+        });
         const id = `m-${Math.random().toString(36).slice(2, 9)}`;
         const result = await mermaid.render(id, prepMermaid(code));
         if (!cancelled) {
