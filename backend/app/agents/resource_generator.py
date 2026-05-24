@@ -183,6 +183,9 @@ class ResourceGeneratorAgent(BaseAgent):
             content = re.sub(r"^ {4}", "", content, flags=re.MULTILINE)
 
             if rtype == "mindmap":
+                # Strip mermaid fences that the LLM may have included
+                content = re.sub(r"^```mermaid\s*\n?", "", content, flags=re.MULTILINE)
+                content = re.sub(r"\n?```\s*$", "", content)
                 if ask_mindmap:
                     footer = "\n\n> 需要我帮你详细讲解吗？回复\"帮我讲解\"即可。"
                 else:
