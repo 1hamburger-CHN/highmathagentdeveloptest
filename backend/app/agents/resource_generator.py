@@ -147,7 +147,7 @@ class ResourceGeneratorAgent(BaseAgent):
             if ask_lecture: wanted.append("lecture")
             type_instruction = f"只生成{'和'.join(wanted)}类型，不要生成其他类型。"
         else:
-            type_instruction = "至少1-2种类型。不要生成练习题（exercise），练习题需用户主动要求才生成。"
+            type_instruction = "至少1-2种类型。不要生成练习题（exercise）和思维导图（mindmap），练习题和思维导图需用户主动要求才生成。"
 
         user_prompt = f"""学生的请求：{user_request}
 目标概念：{concept}
