@@ -13,6 +13,17 @@ interface ChangeEntry {
 const changelog: ChangeEntry[] = [
   {
     date: "2026-05-24",
+    title: "Spark 图片理解 + 前端图片上传",
+    icon: <MessageCircle className="w-4 h-4" />,
+    items: [
+      "接入星火图片理解 API（WebSocket wss://spark-api.../v2.1/image），HMAC-SHA256 鉴权",
+      "前端聊天输入框新增图片上传按钮，支持拍照/选图，base64 预览，发送前可移除",
+      "用户上传图片后，后端先调星火图片 API 分析内容，再将结果喂入苏格拉底教练继续辅导",
+      "图片在用户消息气泡内显示缩略图",
+    ],
+  },
+  {
+    date: "2026-05-24",
     title: "上下文感知 + 学习画像进度条",
     icon: <MessageCircle className="w-4 h-4" />,
     items: [
