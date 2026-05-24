@@ -22,7 +22,12 @@ _SPARK_IMAGE_URL = settings.spark_image_api_url
 def _build_auth_url() -> str:
     """Build authenticated WebSocket URL with HMAC-SHA256 signature."""
     host = urlparse(_SPARK_IMAGE_URL).netloc
-    ts = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
+    # Manually build RFC 1123 date — strftime %b is locale-dependent
+    MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    now = datetime.now(timezone.utc)
+    ts = f"{DAYS[now.weekday()]}, {now.day:02d} {MONTHS[now.month-1]} {now.year} {now.hour:02d}:{now.minute:02d}:{now.second:02d} GMT"
 
     # Signature string per Spark WebSocket spec
     path = urlparse(_SPARK_IMAGE_URL).path or "/v2.1/image"
