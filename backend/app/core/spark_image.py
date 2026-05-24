@@ -102,7 +102,7 @@ async def spark_image_chat(
         "header": {"app_id": settings.spark_image_app_id, "uid": request_id},
         "parameter": {
             "chat": {
-                "domain": "imagev3",
+                "domain": "image",
                 "temperature": 0.5,
                 "max_tokens": 2048,
             }
