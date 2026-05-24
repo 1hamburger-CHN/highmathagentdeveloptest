@@ -34,7 +34,7 @@ def _build_auth_url() -> str:
 
     # HMAC-SHA256
     tmp_sha = hmac.new(
-        settings.spark_image_api_secret.encode("utf-8"),
+        settings.spark_image_api_secret.strip().encode("utf-8"),
         tmp.encode("utf-8"),
         digestmod=hashlib.sha256,
     ).digest()
@@ -66,6 +66,10 @@ def _build_auth_url() -> str:
     logger.info(f"tmp:  {tmp!r}")
     logger.info(f"sig:  {signature}")
     logger.info(f"auth_origin: {authorization_origin}")
+    sk = settings.spark_image_api_secret
+    ak = settings.spark_image_api_key
+    logger.info(f"SECRET(len={len(sk)}): {sk[:8] if len(sk)>=8 else sk}...{sk[-4:] if len(sk)>=4 else ''}")
+    logger.info(f"KEY(len={len(ak)}):    {ak[:8] if len(ak)>=8 else ak}...{ak[-4:] if len(ak)>=4 else ''}")
     logger.info(f"FULL URL: {url}")
     return url
 
