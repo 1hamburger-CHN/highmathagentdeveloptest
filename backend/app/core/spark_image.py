@@ -42,19 +42,18 @@ def _build_auth_url() -> str:
     # Base64 signature
     signature = base64.b64encode(tmp_sha).decode("utf-8")
 
-    # Authorization
+    # Authorization (raw, NOT base64 — URL-encoded directly per working sample)
     authorization_origin = (
         f'api_key="{settings.spark_image_api_key}", '
         f'algorithm="hmac-sha256", '
         f'headers="host date request-line", '
         f'signature="{signature}"'
     )
-    authorization = base64.b64encode(authorization_origin.encode("utf-8")).decode("utf-8")
 
-    # Final URL
+    # Final URL — authorization_origin is URL-encoded, NOT base64-encoded
     url = (
         f"wss://{host}{path}?"
-        f"authorization={quote(authorization)}"
+        f"authorization={quote(authorization_origin)}"
         f"&date={quote(date)}"
         f"&host={quote(host)}"
     )
