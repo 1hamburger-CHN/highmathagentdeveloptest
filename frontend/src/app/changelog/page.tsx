@@ -13,6 +13,18 @@ interface ChangeEntry {
 const changelog: ChangeEntry[] = [
   {
     date: "2026-05-24",
+    title: "上下文感知 + 学习画像进度条",
+    icon: <MessageCircle className="w-4 h-4" />,
+    items: [
+      "Safety 过滤层上下文感知：检测助手是否在提问，用户回复为合理回答时自动放行，不再拦截为无意义消息",
+      "Coach Prompt 优化：学生回答你的问题时自然承接对话，不僵硬引导回数学",
+      "聊天页新增学习画像进度条，实时显示已评估概念数 (X/17)，SSE 推送更新",
+      "思维导图修复：标签内方括号自动转全角符号，LaTeX 公式自动剥离，Mermaid 解析不再报错",
+      "分层练习题改为用户主动要求才生成，不再自动弹出",
+    ],
+  },
+  {
+    date: "2026-05-24",
     title: "复变函数内容转向",
     icon: <BookOpen className="w-4 h-4" />,
     items: [
