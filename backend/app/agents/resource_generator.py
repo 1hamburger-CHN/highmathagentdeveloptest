@@ -155,6 +155,8 @@ class ResourceGeneratorAgent(BaseAgent):
             content = content.replace("\\n", "\n").replace("\r\n", "\n")
             # Strip markdown heading markers the LLM may have injected
             content = re.sub(r"^#{1,4}\s+", "", content, flags=re.MULTILINE)
+            # Dedent — 4-space indent triggers code blocks in markdown, LLMs often indent content
+            content = re.sub(r"^ {4}", "", content, flags=re.MULTILINE)
 
             if rtype == "mindmap":
                 if ask_mindmap:

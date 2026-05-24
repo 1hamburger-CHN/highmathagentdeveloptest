@@ -384,7 +384,7 @@ export default function ChatPage() {
                     {m.plaintext ? (
                       <div className="text-sm text-gray-900 whitespace-pre-wrap">{m.content}</div>
                     ) : (
-                      <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900">
+                      <div className="prose prose-sm max-w-none text-gray-800 prose-headings:text-gray-900 prose-p:text-gray-800 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900 prose-li:text-gray-800 prose-blockquote:text-gray-700">
                         <StreamingMarkdown key={i} content={m.content} />
                       </div>
                     )}
@@ -432,7 +432,7 @@ export default function ChatPage() {
         {streamingContent && (
           <div className="flex justify-start">
             <div className="max-w-[75%] rounded-2xl bg-gray-100 px-4 py-3">
-              <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-800 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900">
+              <div className="prose prose-sm max-w-none text-gray-800 prose-headings:text-gray-900 prose-p:text-gray-800 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900 prose-li:text-gray-800 prose-blockquote:text-gray-700">
                 <StreamingMarkdown content={streamingContent} />
               </div>
             </div>
