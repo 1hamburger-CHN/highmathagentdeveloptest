@@ -49,15 +49,16 @@ def _build_auth_url() -> str:
     )
     auth_b64 = base64.b64encode(auth_raw.encode()).decode()
 
-    params = urlencode({
-        "authorization": auth_b64,
-        "date": ts,
-        "host": host,
-    })
-    url = f"{_SPARK_IMAGE_URL}?{params}"
+    # Manually build URL — urlencode uses quote_plus which encodes spaces as +
+    # but the HMAC signature uses literal spaces, causing auth mismatch
+    url = (
+        f"{_SPARK_IMAGE_URL}?"
+        f"authorization={quote(auth_b64, safe='')}"
+        f"&date={quote(ts, safe='')}"
+        f"&host={quote(host, safe='')}"
+    )
     logger.info(f"Spark Image Auth: host={host} date={ts}")
     logger.info(f"Spark Image Auth: sig_raw={sig_raw!r}")
-    logger.info(f"Spark Image Auth: api_key first 20 chars={settings.spark_image_api_key[:20]}...")
     return url
 
 
