@@ -75,6 +75,20 @@ async def chat_stream(payload: dict):
                     if isinstance(node_output, dict):
                         if node_output.get("profile"):
                             accumulated_profile = node_output["profile"]
+                            # Emit profile progress after profile is updated
+                            km = accumulated_profile.get("knowledge_mastery", [])
+                            assessed = [c for c in km if c.get("score", 0) > 0]
+                            yield {
+                                "event": "profile_progress",
+                                "data": json.dumps({
+                                    "assessed": len(assessed),
+                                    "total_concepts": 17,
+                                    "concepts": [{
+                                        "id": c["concept_id"],
+                                        "score": c["score"],
+                                    } for c in assessed],
+                                }),
+                            }
 
                         if node_name not in _SILENT_NODES:
                             msgs = node_output.get("messages", [])

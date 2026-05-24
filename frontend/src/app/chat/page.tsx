@@ -54,6 +54,7 @@ export default function ChatPage() {
 
   const [debug, setDebug] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [profileProgress, setProfileProgress] = useState<{ assessed: number; total: number } | null>(null);
 
   const handleCopy = useCallback((text: string, index: number) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -74,6 +75,11 @@ export default function ChatPage() {
       .then((data) => {
         if (data.profile) {
           setProfile(data.profile);
+          const km = (data.profile as Record<string, unknown>).knowledge_mastery as Array<{ score: number }> | undefined;
+          if (km) {
+            const assessed = km.filter((c) => c.score > 0).length;
+            setProfileProgress({ assessed, total: 17 });
+          }
         }
       })
       .catch(() => {});
@@ -244,6 +250,13 @@ export default function ChatPage() {
       setActiveNode(data.node as string);
       nodesRef.current.add(data.node as string);
     }
+    // Profile progress update
+    if (data.assessed !== undefined) {
+      setProfileProgress({
+        assessed: data.assessed as number,
+        total: data.total_concepts as number,
+      });
+    }
     if (data.role && data.content) {
       streamingRef.current += data.content as string;
       setStreamingContent(streamingRef.current);
@@ -261,6 +274,11 @@ export default function ChatPage() {
       // Persist updated profile from backend
       if (data.profile) {
         setProfile(data.profile as Record<string, unknown>);
+        const km = (data.profile as Record<string, unknown>).knowledge_mastery as Array<{ score: number }> | undefined;
+        if (km) {
+          const assessed = km.filter((c) => c.score > 0).length;
+          setProfileProgress({ assessed, total: 17 });
+        }
       }
       setDebug("");
     }
@@ -289,6 +307,24 @@ export default function ChatPage() {
             </span>
           </h1>
           <p className="text-xs text-gray-500">复变函数</p>
+          {profileProgress && profileProgress.total > 0 && (
+            <div className="mt-2 w-64">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-500">
+                  学习画像 {profileProgress.assessed}/{profileProgress.total} 概念
+                </span>
+                <span className="text-xs font-medium text-primary-600">
+                  {Math.round((profileProgress.assessed / profileProgress.total) * 100)}%
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary-500 transition-all duration-500 ease-out"
+                  style={{ width: `${(profileProgress.assessed / profileProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {/* Load history button */}
