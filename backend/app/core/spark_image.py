@@ -53,8 +53,13 @@ def _build_auth_url() -> str:
         "authorization": auth_b64,
         "date": ts,
         "host": host,
+        "app_id": settings.spark_image_app_id,
     })
-    return f"{_SPARK_IMAGE_URL}?{params}"
+    url = f"{_SPARK_IMAGE_URL}?{params}"
+    logger.info(f"Spark Image Auth: host={host} date={ts}")
+    logger.info(f"Spark Image Auth: sig_raw={sig_raw!r}")
+    logger.info(f"Spark Image Auth: api_key first 20 chars={settings.spark_image_api_key[:20]}...")
+    return url
 
 
 async def spark_image_chat(
