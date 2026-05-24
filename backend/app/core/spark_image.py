@@ -104,10 +104,14 @@ async def spark_image_chat(
                 "text": [
                     {
                         "role": "user",
-                        "content": prompt,
+                        "content": f"data:image/jpeg;base64,{image_data}",
                         "content_type": "image",
-                        "content_url": f"data:image/jpeg;base64,{image_data}",
-                    }
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                        "content_type": "text",
+                    },
                 ]
             }
         },
