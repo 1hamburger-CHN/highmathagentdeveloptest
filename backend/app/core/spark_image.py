@@ -83,11 +83,16 @@ async def spark_image_chat(
     timeout: int = 60,
 ) -> str:
     """Send image + prompt to Spark Image API via WebSocket, return response text."""
+    # Preserve original MIME type from data URL
+    mime = "image/jpeg"
     if image_data.startswith("data:"):
-        image_data = image_data.split(",", 1)[1]
-    # Ensure clean base64 — strip whitespace, fix URL-safe chars
-    image_data = image_data.strip().replace("-", "+").replace("_", "/")
-    logger.info(f"Image base64 length: {len(image_data)}, first 20 chars: {image_data[:20]}")
+        header, image_data = image_data.split(",", 1)
+        if ":" in header:
+            mime = header.split(":")[1].split(";")[0]  # e.g. "image/png"
+    # Ensure clean base64
+    image_data = image_data.strip().replace("\n", "").replace("\r", "").replace(" ", "")
+    image_data = image_data.replace("-", "+").replace("_", "/")
+    logger.info(f"Image mime={mime} base64_len={len(image_data)} first20={image_data[:20]}")
 
     ws_url = _build_auth_url()
     logger.info(f"Spark Image FULL URL:\n{ws_url}")
@@ -107,7 +112,7 @@ async def spark_image_chat(
                 "text": [
                     {
                         "role": "user",
-                        "content": f"data:image/jpeg;base64,{image_data}",
+                        "content": f"data:{mime};base64,{image_data}",
                         "content_type": "image",
                     },
                     {
