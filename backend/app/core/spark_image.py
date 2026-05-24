@@ -22,7 +22,9 @@ _SPARK_IMAGE_URL = settings.spark_image_api_url
 
 def _build_auth_url() -> str:
     """Build authenticated WebSocket URL with HMAC-SHA256 signature."""
-    host = urlparse(_SPARK_IMAGE_URL).netloc
+    # Strip :443 port if present — websockets may add it to Host header
+    raw_host = urlparse(_SPARK_IMAGE_URL).netloc
+    host = raw_host.split(":")[0]  # spark-api.cn-huabei-1.xf-yun.com
     path = urlparse(_SPARK_IMAGE_URL).path or "/v2.1/image"
 
     # RFC 1123 date per Spark spec
@@ -31,6 +33,8 @@ def _build_auth_url() -> str:
 
     # Signature string per Spark WebSocket spec
     sig_raw = f"host: {host}\ndate: {ts}\nGET {path} HTTP/1.1"
+    logger.info(f"Spark Image Auth: raw_host={raw_host} clean_host={host} date={ts}")
+    logger.info(f"Spark Image Auth: sig_raw={sig_raw!r}")
     sig = base64.b64encode(
         hmac.new(
             settings.spark_image_api_secret.encode(),
