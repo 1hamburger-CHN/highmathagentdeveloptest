@@ -24,8 +24,8 @@ def _build_auth_url() -> str:
     host = urlparse(_SPARK_IMAGE_URL).netloc
     ts = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
-    # Signature string
-    sig_raw = f"host: {host}\ndate: {ts}\nGET /v2.1/image HTTP/1.1"
+    # Signature string — try host+date only (no request-line)
+    sig_raw = f"host: {host}\ndate: {ts}"
     sig = base64.b64encode(
         hmac.new(
             settings.spark_image_api_secret.encode(),
@@ -38,7 +38,7 @@ def _build_auth_url() -> str:
     auth_raw = (
         f'api_key="{settings.spark_image_api_key}", '
         f'algorithm="hmac-sha256", '
-        f'headers="host date request-line", '
+        f'headers="host date", '
         f'signature="{sig}"'
     )
     auth_b64 = base64.b64encode(auth_raw.encode()).decode()
