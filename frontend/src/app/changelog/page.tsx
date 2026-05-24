@@ -12,6 +12,28 @@ interface ChangeEntry {
 
 const changelog: ChangeEntry[] = [
   {
+    date: "2026-05-24",
+    title: "复变函数内容转向",
+    icon: <BookOpen className="w-4 h-4" />,
+    items: [
+      "知识库完全重写：高等数学极限与连续 → 复变函数，17 个知识节点覆盖 7 章",
+      "所有 Agent Prompt 重构：Diagnostician / Coach / Profile Builder 知识树全面更新",
+      "前端全页面文案替换：首页、聊天、画像、知识树、更新日志",
+      "Safety Pipeline 关键词和问候语适配复变函数领域",
+    ],
+  },
+  {
+    date: "2026-05-24",
+    title: "Railway 部署优化",
+    icon: <Zap className="w-4 h-4" />,
+    items: [
+      "嵌入模型切换：BGE-M3 (2GB) → MiniLM-L6-v2 (80MB)，适配 Railway 512MB 免费档",
+      "容器启动自动重建知识库索引，重启不再丢数据",
+      "索引放入后台线程，避免启动超时被健康检查 kill",
+      "ChromaDB + sentence-transformers + jieba 依赖补全",
+    ],
+  },
+  {
     date: "2026-05-23",
     title: "LaTeX 数学公式渲染",
     icon: <Sparkles className="w-4 h-4" />,
