@@ -98,7 +98,7 @@ async def spark_image_chat(
     }
 
     try:
-        import websockets
+        from websockets.client import connect as ws_connect
     except ImportError:
         logger.error("websockets not installed")
         return "图片理解服务暂不可用（缺少 websockets 依赖）。"
@@ -106,7 +106,12 @@ async def spark_image_chat(
     full_response = []
 
     try:
-        async with websockets.connect(ws_url, open_timeout=timeout, ping_interval=None) as ws:
+        from urllib.parse import urlparse as _up, urlunparse
+        p = _up(ws_url)
+        # Rebuild URI preserving query string explicitly
+        uri = urlunparse(("wss", p.netloc, p.path, "", p.query, ""))
+        logger.info(f"Spark Image WS URI: {uri[:200]}...")
+        async with ws_connect(uri, open_timeout=timeout, ping_interval=None) as ws:
             await ws.send(json.dumps(payload, ensure_ascii=False))
 
             while True:
