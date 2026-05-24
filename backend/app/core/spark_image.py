@@ -112,7 +112,7 @@ async def spark_image_chat(
                 "text": [
                     {
                         "role": "user",
-                        "content": f"data:{mime};base64,{image_data}",
+                        "content": image_data,
                         "content_type": "image",
                     },
                     {
