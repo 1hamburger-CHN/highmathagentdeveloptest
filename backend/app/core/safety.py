@@ -97,6 +97,7 @@ class SafetyPipeline:
         "讲义", "课件", "教程", "笔记", "总结", "归纳",
         "练习题", "习题", "出题", "试卷", "题目",
         "阅读材料", "拓展", "资料", "帮我", "给我",
+        "介绍", "概述", "概览", "入门",
     ]
 
     # Common vague-but-valid math conversation responses

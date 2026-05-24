@@ -160,6 +160,7 @@ def _is_resource_request(text: str) -> bool:
         "讲义", "课件", "教程", "笔记", "总结", "归纳",
         "练习题", "习题", "题目", "出题", "试卷",
         "阅读材料", "拓展", "资料",
+        "介绍", "概述", "概览", "入门",
     ]
     return any(kw in text for kw in resource_keywords)
 
