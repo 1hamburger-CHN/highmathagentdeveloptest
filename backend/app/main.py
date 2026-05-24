@@ -73,7 +73,8 @@ async def lifespan(app: FastAPI):
     logger.info("Starting 苏格拉底教练 server...")
     init_db()
     logger.info(f"Turso database ready at {settings.turso_url}")
-    ensure_knowledge_base_indexed()
+    import asyncio
+    asyncio.get_running_loop().run_in_executor(None, ensure_knowledge_base_indexed)
     yield
     logger.info("Shutting down...")
 
