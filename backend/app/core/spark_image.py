@@ -53,7 +53,6 @@ def _build_auth_url() -> str:
         "authorization": auth_b64,
         "date": ts,
         "host": host,
-        "app_id": settings.spark_image_app_id,
     })
     url = f"{_SPARK_IMAGE_URL}?{params}"
     logger.info(f"Spark Image Auth: host={host} date={ts}")
