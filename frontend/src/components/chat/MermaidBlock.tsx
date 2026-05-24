@@ -9,12 +9,20 @@ interface Props {
 
 function prepMermaid(input: string): string {
   let code = input.replace(/^```mermaid\s*\n?/i, "").replace(/\n?```\s*$/, "");
+  // Quote unquoted labels, escape ] inside labels (breaks mermaid bracket parsing)
   code = code.replace(/\[([^\]]+?)\]/g, (_, label: string) => {
     const t = label.trim();
-    if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
-      return `[${label}]`;
-    }
-    return `["${label.replace(/"/g, '\\"')}"]`;
+    const alreadyQuoted = (t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"));
+    const inner = alreadyQuoted ? t.slice(1, -1) : t;
+    // Strip LaTeX math, replace brackets that break mermaid parsing
+    const safe = inner
+      .replace(/\$[^$]*\$/g, "")   // strip $...$ inline math
+      .replace(/]/g, "〕")          // ] inside label breaks mermaid bracket parsing
+      .replace(/\[/g, "〔");        // [ same
+    return `["${safe.replace(/"/g, '\\"')}"]`;
+    return alreadyQuoted
+      ? `["${safe.replace(/"/g, '\\"')}"]`
+      : `["${safe.replace(/"/g, '\\"')}"]`;
   });
   return code;
 }
