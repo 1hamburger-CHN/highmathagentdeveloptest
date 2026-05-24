@@ -24,8 +24,9 @@ def _build_auth_url() -> str:
     host = urlparse(_SPARK_IMAGE_URL).netloc
     ts = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
-    # Signature string — try host+date only (no request-line)
-    sig_raw = f"host: {host}\ndate: {ts}"
+    # Signature string per Spark WebSocket spec
+    path = urlparse(_SPARK_IMAGE_URL).path or "/v2.1/image"
+    sig_raw = f"host: {host}\ndate: {ts}\nGET {path} HTTP/1.1"
     sig = base64.b64encode(
         hmac.new(
             settings.spark_image_api_secret.encode(),
@@ -38,7 +39,7 @@ def _build_auth_url() -> str:
     auth_raw = (
         f'api_key="{settings.spark_image_api_key}", '
         f'algorithm="hmac-sha256", '
-        f'headers="host date", '
+        f'headers="host date request-line", '
         f'signature="{sig}"'
     )
     auth_b64 = base64.b64encode(auth_raw.encode()).decode()
@@ -62,6 +63,7 @@ async def spark_image_chat(
         image_data = image_data.split(",", 1)[1]
 
     ws_url = _build_auth_url()
+    logger.info(f"Spark Image WS URL: {ws_url[:120]}...")
 
     request_id = uuid.uuid4().hex
     payload = {
