@@ -1,6 +1,6 @@
 """Spark Image Understanding API via WebSocket (wss://spark-api.../v2.1/image).
 
-HMAC-SHA256 signature auth, WebSocket streaming, base64 image support.
+HMAC-SHA256 signature auth per official Spark WebSocket spec.
 """
 import base64
 import hashlib
@@ -9,9 +9,8 @@ import json
 import logging
 import uuid
 from datetime import datetime
-from time import mktime
-from urllib.parse import urlencode, urlparse
-from wsgiref.handlers import format_date_time
+from email.utils import formatdate
+from urllib.parse import quote, urlparse
 
 from app.config import settings
 
@@ -21,46 +20,45 @@ _SPARK_IMAGE_URL = settings.spark_image_api_url
 
 
 def _build_auth_url() -> str:
-    """Build authenticated WebSocket URL with HMAC-SHA256 signature."""
-    # Strip existing port, then explicitly add :443 for WSS
-    raw_host = urlparse(_SPARK_IMAGE_URL).netloc
-    host = raw_host.split(":")[0] + ":443"
-    path = urlparse(_SPARK_IMAGE_URL).path or "/v2.1/image"
+    """Build authenticated WebSocket URL per Spark official sample code."""
+    host = urlparse(_SPARK_IMAGE_URL).netloc
+    path = urlparse(_SPARK_IMAGE_URL).path
 
-    # RFC 1123 date per Spark spec
-    now = datetime.now()
-    ts = format_date_time(mktime(now.timetuple()))
+    # RFC 1123 date
+    date = formatdate(timeval=None, localtime=False, usegmt=True)
 
-    # Signature string per Spark WebSocket spec
-    sig_raw = f"host: {host}\ndate: {ts}\nGET {path} HTTP/1.1"
-    logger.info(f"Spark Image Auth: raw_host={raw_host} clean_host={host} date={ts}")
-    logger.info(f"Spark Image Auth: sig_raw={sig_raw!r}")
-    sig = base64.b64encode(
-        hmac.new(
-            settings.spark_image_api_secret.encode(),
-            sig_raw.encode(),
-            hashlib.sha256,
-        ).digest()
-    ).decode()
+    # Signature string
+    tmp = f"host: {host}\n"
+    tmp += f"date: {date}\n"
+    tmp += f"GET {path} HTTP/1.1"
 
-    # Authorization header
-    auth_raw = (
+    # HMAC-SHA256
+    tmp_sha = hmac.new(
+        settings.spark_image_api_secret.encode("utf-8"),
+        tmp.encode("utf-8"),
+        digestmod=hashlib.sha256,
+    ).digest()
+
+    # Base64 signature
+    signature = base64.b64encode(tmp_sha).decode("utf-8")
+
+    # Authorization
+    authorization_origin = (
         f'api_key="{settings.spark_image_api_key}", '
         f'algorithm="hmac-sha256", '
         f'headers="host date request-line", '
-        f'signature="{sig}"'
+        f'signature="{signature}"'
     )
-    auth_b64 = base64.b64encode(auth_raw.encode()).decode()
+    authorization = base64.b64encode(authorization_origin.encode("utf-8")).decode("utf-8")
 
-    # Build URL with urlencode per Spark spec (spaces → + in params)
-    v = {
-        "authorization": auth_b64,
-        "date": ts,
-        "host": host,
-    }
-    url = f"{_SPARK_IMAGE_URL}?{urlencode(v)}"
-    logger.info(f"Spark Image Auth: host={host} date={ts}")
-    logger.info(f"Spark Image Auth: sig_raw={sig_raw!r}")
+    # Final URL
+    url = (
+        f"wss://{host}{path}?"
+        f"authorization={quote(authorization)}"
+        f"&date={quote(date)}"
+        f"&host={quote(host)}"
+    )
+    logger.info(f"Spark Image Auth: host={host} date={date}")
     return url
 
 
@@ -70,12 +68,10 @@ async def spark_image_chat(
     timeout: int = 60,
 ) -> str:
     """Send image + prompt to Spark Image API via WebSocket, return response text."""
-    # Normalize image data — strip data URL prefix if present
     if image_data.startswith("data:"):
         image_data = image_data.split(",", 1)[1]
 
     ws_url = _build_auth_url()
-    logger.info(f"Spark Image WS URL: {ws_url[:120]}...")
 
     request_id = uuid.uuid4().hex
     payload = {
@@ -104,11 +100,10 @@ async def spark_image_chat(
     try:
         import websockets
     except ImportError:
-        logger.error("websockets not installed; cannot call Spark Image API")
+        logger.error("websockets not installed")
         return "图片理解服务暂不可用（缺少 websockets 依赖）。"
 
     full_response = []
-    status = 0  # 0=first, 1=streaming, 2=complete
 
     try:
         async with websockets.connect(ws_url, open_timeout=timeout, ping_interval=None) as ws:
@@ -120,7 +115,6 @@ async def spark_image_chat(
 
                 header = data.get("header", {})
                 code = header.get("code", 0)
-                sid = header.get("sid", "")
 
                 if code != 0:
                     msg = header.get("message", f"Spark Image API error {code}")
@@ -136,13 +130,11 @@ async def spark_image_chat(
                     if content:
                         full_response.append(content)
 
-                status = header.get("status", 0)
-                if status == 2:  # complete
+                if header.get("status") == 2:
                     break
 
     except Exception as e:
         detail = str(e)
-        # Capture HTTP response details from websockets InvalidStatus
         if hasattr(e, "response"):
             detail += f" | body: {getattr(e.response, 'body', b'')[:300]}"
         logger.exception(f"Spark Image WebSocket error: {detail}")
