@@ -64,16 +64,16 @@ async def chat_stream(payload: dict):
 
             # Feed analysis into normal coaching pipeline
             inner_prompt = f"学生上传了一张图片，图片内容分析如下：\n\n{analysis}\n\n学生的原始问题是：{user_message}\n\n请基于图片内容进行苏格拉底式辅导。"
-            inner_payload = dict(payload)
-            inner_payload["message"] = inner_prompt
-            inner_payload.pop("image", None)
+            inner_transcript = history + [{"role": "user", "content": user_message}]
+            inner_transcript.append({"role": "assistant", "content": f"图片分析结果：{analysis}"})
+            accumulated = existing_profile
 
             async for event in _tutor_graph.astream(
                 TutorState(
                     session_id=session_id,
                     user_id=user_id,
                     current_state=AgentState.INIT,
-                    messages=history + [{"role": "user", "content": inner_prompt}],
+                    messages=inner_transcript,
                     profile=existing_profile,
                 ),
                 stream_mode="updates",
@@ -81,19 +81,24 @@ async def chat_stream(payload: dict):
                 for node_name, node_output in event.items():
                     yield {"event": "node", "data": json.dumps({"node": node_name})}
                     if isinstance(node_output, dict):
+                        if node_output.get("profile"):
+                            accumulated = node_output["profile"]
                         msgs = node_output.get("messages", [])
                         for msg in msgs:
-                            if msg.get("content", ""):
+                            content = msg.get("content", "")
+                            if content:
+                                inner_transcript.append({"role": "assistant", "content": content})
                                 yield {
                                     "event": "message",
                                     "data": json.dumps({
                                         "role": msg.get("role", "assistant"),
-                                        "content": msg.get("content", ""),
+                                        "content": content,
                                         "node": node_name,
                                     }, ensure_ascii=False),
                                 }
 
-            yield {"event": "done", "data": json.dumps({"status": "complete", "session_id": session_id})}
+            _save_profile_and_session(user_id, session_id, accumulated or {}, inner_transcript)
+            yield {"event": "done", "data": json.dumps({"status": "complete", "session_id": session_id, "profile": accumulated})}
 
         return EventSourceResponse(image_stream_generator())
 
