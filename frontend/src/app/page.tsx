@@ -14,7 +14,7 @@ export default function LandingPage() {
             测试版
           </span>
         </h1>
-        <p className="mb-2 text-xl text-primary-700">多智能体高等数学辅导系统</p>
+        <p className="mb-2 text-xl text-primary-700">多智能体复变函数辅导系统</p>
         <p className="mb-12 text-gray-500">
           通过苏格拉底式追问，发现你不知道自己哪里不懂，追问直到你真的懂了
         </p>

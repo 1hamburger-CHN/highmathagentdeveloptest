@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     api_timeout: int = 120
     sympy_timeout: int = 5
 
-    model_config = {"env_file": str(_PROJECT_ROOT / ".env"), "env_file_encoding": "utf-8"}
+    model_config = {"env_file": str(_PROJECT_ROOT / ".env"), "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

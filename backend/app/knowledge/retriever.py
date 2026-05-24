@@ -15,7 +15,7 @@ class HybridRetriever:
         )
         self.embedder = BGEM3Embedder(settings.embedding_model)
         self.collection = self.client.get_or_create_collection(
-            name="limits_continuity",
+            name="complex_analysis",
             embedding_function=self.embedder,
         )
 

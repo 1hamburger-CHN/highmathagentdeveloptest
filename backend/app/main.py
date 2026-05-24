@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="苏格拉底教练 — 多智能体辅导系统",
+    title="苏格拉底教练 — 多智能体复变函数辅导系统",
     version="0.1.0",
     lifespan=lifespan,
 )

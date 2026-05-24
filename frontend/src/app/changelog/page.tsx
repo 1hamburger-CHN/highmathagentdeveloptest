@@ -82,7 +82,7 @@ export default function ChangelogPage() {
             返回首页
           </Link>
           <h1 className="text-3xl font-bold text-primary-900 mb-2">更新日志</h1>
-          <p className="text-gray-500">苏格拉底教练 — 多智能体高等数学辅导系统</p>
+          <p className="text-gray-500">苏格拉底教练 — 多智能体复变函数辅导系统</p>
           <div className="mt-3 inline-flex rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
             测试版
           </div>

@@ -1,522 +1,565 @@
-# 高等数学知识库: 极限 (v1)
-# 18个知识节点，覆盖数列极限、函数极限、重要极限、等价无穷小
+# 复变函数知识库 (v1)
+# 17个知识节点，覆盖复数基础、解析函数、初等函数、复积分、级数展开、留数定理、共形映射
 # Schema: id, title, content (definition, theorems, examples, misconceptions), prerequisites, related, difficulty, bloom_level
 
 nodes:
   # ============================================================
-  # 1.1 数列极限
+  # 1. 复数与复平面
   # ============================================================
 
-  - id: 'limit-1.1.1'
-    title: '数列极限的定义 (ε-N语言)'
-    difficulty: 3
-    bloom_level: 2
+  - id: 'complex-1.1'
+    title: '复数定义与运算'
+    difficulty: 1
+    bloom_level: 1
     content:
       definition: |
-        设 $\{x_n\}$ 为一数列，$a$ 为一常数。若对任意给定的 $\varepsilon > 0$，总存在正整数 $N$，
-        使得当 $n > N$ 时，恒有 $|x_n - a| < \varepsilon$，则称数列 $\{x_n\}$ 收敛于 $a$，
-        记作 $\lim\limits_{n \to \infty} x_n = a$ 或 $x_n \to a\ (n \to \infty)$。
+        设 $x, y \in \mathbb{R}$，称 $z = x + iy$ 为**复数**，其中 $i$ 为虚数单位，满足 $i^2 = -1$。
+        $x = \operatorname{Re}(z)$ 称为实部，$y = \operatorname{Im}(z)$ 称为虚部。
 
-        **ε-N定义的逻辑结构**: $\forall \varepsilon > 0, \exists N \in \mathbb{N}^+, \forall n > N: |x_n - a| < \varepsilon$
+        **基本运算**：
+        - 加减：$(x_1 + iy_1) \pm (x_2 + iy_2) = (x_1 \pm x_2) + i(y_1 \pm y_2)$
+        - 乘法：$(x_1 + iy_1)(x_2 + iy_2) = (x_1x_2 - y_1y_2) + i(x_1y_2 + x_2y_1)$
+        - 共轭：$\bar{z} = x - iy$
+        - 模：$|z| = \sqrt{x^2 + y^2} = \sqrt{z\bar{z}}$
+        - 除法：$\frac{z_1}{z_2} = \frac{z_1\bar{z_2}}{|z_2|^2} \quad (z_2 \neq 0)$
       theorems: []
       examples:
-        - question: '用ε-N语言证明 $\lim\limits_{n \to \infty} \frac{1}{n} = 0$'
+        - question: '设 $z_1 = 2 + 3i$, $z_2 = 1 - i$，求 $z_1z_2$ 和 $\frac{z_1}{z_2}$'
           solution: |
-            任给 $\varepsilon > 0$，要使 $|\frac{1}{n} - 0| = \frac{1}{n} < \varepsilon$，
-            只要 $n > \frac{1}{\varepsilon}$。取 $N = \lfloor\frac{1}{\varepsilon}\rfloor + 1$，
-            当 $n > N$ 时恒有 $|\frac{1}{n} - 0| < \varepsilon$。证毕。
+            $z_1z_2 = (2+3i)(1-i) = 2 - 2i + 3i - 3i^2 = 2 + i + 3 = 5 + i$
+
+            $\frac{z_1}{z_2} = \frac{2+3i}{1-i} \cdot \frac{1+i}{1+i} = \frac{(2+3i)(1+i)}{1+1} = \frac{-1 + 5i}{2} = -\frac{1}{2} + \frac{5}{2}i$
       misconceptions:
-        - 'ε必须是一个很小的数“ — 错，ε是任意正数，关键在于”任意'
-        - 'N找到了就结束了 — 错，N依赖于ε，ε改变则N可能改变'
-        - '极限就是越来越接近“ — 不准确，极限是”无限接近“而非”越来越'
+        - '复数就是向量 — 复数可以表示为向量，但复数还有乘除运算和代数结构，两者不是同一概念'
+        - '$i = \sqrt{-1}$ 是唯一定义 — 实际上 $i$ 和 $-i$ 都满足 $i^2 = -1$，选择哪个是约定的'
     prerequisites: []
-    related: ["limit-1.2.1"]
+    related: ["complex-1.2"]
 
-  - id: 'limit-1.1.2'
-    title: '收敛数列的性质'
+  - id: 'complex-1.2'
+    title: '复数的几何表示与棣莫弗公式'
     difficulty: 2
     bloom_level: 2
     content:
-      definition: ""
-      theorems:
-        - statement: '唯一性: 若数列收敛，则极限唯一'
-          proof: '反证法: 若极限不唯一，设两个不同极限a和b，取ε=|a-b|/2可导出矛盾'
-        - statement: '有界性: 收敛数列必有界'
-          proof: '取ε=1，由定义N存在，N项之后|xn-a|<1，前N项取最大值即得有界'
-        - statement: '保号性: 若lim xn = a > 0，则存在N，当n>N时xn > 0'
-      examples:
-        - question: '数列 xn = (-1)^n 是否收敛？'
-          solution: |
-            不收敛。假设收敛于a，取ε=1/2，|xn - a| < 1/2对充分大的n成立。
-            但|x_{2k} - x_{2k+1}| = 2 > 1，与三角不等式矛盾。
-      misconceptions:
-        - '有界数列一定收敛 — 错，反例: xn = (-1)^n 有界但不收敛'
-        - '无界数列一定发散 — 对（逆否命题）'
-    prerequisites: ["limit-1.1.1"]
-    related: ["limit-1.1.3"]
+      definition: |
+        **极坐标表示**：$z = r(\cos\theta + i\sin\theta)$，其中 $r = |z|$ 为模，$\theta = \arg z$ 为辐角。
 
-  - id: 'limit-1.1.3'
-    title: '极限的四则运算法则'
+        **辐角主值**：通常取 $\arg z \in (-\pi, \pi]$ 或 $[0, 2\pi)$。
+
+        **棣莫弗(De Moivre)公式**：
+        $$(\cos\theta + i\sin\theta)^n = \cos(n\theta) + i\sin(n\theta)$$
+
+        **欧拉(Euler)公式**：$e^{i\theta} = \cos\theta + i\sin\theta$，故 $z = re^{i\theta}$
+      theorems:
+        - statement: '棣莫弗公式: $(\cos\theta + i\sin\theta)^n = \cos(n\theta) + i\sin(n\theta)$'
+      examples:
+        - question: '将 $z = -1 + i\sqrt{3}$ 化为极坐标形式'
+          solution: |
+            $r = \sqrt{(-1)^2 + (\sqrt{3})^2} = 2$
+            $\theta = \pi - \frac{\pi}{3} = \frac{2\pi}{3}$（第二象限）
+            故 $z = 2(\cos\frac{2\pi}{3} + i\sin\frac{2\pi}{3}) = 2e^{i\cdot 2\pi/3}$
+        - question: '用棣莫弗公式计算 $(1+i)^{10}$'
+          solution: |
+            $1+i = \sqrt{2}(\cos\frac{\pi}{4} + i\sin\frac{\pi}{4})$
+            $(1+i)^{10} = (\sqrt{2})^{10}(\cos\frac{10\pi}{4} + i\sin\frac{10\pi}{4}) = 32(\cos\frac{5\pi}{2} + i\sin\frac{5\pi}{2}) = 32(0 + i) = 32i$
+      misconceptions:
+        - '辐角是唯一的 — 辐角可以差 $2\pi$ 的整数倍，主值是唯一定义的'
+        - '棣莫弗公式对任何n都成立 — 对，不仅对正整数成立，但对非整数次幂需要小心多值性'
+    prerequisites: ["complex-1.1"]
+    related: ["complex-1.1", "complex-1.3"]
+
+  - id: 'complex-1.3'
+    title: '复数的n次方根'
     difficulty: 2
     bloom_level: 3
     content:
       definition: |
-        设 $\lim x_n = A$, $\lim y_n = B$，则:
-        - $\lim(x_n \pm y_n) = A \pm B$
-        - $\lim(x_n \cdot y_n) = A \cdot B$
-        - $\lim\frac{x_n}{y_n} = \frac{A}{B}$（$B \neq 0$，且从某项起 $y_n \neq 0$）
-      theorems:
-        - statement: '极限的线性性质: lim(ax_n + by_n) = a·lim x_n + b·lim y_n'
-      examples:
-        - question: '求 $\lim\limits_{n \to \infty} \frac{3n^2 + 2n}{n^2 + 1}$'
-          solution: |
-            分子分母同除 $n^2$: $\lim\frac{3 + 2/n}{1 + 1/n^2} = \frac{3+0}{1+0} = 3$
-      misconceptions:
-        - '极限的加减可以拆开一定成立 — 前提是两个极限都存在（有限）'
-        - '∞/∞型直接上下分别取极限 — 错，∞不是数，要先变形'
-    prerequisites: ["limit-1.1.1"]
-    related: ["limit-1.2.5"]
+        设 $z = re^{i\theta} \neq 0$，方程 $w^n = z$ 的 $n$ 个根为：
+        $$w_k = \sqrt[n]{r} \cdot e^{i(\theta + 2k\pi)/n}, \quad k = 0, 1, \ldots, n-1$$
 
-  - id: 'limit-1.1.4'
-    title: '夹逼准则'
-    difficulty: 3
-    bloom_level: 3
-    content:
-      definition: |
-        若存在正整数 $N$，当 $n > N$ 时 $y_n \leq x_n \leq z_n$，
-        且 $\lim y_n = \lim z_n = a$，则 $\lim x_n = a$。
-      theorems: []
-      examples:
-        - question: '证明 $\lim\limits_{n \to \infty} \frac{\sin n}{n} = 0$'
-          solution: |
-            $-\frac{1}{n} \leq \frac{\sin n}{n} \leq \frac{1}{n}$，两边极限均为0，由夹逼准则得证。
-        - question: '求 $\lim\limits_{n \to \infty} \sqrt[n]{n}$'
-          solution: |
-            设 $\sqrt[n]{n} = 1 + h_n\ (h_n > 0)$，则 $n = (1+h_n)^n \geq 1 + \frac{n(n-1)}{2}h_n^2$
-            得 $h_n \leq \sqrt{\frac{2}{n}}$，由夹逼准则 $h_n \to 0$，故极限为1。
-      misconceptions:
-        - '夹逼要求严格不等式 — 不严格也可以，≤足够'
-        - '两边极限不相等就不能用 — 对，夹逼必须是同一个极限值'
-    prerequisites: ["limit-1.1.1", "limit-1.1.3"]
-    related: ["limit-1.2.3"]
-
-  - id: 'limit-1.1.5'
-    title: '单调有界定理'
-    difficulty: 3
-    bloom_level: 3
-    content:
-      definition: |
-        单调递增(减)且有上(下)界的数列必收敛。这是实数完备性的等价命题之一。
+        这 $n$ 个根均匀分布在以原点为圆心、$\sqrt[n]{r}$ 为半径的圆周上。
       theorems:
-        - statement: '单调递增+上有界 → 收敛于它的上确界'
-        - statement: '单调递减+下有界 → 收敛于它的下确界'
+        - statement: '非零复数的n次方根恰有n个，且均匀分布在圆周上'
       examples:
-        - question: '证明数列 $x_1 = 1, x_{n+1} = \sqrt{2 + x_n}$ 收敛并求极限'
+        - question: '求 $\sqrt[3]{1}$（1的立方根）'
           solution: |
-            先证单调递增: $x_1 = 1 < \sqrt{3} = x_2$，归纳证 $x_n < x_{n+1}$
-            再证上有界: 归纳证 $x_n < 2$。由单调有界定理，极限存在。
-            设极限为A，则 $A = \sqrt{2 + A}$，解得 $A = 2$（舍去-1）。
-        - question: '证明 $\lim\limits_{n \to \infty} (1 + \frac{1}{n})^n$ 存在'
-          solution: '用二项式展开证数列单调递增且上有界(界为3)，由单调有界定理极限存在。这个极限定义为e。'
+            $1 = e^{i\cdot 0}$，$r=1$, $\theta=0$
+            $w_k = \sqrt[3]{1} \cdot e^{i(0+2k\pi)/3} = e^{i\cdot 2k\pi/3}, \quad k=0,1,2$
+            $w_0 = 1$, $w_1 = e^{i\cdot 2\pi/3} = -\frac{1}{2} + i\frac{\sqrt{3}}{2}$, $w_2 = e^{i\cdot 4\pi/3} = -\frac{1}{2} - i\frac{\sqrt{3}}{2}$
       misconceptions:
-        - '单调有界只能判断收敛，不能求极限值 — 对，需要额外手段（如设极限等式）'
-        - '任何单调数列都有极限 — 错，还需要有界。xn=n单调递增但发散。'
-    prerequisites: ["limit-1.1.1", "limit-1.1.2"]
-    related: ["limit-1.3.2"]
+        - '$\sqrt[3]{1}$ 只有一个值1 — 在实数范围内是对的，在复数范围内有3个值'
+        - '单位根是无聊的练习题 — 单位根在FFT、信号处理中有重要应用'
+    prerequisites: ["complex-1.2"]
+    related: ["complex-1.2"]
 
   # ============================================================
-  # 1.2 函数极限
+  # 2. 解析函数
   # ============================================================
 
-  - id: 'limit-1.2.1'
-    title: '函数极限的定义 (ε-δ语言)'
-    difficulty: 4
-    bloom_level: 2
-    content:
-      definition: |
-        设 $f(x)$ 在点 $x_0$ 的某去心邻域内有定义，$A$ 为常数。
-        若 $\forall \varepsilon > 0, \exists \delta > 0$，当 $0 < |x - x_0| < \delta$ 时恒有 $|f(x) - A| < \varepsilon$，
-        则称 $\lim\limits_{x \to x_0} f(x) = A$。
-
-        **关键**: $0 < |x - x_0|$ 表示 $x \neq x_0$，极限与函数在 $x_0$ 处是否有定义、取值为何无关。
-      theorems: []
-      examples:
-        - question: '用ε-δ语言证明 $\lim\limits_{x \to 2} (3x - 1) = 5$'
-          solution: |
-            任给 $\varepsilon > 0$，$|(3x-1) - 5| = 3|x - 2| < \varepsilon$
-            只要 $|x - 2| < \frac{\varepsilon}{3}$。取 $\delta = \frac{\varepsilon}{3}$ 即可。
-      misconceptions:
-        - 'ε和δ中ε更重要 — 两者同等重要，δ依赖于ε'
-        - 'δ必须小于某个固定值 — δ只依赖于ε，没有绝对的“小”要求'
-        - '连续就是极限存在 — 极限存在+极限值=函数值才是连续'
-    prerequisites: ["limit-1.1.1"]
-    related: ["limit-1.1.1", "limit-1.2.3"]
-
-  - id: 'limit-1.2.2'
-    title: '左右极限'
-    difficulty: 3
-    bloom_level: 2
-    content:
-      definition: |
-        **左极限**: $\lim\limits_{x \to x_0^-} f(x) = A$，即 $x < x_0$ 且 $x \to x_0$ 时的极限
-        **右极限**: $\lim\limits_{x \to x_0^+} f(x) = A$，即 $x > x_0$ 且 $x \to x_0$ 时的极限
-
-        极限存在的充要条件: $\lim\limits_{x \to x_0} f(x) = A \iff$ 左右极限都存在且相等。
-      theorems:
-        - statement: '极限存在 ⇔ 左右极限都存在且相等'
-      examples:
-        - question: '讨论 $f(x) = \frac{|x|}{x}$ 在 $x = 0$ 处的极限'
-          solution: |
-            $\lim_{x \to 0^-} f(x) = \lim_{x \to 0^-} \frac{-x}{x} = -1$
-            $\lim_{x \to 0^+} f(x) = \lim_{x \to 0^+} \frac{x}{x} = 1$
-            左右极限不相等，故极限不存在。
-        - question: '分段函数 $f(x) = \begin{cases} x^2 & x < 1 \\ 2x-1 & x \geq 1 \end{cases}$ 在x=1处极限？'
-          solution: |
-            左极限: $\lim_{x \to 1^-} x^2 = 1$，右极限: $\lim_{x \to 1^+} (2x-1) = 1$
-            左右极限相等，$\lim_{x \to 1} f(x) = 1$（但f(1)=1，连续）
-      misconceptions:
-        - '左右极限是x从正负两边趋近 — 对，关键是x在x0的哪一侧'
-        - '分段函数一定没有极限 — 错，只要左右极限相等就有极限'
-    prerequisites: ["limit-1.2.1"]
-    related: ["limit-1.2.1"]
-
-  - id: 'limit-1.2.3'
-    title: '无穷小'
+  - id: 'complex-2.1'
+    title: '复变函数的极限与连续'
     difficulty: 2
     bloom_level: 2
     content:
       definition: |
-        $\lim_{x \to x_0} f(x) = 0$ 则称 $f(x)$ 为 $x \to x_0$ 时的**无穷小**。
+        设复变函数 $w = f(z)$ 在 $z_0$ 的某去心邻域内有定义。
+        若 $\forall \varepsilon > 0, \exists \delta > 0$，当 $0 < |z - z_0| < \delta$ 时恒有 $|f(z) - A| < \varepsilon$，
+        则称 $\lim_{z \to z_0} f(z) = A$。
 
-        无穷小是一个以0为极限的变量，不是"很小的数"。
-      theorems:
-        - statement: '有限个无穷小的和仍为无穷小'
-        - statement: '无穷小乘有界函数仍为无穷小'
-        - statement: '有限个无穷小的乘积仍为无穷小'
-        - statement: '$\lim f(x) = A \iff f(x) = A + \alpha$，其中α为无穷小'
-      examples:
-        - question: '证明 $x \cdot \sin\frac{1}{x}$ 在 $x \to 0$ 时为无穷小'
-          solution: |
-            $\sin\frac{1}{x}$ 是有界函数 ($|\sin\frac{1}{x}| \leq 1$)，乘无穷小x仍为无穷小。由夹逼准则: $0 \leq |x\sin\frac{1}{x}| \leq |x| \to 0$
-      misconceptions:
-        - '0是无穷小 — 对，常数0可以看作无穷小。但“很小的数如0.0001”不是无穷小'
-        - '无穷小除以无穷小一定是1 — 错，结果可能是任何值（这就是极限的未定式）'
-    prerequisites: ["limit-1.2.1"]
-    related: ["limit-1.2.4", "limit-1.2.5", "limit-1.3.3"]
+        $f(z)$ 在 $z_0$ 处**连续** $\iff \lim_{z \to z_0} f(z) = f(z_0)$。
 
-  - id: 'limit-1.2.4'
-    title: '无穷大'
-    difficulty: 2
-    bloom_level: 2
-    content:
-      definition: |
-        $\forall M > 0, \exists \delta > 0$，当 $0 < |x - x_0| < \delta$ 时 $|f(x)| > M$，
-        则称 $f(x)$ 为 $x \to x_0$ 时的**无穷大**，记作 $\lim f(x) = \infty$。
-      theorems:
-        - statement: '若f(x)为无穷大且f(x)≠0，则1/f(x)为无穷小'
-        - statement: '若f(x)为无穷小且f(x)≠0，则1/f(x)为无穷大'
-      examples:
-        - question: '求 $\lim\limits_{x \to 0^+} \frac{1}{x}$'
-          solution: '任给M>0，取δ=1/M，当0<x<δ时1/x > M，故极限为正无穷。'
-      misconceptions:
-        - '∞是一个数 — 错，∞是一个符号，表示无限增大的趋势'
-        - '极限是∞就是极限不存在 — 极限值为∞是极限不存在的一种情况（另一种是振荡不存在）'
-    prerequisites: ["limit-1.2.1", "limit-1.2.3"]
-    related: ["limit-1.2.3"]
-
-  - id: 'limit-1.2.5'
-    title: '无穷小的比较'
-    difficulty: 3
-    bloom_level: 3
-    content:
-      definition: |
-        设 $\alpha, \beta$ 为同一极限过程中的无穷小 ($\beta \neq 0$):
-
-        - **高阶无穷小**: $\lim \frac{\alpha}{\beta} = 0$，记作 $\alpha = o(\beta)$
-        - **低阶无穷小**: $\lim \frac{\alpha}{\beta} = \infty$
-        - **同阶无穷小**: $\lim \frac{\alpha}{\beta} = C \neq 0$（常数）
-        - **等价无穷小**: $\lim \frac{\alpha}{\beta} = 1$，记作 $\alpha \sim \beta$
-        - **k阶无穷小**: $\lim \frac{\alpha}{\beta^k} = C \neq 0$
+        **关键区别**：$z \to z_0$ 是在复平面上从**任意方向**趋近，比实函数的一维趋近严格得多。
       theorems: []
       examples:
-        - question: '比较 $x \to 0$ 时 $x^2$ 和 $\sin x$ 的阶'
+        - question: '讨论 $f(z) = \frac{\bar{z}}{z}$ 在 $z \to 0$ 时的极限'
           solution: |
-            $\lim_{x \to 0} \frac{x^2}{\sin x} = \lim_{x \to 0} \frac{x^2}{x} \cdot \frac{x}{\sin x} = 0 \cdot 1 = 0$
-            故 $x^2$ 是比 $\sin x$ 更高阶的无穷小 ($x^2 = o(\sin x)$)。
-        - question: '当x→0时，1-cos x是x的几阶无穷小？'
-          solution: |
-            $\lim_{x \to 0} \frac{1-\cos x}{x^k} = \lim_{x \to 0} \frac{2\sin^2(x/2)}{x^k}$
-            当k=2时极限为1/2≠0，故1-cos x是x的2阶无穷小。
+            沿实轴 ($z = x$): $\lim_{x \to 0} \frac{x}{x} = 1$
+            沿虚轴 ($z = iy$): $\lim_{y \to 0} \frac{-iy}{iy} = -1$
+            两个方向极限不同，故极限不存在。这说明复极限要求所有方向一致。
       misconceptions:
-        - '高阶无穷小就是趋向0更快的无穷小 — 直观理解正确'
-        - '等价无穷小就是相等的无穷小 — 错，比值趋近1，但不相等'
-        - '高阶无穷小可以随便忽略 — 在极限运算中注意：α+o(α) ~ α 是对的，但不能在加减法中直接替换'
-    prerequisites: ["limit-1.2.3"]
-    related: ["limit-1.3.3", "limit-1.2.3"]
+        - '复极限和实极限一样 — 复极限要求从复平面上任意方向趋近都得到同一极限值，条件远强于实极限'
+        - '连续函数自动可导 — 在复变函数中同样不成立，$f(z)=\bar{z}$ 处处连续但处处不可导'
+    prerequisites: ["complex-1.1"]
+    related: ["complex-2.2"]
 
-  - id: 'limit-1.2.6'
-    title: '函数极限运算法则'
-    difficulty: 2
-    bloom_level: 3
-    content:
-      definition: |
-        设 $\lim f(x) = A$, $\lim g(x) = B$（A, B为有限数），则:
-        - $\lim[f(x) \pm g(x)] = A \pm B$
-        - $\lim[f(x) \cdot g(x)] = A \cdot B$
-        - $\lim\frac{f(x)}{g(x)} = \frac{A}{B}$（$B \neq 0$）
-        - $\lim[f(x)]^{g(x)} = A^B$（$A > 0$）
-
-        **复合函数极限**: 设 $\lim_{x \to x_0} g(x) = u_0$，$\lim_{u \to u_0} f(u) = A$，
-        且在 $x_0$ 的某去心邻域内 $g(x) \neq u_0$，则 $\lim_{x \to x_0} f(g(x)) = A$。
-      theorems: []
-      examples:
-        - question: '求 $\lim\limits_{x \to 1} \frac{x^2 - 1}{x - 1}$'
-          solution: |
-            $\frac{x^2-1}{x-1} = x+1$（$x \neq 1$），$\lim_{x \to 1}(x+1) = 2$
-      misconceptions:
-        - '只要分母极限为0就不能用除法法则 — 对，此时需要先变形（因式分解、有理化等）'
-        - '0/0型一定有极限 — 错，0/0是未定式，可能有也可能没有极限'
-    prerequisites: ["limit-1.2.1", "limit-1.1.3"]
-    related: ["limit-1.1.3"]
-
-  # ============================================================
-  # 1.3 两个重要极限
-  # ============================================================
-
-  - id: 'limit-1.3.1'
-    title: '第一个重要极限: lim sin x / x = 1'
+  - id: 'complex-2.2'
+    title: '解析函数与Cauchy-Riemann方程'
     difficulty: 4
     bloom_level: 3
     content:
       definition: |
-        $\lim\limits_{x \to 0} \frac{\sin x}{x} = 1$
+        设 $f(z) = u(x,y) + iv(x,y)$ 在区域 $D$ 内可导，若导数 $f'(z)$ 存在，则：
 
-        这是 $\frac{0}{0}$ 型未定式的重要结果。其证明依赖于几何不等式: $\sin x < x < \tan x$（$0 < x < \frac{\pi}{2}$），即 $\cos x < \frac{\sin x}{x} < 1$，由夹逼准则得证。
+        **Cauchy-Riemann方程 (C-R方程)**：
+        $$\frac{\partial u}{\partial x} = \frac{\partial v}{\partial y}, \quad \frac{\partial u}{\partial y} = -\frac{\partial v}{\partial x}$$
+
+        $f(z)$ 在 $z_0$ 处**可导** $\iff$ $u, v$ 在 $(x_0, y_0)$ 可微且满足 C-R 方程。
+        $f(z)$ 在区域 $D$ 内**解析（全纯）** $\iff$ $f(z)$ 在 $D$ 内每一点可导。
+
+        **导数公式**：$f'(z) = u_x + iv_x = v_y - iu_y$
       theorems:
-        - statement: 'lim sin x / x = 1 (x→0)'
-          proof: |
-            单位圆中，$0 < x < \pi/2$ 时，面积比较得 $\sin x < x < \tan x$
-            除以 $\sin x$: $1 < \frac{x}{\sin x} < \frac{1}{\cos x}$
-            取倒数: $\cos x < \frac{\sin x}{x} < 1$
-            由夹逼准则 $x \to 0^+$ 时 $\frac{\sin x}{x} \to 1$，$x \to 0^-$ 由对称性同理。
+        - statement: '可导的充要条件：u,v可微且满足C-R方程'
+        - statement: '若偏导数连续且满足C-R方程，则f(z)解析（充分条件）'
       examples:
-        - question: '求 $\lim\limits_{x \to 0} \frac{\sin 3x}{x}$'
-          solution: '$\lim\frac{\sin 3x}{x} = \lim\frac{\sin 3x}{3x} \cdot 3 = 1 \cdot 3 = 3$'
-        - question: '求 $\lim\limits_{x \to 0} \frac{1 - \cos x}{x^2}$'
+        - question: '验证 $f(z) = z^2$ 是解析函数并求导'
           solution: |
-            $1-\cos x = 2\sin^2\frac{x}{2}$
-            $\lim\frac{2\sin^2(x/2)}{x^2} = \lim\frac{2\sin^2(x/2)}{4(x/2)^2} = \frac{1}{2} \cdot 1^2 = \frac{1}{2}$
+            $f(z) = (x+iy)^2 = (x^2 - y^2) + i(2xy)$
+            $u = x^2 - y^2$, $v = 2xy$
+            $u_x = 2x = v_y$, $u_y = -2y = -v_x$ ✓ C-R方程成立
+            $f'(z) = u_x + iv_x = 2x + i(2y) = 2(x+iy) = 2z$ ✓
+        - question: '证明 $f(z) = \bar{z} = x - iy$ 处处不可导'
+          solution: |
+            $u = x$, $v = -y$
+            $u_x = 1$, $v_y = -1$，$u_x \neq v_y$，C-R方程不成立
+            故 $f(z) = \bar{z}$ 在复平面上处处不可导。
       misconceptions:
-        - 'sin x / x 的极限在任何情况下都是1 — 错，仅x→0。x→∞时sin x / x → 0'
-        - '证明中用到了sin x的导数 — 不，这是几何证明，不依赖洛必达法则（避免循环论证）'
-    prerequisites: ["limit-1.2.5", "limit-1.1.4"]
-    related: ["limit-1.3.3", "limit-1.2.5"]
+        - 'C-R方程成立就一定能保证可导 — 还需要u,v可微，仅偏导数存在不够（反例：f(z)=√{|xy|}在原点）'
+        - '可导和解析是一个概念 — 单点可导不等于解析，解析要求在某个区域内处处可导'
+    prerequisites: ["complex-2.1"]
+    related: ["complex-2.1", "complex-2.3"]
 
-  - id: 'limit-1.3.2'
-    title: '第二个重要极限: lim (1+1/x)^x = e'
-    difficulty: 4
-    bloom_level: 3
+  - id: 'complex-2.3'
+    title: '调和函数与共轭调和函数'
+    difficulty: 3
+    bloom_level: 2
     content:
       definition: |
-        $\lim\limits_{x \to \infty} \left(1 + \frac{1}{x}\right)^x = e$
+        若区域 $D$ 内的实函数 $u(x,y)$ 满足 Laplace 方程：
+        $$\Delta u = \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2} = 0$$
+        则称 $u$ 为 $D$ 内的**调和函数**。
 
-        等价形式: $\lim\limits_{x \to 0} (1 + x)^{\frac{1}{x}} = e$
-
-        这是 $1^\infty$ 型未定式最重要的结果。e ≈ 2.71828... 是一个无理数，也是自然对数的底。
+        **核心结论**：若 $f = u + iv$ 解析，则 $u$ 和 $v$ 都是调和函数，且 $v$ 称为 $u$ 的**共轭调和函数**。
       theorems:
-        - statement: 'lim (1 + 1/n)^n = e (n→∞, n为自然数)'
-          proof: '用二项式定理展开，证数列单调递增且上有界（<3），由单调有界定理极限存在，定义为e。'
+        - statement: '解析函数的实部和虚部均为调和函数'
+        - statement: '给定调和函数u，可通过C-R方程求出其共轭调和函数v（差一个常数）'
       examples:
-        - question: '求 $\lim\limits_{x \to \infty} \left(1 + \frac{2}{x}\right)^x$'
+        - question: '验证 $u(x,y) = x^2 - y^2$ 是调和函数，并求其共轭调和函数 $v$'
           solution: |
-            $\lim\left(1 + \frac{2}{x}\right)^x = \lim\left[\left(1 + \frac{2}{x}\right)^{\frac{x}{2}}\right]^2 = e^2$
-        - question: '求 $\lim\limits_{x \to 0} (1 + 3x)^{\frac{1}{x}}$'
-          solution: '$\lim(1 + 3x)^{\frac{1}{x}} = \lim[(1 + 3x)^{\frac{1}{3x}}]^3 = e^3$'
+            $u_{xx} = 2$, $u_{yy} = -2$，$u_{xx} + u_{yy} = 0$ → $u$ 调和 ✓
+            由C-R方程：$v_y = u_x = 2x$ → $v = 2xy + \varphi(x)$
+            $v_x = 2y + \varphi'(x) = -u_y = 2y$ → $\varphi'(x) = 0$ → $\varphi(x) = C$
+            故 $v = 2xy + C$，$f(z) = (x^2 - y^2) + i(2xy) = z^2$
       misconceptions:
-        - '1^∞型的结果一定是1 — 错！这是未定式，极限可能是e的任何次幂'
-        - '记住公式就好了，推导不重要 — 如果理解了e的定义，所有1^∞型极限都是这个极限的变形'
-    prerequisites: ["limit-1.1.5", "limit-1.2.6"]
-    related: ["limit-1.3.3", "limit-1.1.5"]
+        - '调和函数一定是一个解析函数的实部 — 在单连通区域成立，多连通区域不一定'
+        - '共轭调和函数是唯一的 — 相差一个常数'
+    prerequisites: ["complex-2.2"]
+    related: ["complex-2.2"]
 
-  - id: 'limit-1.3.3'
-    title: '等价无穷小替换'
-    difficulty: 4
-    bloom_level: 3
+  # ============================================================
+  # 3. 初等复变函数
+  # ============================================================
+
+  - id: 'complex-3.1'
+    title: '复指数函数与对数函数'
+    difficulty: 2
+    bloom_level: 2
     content:
       definition: |
-        **替换原理**: 在求极限的乘除运算中，无穷小因子可用其等价无穷小替换，极限值不变。
-        即: 若 $\alpha \sim \alpha'$，则 $\lim \alpha \cdot f = \lim \alpha' \cdot f$（乘除）。
-        **警告**: 在加减法中不能随意替换！$\lim(\alpha - \beta)$ 不能用 $\alpha' - \beta'$ 替代。
+        **复指数函数**：$e^z = e^{x+iy} = e^x(\cos y + i\sin y)$
+        - 周期为 $2\pi i$：$e^{z+2\pi i} = e^z$
+        - $|e^z| = e^x$，$\arg(e^z) = y$
 
-        **常用等价无穷小** ($x \to 0$):
-        - $\sin x \sim x$
-        - $\tan x \sim x$
-        - $\arcsin x \sim x$
-        - $\arctan x \sim x$
-        - $\ln(1+x) \sim x$
-        - $e^x - 1 \sim x$
-        - $1 - \cos x \sim \frac{1}{2}x^2$
-        - $(1+x)^a - 1 \sim ax$
-        - $a^x - 1 \sim x\ln a$
+        **复对数函数**（多值函数）：
+        $$\operatorname{Ln} z = \ln|z| + i\arg z + 2k\pi i = \ln r + i(\theta + 2k\pi)$$
+        主值分支：$\ln z = \ln|z| + i\operatorname{Arg} z$，其中 $\operatorname{Arg} z \in (-\pi, \pi]$
       theorems:
-        - statement: '乘除可替换、加减不可替换（除非替换后的表达式不为0）'
+        - statement: '$e^{z_1+z_2} = e^{z_1}e^{z_2}$ 在复数域仍成立'
+        - statement: '$\operatorname{Ln}(z_1z_2) = \operatorname{Ln} z_1 + \operatorname{Ln} z_2$（作为集合等式）'
       examples:
-        - question: '求 $\lim\limits_{x \to 0} \frac{\sin 2x}{\tan 3x}$'
+        - question: '计算 $\ln(1+i)$（取主值）'
           solution: |
-            $\sin 2x \sim 2x$, $\tan 3x \sim 3x$
-            $\lim\frac{\sin 2x}{\tan 3x} = \frac{2x}{3x} = \frac{2}{3}$
-        - question: '求 $\lim\limits_{x \to 0} \frac{\sin x - x}{x^3}$ — 能替换吗？'
+            $|1+i| = \sqrt{2}$，$\arg(1+i) = \frac{\pi}{4}$
+            $\ln(1+i) = \ln\sqrt{2} + i\frac{\pi}{4} = \frac{1}{2}\ln 2 + i\frac{\pi}{4}$
+        - question: '求满足 $e^z = 1 + i$ 的所有 $z$'
           solution: |
-            分子是加减法，不能直接用sin x ~ x替换！替换后得0/x^3 = 0（错误答案）
-            正确做法: 用泰勒展开 $\sin x = x - \frac{x^3}{6} + o(x^3)$
-            $\lim\frac{(x - x^3/6 + ...) - x}{x^3} = -\frac{1}{6}$
+            $1+i = \sqrt{2}e^{i\pi/4}$
+            $z = \operatorname{Ln}(1+i) = \ln\sqrt{2} + i(\frac{\pi}{4} + 2k\pi), \quad k \in \mathbb{Z}$
       misconceptions:
-        - '等价无穷小在任何情况下都可以替换 — 错！**加减法中替换是常见错误**（如上例）'
-        - 'sin x ~ x 所以 sin x ≈ x — 近似成立，但在极限运算中“等于”和“等价”有严格差别'
-        - '所有无穷小都能找到简单等价形式 — 不一定，需要满足比值为1的条件'
-    prerequisites: ["limit-1.2.5", "limit-1.3.1", "limit-1.2.6"]
-    related: ["limit-1.2.5", "limit-1.3.1", "limit-1.5.1"]
+        - '$\ln(-1)$ 在复数中没有意义 — 错！$\ln(-1) = \ln 1 + i\pi = i\pi$（主值），只是在实数中没有意义'
+        - '复指数函数是单射 — 错，$e^z$ 以 $2\pi i$ 为周期，不是单射'
+    prerequisites: ["complex-1.2"]
+    related: ["complex-1.2", "complex-3.2"]
 
-  # ============================================================
-  # 1.5 极限的应用 (v1精选)
-  # ============================================================
-
-  - id: 'limit-1.5.1'
-    title: '渐近线'
+  - id: 'complex-3.2'
+    title: '复幂函数与三角函数'
     difficulty: 3
     bloom_level: 3
     content:
       definition: |
-        **水平渐近线**: 若 $\lim_{x \to \pm\infty} f(x) = A$，则 $y = A$ 是水平渐近线。
-        **垂直渐近线**: 若 $\lim_{x \to x_0^\pm} f(x) = \pm\infty$，则 $x = x_0$ 是垂直渐近线。
-        **斜渐近线**: 若 $\lim_{x \to \pm\infty} \frac{f(x)}{x} = k$ 且 $\lim_{x \to \pm\infty}[f(x) - kx] = b$，则 $y = kx + b$ 是斜渐近线。
-      theorems: []
-      examples:
-        - question: '求 $f(x) = \frac{x^2+1}{x-1}$ 的渐近线'
-          solution: |
-            垂直: $\lim_{x \to 1^\pm} \frac{x^2+1}{x-1} = \pm\infty$，故x=1为垂直渐近线
-            斜: $k = \lim\frac{f(x)}{x} = \lim\frac{x^2+1}{x(x-1)} = 1$
-            $b = \lim[f(x) - x] = \lim(\frac{x^2+1}{x-1} - x) = \lim\frac{x+1}{x-1} = 1$
-            故斜渐近线为 $y = x + 1$
-      misconceptions:
-        - '每个函数都有渐近线 — 错，只有满足特定极限条件的函数才有'
-        - '一次函数y=x的渐近线是它自己 — 有些教材认为斜渐近线必须不同于原函数'
-    prerequisites: ["limit-1.2.1", "limit-1.2.4"]
-    related: ["limit-1.2.1"]
+        **复幂函数**（多值，$\alpha$ 为非整数时）：
+        $$z^\alpha = e^{\alpha \operatorname{Ln} z}$$
 
-  - id: 'limit-1.5.2'
-    title: '极限的存在性判别'
+        **复三角函数**：
+        $$\sin z = \frac{e^{iz} - e^{-iz}}{2i}, \quad \cos z = \frac{e^{iz} + e^{-iz}}{2}$$
+
+        **重要性质**：
+        - $\sin z, \cos z$ 在复平面上无界！(与实函数完全不同)
+        - 如 $\cos(i) = \frac{e^{-1} + e^{1}}{2} \approx 1.54 > 1$
+        - $\sin^2 z + \cos^2 z = 1$ 在复数域仍成立
+      theorems:
+        - statement: '$\sin z$ 和 $\cos z$ 在复平面上是解析的，$(\sin z)'' = \cos z$, $(\cos z)'' = -\sin z$'
+        - statement: '$\sin(-z) = -\sin z$, $\cos(-z) = \cos z$ 及所有三角恒等式在复数域成立'
+      examples:
+        - question: '计算 $\cos(i)$'
+          solution: |
+            $\cos(i) = \frac{e^{i\cdot i} + e^{-i\cdot i}}{2} = \frac{e^{-1} + e^{1}}{2} = \cosh 1 \approx 1.543$
+            这大于1，说明复三角函数不是有界函数！
+      misconceptions:
+        - '正弦余弦的值域是[-1, 1] — 仅在实数域成立，在复数域中 $\sin z$ 和 $\cos z$ 无界'
+        - '$(z^\alpha)'' = \alpha z^{\alpha-1}$ 总成立 — 因为 $z^\alpha$ 可能是多值函数，需要考虑分支'
+    prerequisites: ["complex-3.1", "complex-1.2"]
+    related: ["complex-3.1"]
+
+  # ============================================================
+  # 4. 复积分
+  # ============================================================
+
+  - id: 'complex-4.1'
+    title: '复积分的定义与基本性质'
+    difficulty: 2
+    bloom_level: 2
+    content:
+      definition: |
+        设 $C$ 为一条光滑曲线，参数方程 $z = z(t), a \leq t \leq b$，$f(z)$ 在 $C$ 上连续：
+
+        $$\int_C f(z)\,dz = \int_a^b f(z(t))\,z'(t)\,dt$$
+
+        **基本性质**：
+        - 线性：$\int_C [\alpha f(z) + \beta g(z)]\,dz = \alpha\int_C f\,dz + \beta\int_C g\,dz$
+        - 反向：$\int_{-C} f(z)\,dz = -\int_C f(z)\,dz$
+        - **模不等式**：$\left|\int_C f(z)\,dz\right| \leq \int_C |f(z)|\,|dz| = \int_a^b |f(z(t))|\,|z'(t)|\,dt \leq ML$
+          其中 $M = \max_{z \in C} |f(z)|$，$L$ 为曲线 $C$ 的弧长。
+      theorems:
+        - statement: '模不等式 (ML估计): $|\int_C f(z)dz| \leq ML$'
+      examples:
+        - question: '计算 $\int_C \bar{z}\,dz$，$C$ 为从 $0$ 到 $1+i$ 的直线段'
+          solution: |
+            C参数化：$z(t) = t + it = (1+i)t$, $0 \leq t \leq 1$
+            $f(z) = \bar{z} = t - it$, $z'(t) = 1 + i$
+            $\int_C \bar{z}\,dz = \int_0^1 (t-it)(1+i)\,dt = (1+i)\int_0^1 t(1-i)\,dt = (1+i)(1-i)\int_0^1 t\,dt = 2 \cdot \frac{1}{2} = 1$
+      misconceptions:
+        - '复积分就是实积分的简单推广 — 复积分依赖于路径！即使被积函数处处解析，不同路径可能导致相同或不同结果'
+        - '模不等式是等式 — 通常只是上界估计，只在特定条件下取等号'
+    prerequisites: ["complex-1.1", "complex-2.1"]
+    related: ["complex-4.2"]
+
+  - id: 'complex-4.2'
+    title: 'Cauchy-Goursat定理'
+    difficulty: 4
+    bloom_level: 3
+    content:
+      definition: |
+        **Cauchy定理**：若 $f(z)$ 在单连通区域 $D$ 内解析，则对 $D$ 内任一条简单闭曲线 $C$：
+        $$\oint_C f(z)\,dz = 0$$
+
+        **Cauchy-Goursat定理**（加强版）：
+        只需 $f'(z)$ 存在（不需要连续），结论仍成立。Goursat去掉了Cauchy原证明中对 $f'$ 连续的要求。
+
+        **推论 — 路径无关性**：
+        在单连通区域内，解析函数的积分与路径无关，仅与起点和终点有关。
+      theorems:
+        - statement: 'Cauchy-Goursat定理: f在单连通区域D内解析 ⇒ 沿D内任一条简单闭曲线的积分为0'
+        - statement: '复合闭路定理: 可将闭曲线变形而不改变积分值（边界可连续变形）'
+      examples:
+        - question: '计算 $\oint_{|z|=1} z^n\,dz$'
+          solution: |
+            $f(z) = z^n$ 在复平面上处处解析。
+            由Cauchy-Goursat定理，$\oint_{|z|=1} z^n\,dz = 0$（对所有 $n \geq 0$）。
+            （注意：$n = -1$ 时 $1/z$ 在原点不解析，定理不适用！）
+        - question: '利用路径无关性计算 $\int_C e^z\,dz$，C为从0到1+i的任意曲线'
+          solution: |
+            $e^z$ 处处解析，积分与路径无关。
+            取单变量路径：先沿实轴 $0 \to 1$，再竖直上 $1 \to 1+i$
+            $\int_0^1 e^x\,dx + \int_0^1 e^{1+iy}\cdot i\,dy = (e-1) + ie\int_0^1 e^{iy}dy = e-1 + ie[\frac{e^{iy}}{i}]_0^1 = e-1 + e(e^i-1) = e^{1+i} - 1$
+            （直接验证：$F(z) = e^z$ 是原函数，$F(1+i)-F(0) = e^{1+i} - 1$ ✓）
+      misconceptions:
+        - '只要被积函数解析积分就是0 — 还需要闭曲线！开曲线积分不一定是0'
+        - 'Cauchy定理对任何区域都成立 — 需要单连通区域。在多连通区域中需要复合闭路定理'
+    prerequisites: ["complex-4.1", "complex-2.2"]
+    related: ["complex-4.1", "complex-4.3"]
+
+  - id: 'complex-4.3'
+    title: 'Cauchy积分公式与高阶导数公式'
+    difficulty: 4
+    bloom_level: 3
+    content:
+      definition: |
+        **Cauchy积分公式**：若 $f(z)$ 在简单闭曲线 $C$ 内解析，在 $\bar{C}$ 上连续，则对 $C$ 内任一点 $z_0$：
+        $$f(z_0) = \frac{1}{2\pi i}\oint_C \frac{f(z)}{z - z_0}\,dz$$
+
+        **高阶导数公式**：
+        $$f^{(n)}(z_0) = \frac{n!}{2\pi i}\oint_C \frac{f(z)}{(z - z_0)^{n+1}}\,dz$$
+
+        **惊人结论**：解析函数只要可导一次，就能无穷次可导！这是复分析独有的性质。
+      theorems:
+        - statement: 'Cauchy积分公式: 解析函数在区域内部的值由其边界上的值完全决定'
+        - statement: '解析函数无穷次可导: 一次可导 ⇒ 任意阶可导'
+        - statement: 'Morera定理 (Cauchy定理的逆): 若f连续且沿区域内任一闭曲线积分为0，则f解析'
+      examples:
+        - question: '计算 $\oint_{|z|=2} \frac{e^z}{z-1}\,dz$'
+          solution: |
+            $f(z) = e^z$ 在 $|z| \leq 2$ 内解析，$z_0 = 1$ 在圆内。
+            由Cauchy积分公式：$\oint_{|z|=2} \frac{e^z}{z-1}\,dz = 2\pi i \cdot f(1) = 2\pi i e$
+        - question: '计算 $\oint_{|z|=1} \frac{\cos z}{z^3}\,dz$'
+          solution: |
+            由高阶导数公式 ($n=2$): $\oint \frac{\cos z}{z^3}\,dz = \frac{2\pi i}{2!} f''(0)$
+            $f(z)=\cos z$, $f'(z)=-\sin z$, $f''(z)=-\cos z$, $f''(0)=-1$
+            故积分为 $\frac{2\pi i}{2} \cdot (-1) = -\pi i$
+      misconceptions:
+        - 'Cauchy积分公式就是留数定理的特例 — 可以这样理解，但它是有独立价值的核心定理'
+        - '解析函数的可导性和实函数一样 — 复解析函数自动无穷阶可导，实可导函数甚至不一定有二阶导数'
+    prerequisites: ["complex-4.2", "complex-2.2"]
+    related: ["complex-4.2", "complex-6.2"]
+
+  # ============================================================
+  # 5. 级数展开
+  # ============================================================
+
+  - id: 'complex-5.1'
+    title: '泰勒级数'
     difficulty: 3
     bloom_level: 3
     content:
-      definition: ""
-      theorems:
-        - statement: '单调有界准则: 单调且有界的函数(数列)极限必存在（有限或无穷）'
-        - statement: '柯西收敛准则: 函数(数列)收敛 ⇔ 当x1,x2充分接近时|f(x1)-f(x2)|可任意小'
-        - statement: '归结原则: lim_{x→x0} f(x)=A ⇔ 对任意满足xn→x0(xn≠x0)的数列{xn}，有lim f(xn)=A'
-      examples:
-        - question: '证明 $\lim\limits_{x \to 0} \sin\frac{1}{x}$ 不存在'
-          solution: |
-            取两个子列: $x_n^{(1)} = \frac{1}{2n\pi}$ → $\sin(2n\pi)=0$
-            $x_n^{(2)} = \frac{1}{2n\pi + \pi/2}$ → $\sin(2n\pi+\pi/2)=1$
-            两个子列的极限不同，由归结原则极限不存在。
-      misconceptions:
-        - '归结原则只能用来证明存在 — 错，也常用于证伪（找两个子列对应不同极限值）'
-    prerequisites: ["limit-1.1.5", "limit-1.1.4", "limit-1.2.2"]
-    related: ["limit-1.1.5", "limit-1.2.2"]
+      definition: |
+        若 $f(z)$ 在 $z_0$ 处解析，则在以 $z_0$ 为中心、到最近奇点的距离为半径的圆盘内：
+        $$f(z) = \sum_{n=0}^{\infty} a_n (z - z_0)^n, \quad a_n = \frac{f^{(n)}(z_0)}{n!} = \frac{1}{2\pi i}\oint_C \frac{f(z)}{(z-z_0)^{n+1}}\,dz$$
 
-  - id: 'limit-1.3.4'
-    title: '泰勒展开与等价无穷小的关系'
+        **收敛半径**：$R = \frac{1}{\limsup_{n \to \infty} \sqrt[n]{|a_n|}}$（Cauchy-Hadamard公式）
+
+        也可由奇点决定：$R$ 等于 $z_0$ 到最近奇点的距离。
+      theorems:
+        - statement: '解析函数的幂级数展开在收敛圆内绝对收敛，且可逐项求导和逐项积分'
+        - statement: '幂级数的和函数在其收敛圆内解析'
+      examples:
+        - question: '求 $f(z) = \frac{1}{1-z}$ 在 $z=0$ 处的泰勒展开和收敛半径'
+          solution: |
+            $\frac{1}{1-z} = \sum_{n=0}^{\infty} z^n = 1 + z + z^2 + \cdots$
+            $z=0$ 不是奇点，$z=1$ 是最近奇点，收敛半径 $R = |1-0| = 1$
+        - question: '求 $e^z$ 在 $z=0$ 处的泰勒展开'
+          solution: |
+            $a_n = \frac{1}{n!}$（$e^z$ 的各阶导数在原点均为1）
+            $e^z = \sum_{n=0}^{\infty} \frac{z^n}{n!} = 1 + z + \frac{z^2}{2!} + \frac{z^3}{3!} + \cdots$
+            收敛半径 $R = \infty$（$e^z$ 处处解析，无奇点）
+      misconceptions:
+        - '收敛圆内级数一定收敛到原函数 — 对（解析函数的幂级数展开在收敛圆内和函数就是原函数）'
+        - '泰勒展开一定收敛到无穷远 — 收敛半径由最近的奇点决定，有奇点就不能收敛超出该距离'
+    prerequisites: ["complex-4.3", "complex-2.2"]
+    related: ["complex-5.2", "complex-4.3"]
+
+  - id: 'complex-5.2'
+    title: '洛朗级数'
+    difficulty: 4
+    bloom_level: 3
+    content:
+      definition: |
+        若 $f(z)$ 在环域 $r < |z - z_0| < R$ 内解析，则可展开为**洛朗(Laurent)级数**：
+        $$f(z) = \sum_{n=-\infty}^{\infty} a_n (z - z_0)^n = \sum_{n=0}^{\infty} a_n(z-z_0)^n + \sum_{n=1}^{\infty} \frac{b_n}{(z-z_0)^n}$$
+
+        其中：
+        $$a_n = \frac{1}{2\pi i}\oint_C \frac{f(z)}{(z-z_0)^{n+1}}\,dz \quad (n = 0, \pm1, \pm2, \ldots)$$
+
+        - $\sum_{n=0}^{\infty} a_n(z-z_0)^n$ 称为**解析部分**（正则部分）
+        - $\sum_{n=1}^{\infty} b_n(z-z_0)^{-n}$ 称为**主要部分**（奇异部分）
+        - $b_1$ 极为关键——它就是**留数** $\operatorname{Res}[f(z), z_0]$
+      theorems:
+        - statement: '洛朗展开在给定环域内是唯一的'
+      examples:
+        - question: '求 $f(z) = \frac{1}{z(z-1)}$ 在 $0 < |z| < 1$ 内的洛朗展开'
+          solution: |
+            $\frac{1}{z(z-1)} = -\frac{1}{z} \cdot \frac{1}{1-z} = -\frac{1}{z}\sum_{n=0}^{\infty} z^n = -\frac{1}{z} - 1 - z - z^2 - \cdots$
+            主要部分：$-\frac{1}{z}$，留数 $\operatorname{Res}[f, 0] = -1$
+        - question: '为什么需要洛朗级数而不仅是泰勒级数？'
+          solution: |
+            泰勒级数只在解析点处存在（展开式只有非负次幂）。
+            $f(z) = \frac{1}{z}$ 在 $z=0$ 处有奇点，无法做泰勒展开。
+            洛朗级数允许负次幂项，可以在环域内展开有孤立奇点的函数。
+      misconceptions:
+        - '洛朗展开是唯一的 — 在给定的环域内是唯一的。不同环域可能有不同的展开式'
+        - '主要部分只有一项 — 可能有无限多项（本性奇点的情况），如 $e^{1/z} = \sum_{n=0}^{\infty} \frac{1}{n!z^n}$'
+    prerequisites: ["complex-5.1", "complex-4.3"]
+    related: ["complex-5.1", "complex-6.1", "complex-6.2"]
+
+  # ============================================================
+  # 6. 留数定理
+  # ============================================================
+
+  - id: 'complex-6.1'
+    title: '孤立奇点分类'
+    difficulty: 3
+    bloom_level: 3
+    content:
+      definition: |
+        若 $f(z)$ 在 $0 < |z - z_0| < \rho$ 内解析，但在 $z_0$ 处不解析，则 $z_0$ 为 $f(z)$ 的**孤立奇点**。
+
+        根据洛朗展开中主要部分的项数分类：
+        - **可去奇点**：主要部分为0（$b_n = 0$ 对所有 $n$）。$\lim_{z \to z_0} f(z)$ 存在且有限。
+          例：$\frac{\sin z}{z}$ 在 $z=0$ 处（补充定义 $f(0)=1$ 后解析）
+        - **极点**：主要部分只有有限项。若 $b_m \neq 0$ 且 $b_{m+1} = b_{m+2} = \cdots = 0$，称为 $m$ 阶极点。
+          例：$\frac{1}{z^2}$ 在 $z=0$ 处是2阶极点
+        - **本性奇点**：主要部分有无穷多项。
+          例：$e^{1/z} = 1 + \frac{1}{z} + \frac{1}{2!z^2} + \cdots$ 在 $z=0$ 处
+      theorems:
+        - statement: 'Riemann定理: f在z0附近有界 ⇒ z0是可去奇点'
+        - statement: '极点的充要条件: $\lim_{z \to z_0} |f(z)| = \infty$'
+        - statement: 'Casorati-Weierstrass定理: 在本性奇点附近，f(z)可以逼近任意复数值'
+      examples:
+        - question: '判断 $f(z) = \frac{1 - \cos z}{z^2}$ 在 $z=0$ 处的奇点类型'
+          solution: |
+            $\cos z = 1 - \frac{z^2}{2!} + \frac{z^4}{4!} - \cdots$
+            $1 - \cos z = \frac{z^2}{2} - \frac{z^4}{24} + \cdots$
+            $\frac{1 - \cos z}{z^2} = \frac{1}{2} - \frac{z^2}{24} + \cdots$
+            主要部分为0，$z=0$ 是可去奇点。$\lim_{z \to 0} f(z) = \frac{1}{2}$
+      misconceptions:
+        - '$\infty$ 是极点 — 不一定是。$\infty$ 可以是可去奇点、极点或本性奇点，取决于 $f(1/z)$ 在 $z=0$ 处的奇点类型'
+        - '所有奇点都是孤立的 — 错。如 $f(z) = \frac{1}{\sin(1/z)}$ 在 $z=0$ 处就不是孤立奇点（奇点聚于原点）'
+    prerequisites: ["complex-5.2"]
+    related: ["complex-5.2", "complex-6.2"]
+
+  - id: 'complex-6.2'
+    title: '留数与留数定理'
+    difficulty: 4
+    bloom_level: 3
+    content:
+      definition: |
+        设 $z_0$ 为 $f(z)$ 的孤立奇点，$f$ 在 $0 < |z - z_0| < R$ 内的洛朗展开为：
+        $$f(z) = \sum_{n=-\infty}^{\infty} a_n (z - z_0)^n$$
+
+        **留数**：$\operatorname{Res}[f(z), z_0] = a_{-1}$（洛朗展开中 $(z-z_0)^{-1}$ 的系数）
+
+        **留数定理**：若 $f(z)$ 在简单闭曲线 $C$ 内除有限个孤立奇点 $z_1, \ldots, z_n$ 外解析，则：
+        $$\oint_C f(z)\,dz = 2\pi i \sum_{k=1}^{n} \operatorname{Res}[f(z), z_k]$$
+
+        **留数计算规则**：
+        - **1阶极点**：$\operatorname{Res}[f, z_0] = \lim_{z \to z_0} (z - z_0)f(z)$
+        - **m阶极点**：$\operatorname{Res}[f, z_0] = \frac{1}{(m-1)!}\lim_{z \to z_0} \frac{d^{m-1}}{dz^{m-1}}[(z - z_0)^m f(z)]$
+        - **本性奇点**：只能用洛朗展开找 $a_{-1}$
+      theorems:
+        - statement: '留数定理: $\oint_C f(z)dz = 2\pi i \sum \operatorname{Res}$'
+      examples:
+        - question: '计算 $\oint_{|z|=2} \frac{dz}{z^2 + 1}$'
+          solution: |
+            $z^2 + 1 = 0$ → $z = \pm i$，两个1阶极点均在 $|z|=2$ 内。
+            $\operatorname{Res}[f, i] = \lim_{z \to i} \frac{z-i}{(z-i)(z+i)} = \frac{1}{2i}$
+            $\operatorname{Res}[f, -i] = \lim_{z \to -i} \frac{z+i}{(z-i)(z+i)} = \frac{1}{-2i}$
+            由留数定理：$\oint = 2\pi i(\frac{1}{2i} + \frac{1}{-2i}) = 2\pi i(0) = 0$
+            （验证：被积函数是偶函数在对称区域上积分，确实为0）
+      misconceptions:
+        - '留数就是极点处的留数 — 留数是为任何孤立奇点定义的，包括可去奇点和本性奇点'
+        - '留数定理只能算围道积分 — 它在计算实积分中有巨大应用，见下一节'
+    prerequisites: ["complex-6.1", "complex-5.2", "complex-4.3"]
+    related: ["complex-6.1", "complex-6.3", "complex-4.3"]
+
+  - id: 'complex-6.3'
+    title: '留数在实积分中的应用'
     difficulty: 4
     bloom_level: 4
     content:
       definition: |
-        泰勒公式: $f(x) = f(0) + f'(0)x + \frac{f''(0)}{2!}x^2 + ... + \frac{f^{(n)}(0)}{n!}x^n + o(x^n)$
+        留数定理可将一些难算的**实积分**转化为围道积分来计算。三类典型：
 
-        在 $x \to 0$ 时:
-        - $\sin x = x - \frac{x^3}{6} + \frac{x^5}{120} + o(x^5)$
-        - $\cos x = 1 - \frac{x^2}{2} + \frac{x^4}{24} + o(x^4)$
-        - $e^x = 1 + x + \frac{x^2}{2} + \frac{x^3}{6} + o(x^3)$
-        - $\ln(1+x) = x - \frac{x^2}{2} + \frac{x^3}{3} + o(x^3)$
-        - $(1+x)^a = 1 + ax + \frac{a(a-1)}{2}x^2 + o(x^2)$
+        **类型1 — 三角函数有理式积分**：$\int_0^{2\pi} R(\cos\theta, \sin\theta)\,d\theta$
+        令 $z = e^{i\theta}$，$\cos\theta = \frac{z+z^{-1}}{2}$, $\sin\theta = \frac{z-z^{-1}}{2i}$, $d\theta = \frac{dz}{iz}$
+        转化为单位圆上的围道积分。
 
-        **核心理解**: 等价无穷小替换本质上是泰勒展开的一阶近似！sin x ~ x 是因为 sin x = x + o(x)。
-        当加减法中一阶项抵消时，就需要二阶、三阶展开。这就是为什么加减法中sin x不能直接替换为x。
+        **类型2 — 有理函数的反常积分**：$\int_{-\infty}^{\infty} \frac{P(x)}{Q(x)}\,dx$（$Q$ 比 $P$ 至少高2次）
+        用上半平面围道（实轴 + 上半大圆弧），大圆弧积分为0。
+
+        **类型3 — 含三角函数的反常积分**：$\int_{-\infty}^{\infty} f(x)\cos(mx)\,dx$ 或 $\int_{-\infty}^{\infty} f(x)\sin(mx)\,dx$
+        用 Jordan 引理。
       theorems:
-        - statement: '等价无穷小替换是泰勒一阶展开的特例'
+        - statement: '若 $|f(z)| \leq M/R^k$（$k>1$），则大圆弧上的积分在 $R \to \infty$ 时为0'
       examples:
-        - question: '用泰勒展开证明 $\lim_{x\to0}\frac{\sin x - x}{x^3} = -\frac{1}{6}$'
+        - question: '计算 $\int_0^{2\pi} \frac{d\theta}{5 + 4\cos\theta}$'
           solution: |
-            泰勒展开: $\sin x = x - \frac{x^3}{6} + o(x^3)$
-            $\frac{\sin x - x}{x^3} = \frac{x - x^3/6 + o(x^3) - x}{x^3} = -\frac{1}{6} + \frac{o(x^3)}{x^3} \to -\frac{1}{6}$
-        - question: '判断: sin(tan x) ~ x (x→0) 是否正确？'
-          solution: |
-            正确。tan x ~ x，故 sin(tan x) ~ tan x ~ x
-            可通过泰勒展开严格验证: tan x = x + x^3/3 + ... , sin(tan x) = tan x + ... = x + ...
-      misconceptions:
-        - '等价无穷小替换和泰勒展开是两个独立的方法 — 错，前者是后者的特例'
-        - '只要能替换就是对的 — 必须看场景：乘除安全，加减要验证替换后不为0'
-        - '泰勒展开是高等技巧，不适合初学者 — 实际上泰勒展开是理解极限的最统一框架'
-    prerequisites: ["limit-1.3.3", "limit-1.3.1"]
-    related: ["limit-1.3.3", "limit-1.3.1", "limit-1.2.5"]
+            令 $z = e^{i\theta}$，$\cos\theta = \frac{z+z^{-1}}{2}$, $d\theta = \frac{dz}{iz}$
+            $\int_0^{2\pi} \frac{d\theta}{5+4\cos\theta} = \oint_{|z|=1} \frac{dz/iz}{5 + 2(z+z^{-1})} = \oint \frac{dz}{i(2z^2 + 5z + 2)} = \frac{1}{i}\oint \frac{dz}{(2z+1)(z+2)}$
 
-  - id: 'limit-1.2.7'
-    title: '洛必达法则'
+            $z=-1/2$ 在单位圆内（1阶极点），$z=-2$ 在圆外。
+            $\operatorname{Res}[f, -1/2] = \lim_{z \to -1/2} \frac{z+1/2}{(2z+1)(z+2)} = \frac{1}{2(3/2)} = \frac{1}{3}$
+
+            $\int_0^{2\pi} \frac{d\theta}{5+4\cos\theta} = \frac{1}{i} \cdot 2\pi i \cdot \frac{1}{3} = \frac{2\pi}{3}$
+        - question: '计算 $\int_{-\infty}^{\infty} \frac{dx}{x^2 + 1}$'
+          solution: |
+            考虑 $\oint_C \frac{dz}{z^2+1}$，C 为上半平面围道。
+            上半平面内奇点：$z = i$（1阶极点）。
+            $\operatorname{Res}[f, i] = \frac{1}{2i}$
+            $\oint = 2\pi i \cdot \frac{1}{2i} = \pi$
+            大圆弧上积分 → 0（$R \to \infty$），故 $\int_{-\infty}^{\infty} \frac{dx}{x^2+1} = \pi$（验证：$\arctan x|_{-\infty}^{\infty} = \pi$ ✓）
+      misconceptions:
+        - '任何实积分都能用留数算 — 只有特定类型的积分适用，需要满足围道积分的条件'
+        - '围道可以任意选择 — 围道的选择直接影响计算的方便程度，选择不当可能导致无法求解'
+    prerequisites: ["complex-6.2", "complex-4.3"]
+    related: ["complex-6.2"]
+
+  # ============================================================
+  # 7. 共形映射 (选讲)
+  # ============================================================
+
+  - id: 'complex-7.1'
+    title: '共形映射与分式线性变换'
     difficulty: 3
-    bloom_level: 3
-    content:
-      definition: |
-        对于 $\frac{0}{0}$ 或 $\frac{\infty}{\infty}$ 型未定式，若:
-        1. $\lim f(x) = \lim g(x) = 0$（或 $\infty$）
-        2. $f, g$ 在极限点附近可导
-        3. $\lim \frac{f'(x)}{g'(x)}$ 存在（或为 $\infty$）
-
-        则: $\lim \frac{f(x)}{g(x)} = \lim \frac{f'(x)}{g'(x)}$
-      theorems:
-        - statement: '洛必达法则适用于0/0和∞/∞型'
-      examples:
-        - question: '求 $\lim_{x \to 0} \frac{\sin x - x}{x^3}$'
-          solution: |
-            0/0型，洛必达: $\lim\frac{\cos x - 1}{3x^2}$，仍0/0
-            再次洛必达: $\lim\frac{-\sin x}{6x} = \lim\frac{-1}{6} \cdot \frac{\sin x}{x} = -\frac{1}{6}$
-        - question: '求 $\lim_{x \to 0^+} x\ln x$'
-          solution: |
-            0·∞型，转化为∞/∞: $\lim\frac{\ln x}{1/x}$，洛必达: $\lim\frac{1/x}{-1/x^2} = \lim(-x) = 0$
-      misconceptions:
-        - '洛必达法则是求极限的万能方法 — 错。有些极限洛必达后会变得更复杂，或不可导无法使用'
-        - '洛必达可以无限次使用 — 每次使用前必须验证条件是否满足'
-        - '跳过sin x / x的几何证明直接用洛必达求 — 循环论证！洛必达需要sin的导数=cos，而cos的推导依赖于sin x/x→1'
-    prerequisites: ["limit-1.2.6", "limit-1.3.1"]
-    related: ["limit-1.3.3", "limit-1.3.4"]
-
-  # ============================================================
-  # 1.4 连续性 (v1最小覆盖)
-  # ============================================================
-
-  - id: 'limit-1.4.1'
-    title: '连续性的定义与间断点分类'
-    difficulty: 2
     bloom_level: 2
     content:
       definition: |
-        **连续性**: $f(x)$ 在 $x_0$ 处连续 $\iff \lim_{x \to x_0} f(x) = f(x_0)$
-        即三个条件: ① $f(x_0)$ 有定义；② $\lim_{x \to x_0} f(x)$ 存在；③ 两者相等。
+        解析函数 $w = f(z)$ 在 $f'(z_0) \neq 0$ 处是**共形映射**（保角映射）：
+        - **保角性**：过 $z_0$ 的任意两条曲线经映射后的夹角大小和方向保持不变
+        - **伸缩率不变性**：$|f'(z_0)|$ 是映射在 $z_0$ 处的局部伸缩率
 
-        **间断点分类**:
-        - **第一类**: 左右极限都存在
-          - 可去间断点: 左右极限相等但不等于f(x0)或f(x0)无定义
-          - 跳跃间断点: 左右极限不相等
-        - **第二类**: 左右极限至少有一个不存在（无穷间断点、振荡间断点等）
+        **分式线性变换 (Möbius变换)**：
+        $$w = \frac{az + b}{cz + d}, \quad ad - bc \neq 0$$
+        这是最重要的共形映射之一，将圆/直线映射为圆/直线（保圆性），且由3个点的对应关系唯一确定。
       theorems:
-        - statement: '初等函数在其定义域内处处连续'
+        - statement: 'Möbius变换将圆/直线映射为圆/直线（在黎曼球面上均视为"圆"）'
+        - statement: 'Möbius变换保持交比不变: $\frac{w_1 - w_3}{w_1 - w_4} : \frac{w_2 - w_3}{w_2 - w_4} = \frac{z_1 - z_3}{z_1 - z_4} : \frac{z_2 - z_3}{z_2 - z_4}$'
       examples:
-        - question: '讨论 $f(x) = \frac{\sin x}{x}$ 在 $x=0$ 处的连续性'
+        - question: '求将上半平面映射为单位圆盘的分式线性变换'
           solution: |
-            f(0)无定义，故x=0为间断点。
-            但 $\lim_{x \to 0} \frac{\sin x}{x} = 1$，左右极限都存在且相等，
-            故x=0为可去间断点（补充定义f(0)=1后连续）。
+            $w = e^{i\theta}\frac{z - z_0}{z - \bar{z_0}}$ 将上半平面映射为单位圆盘，其中 $\operatorname{Im}(z_0) > 0$。
+
+            最简单的例子（$z_0 = i$, $\theta = 0$）：$w = \frac{z - i}{z + i}$
+            验证：实轴上的点 ($z = x$) → $|w| = |\frac{x-i}{x+i}| = 1$ ✓
+            $z = i$ → $w = 0$（圆心映到圆心）✓
       misconceptions:
-        - '可去间断点可以忽略 — 虽然“可去”，但原函数在该点确实不连续'
-        - '导函数不存在就不连续 — 错。连续和可导是两个概念。f(x)=|x|在x=0处连续但不可导'
-    prerequisites: ["limit-1.2.1", "limit-1.2.2"]
-    related: ["limit-1.2.2", "limit-1.2.1"]
+        - '共形映射一定保角 — 只在 $f''(z) \neq 0$ 的点保角。在 $f''(z)=0$ 的点（如 $f(z)=z^2$ 在原点），角被放大'
+        - '共形映射是唯一的限制条件很强的映射 — 实际上黎曼映射定理表明任何单连通真子区域都可以共形映射到单位圆盘'
+    prerequisites: ["complex-2.2"]
+    related: ["complex-2.2"]

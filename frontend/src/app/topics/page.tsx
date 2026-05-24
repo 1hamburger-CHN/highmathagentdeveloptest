@@ -1,15 +1,17 @@
 export default function TopicsPage() {
   const topics = [
-    { name: "数列极限", concepts: ["ε-N 定义", "收敛性判别", "夹逼准则"] },
-    { name: "函数极限", concepts: ["ε-δ 定义", "左右极限", "无穷小比较"] },
-    { name: "两个重要极限", concepts: ["lim sinx/x", "lim (1+1/x)^x", "等价无穷小替换"] },
-    { name: "连续性", concepts: ["连续定义", "间断点分类", "闭区间性质"] },
-    { name: "极限的应用", concepts: ["渐近线", "函数作图"] },
+    { name: "复数与复平面", concepts: ["复数运算", "几何表示", "n次方根"] },
+    { name: "解析函数", concepts: ["复极限与连续", "C-R方程", "调和函数"] },
+    { name: "初等复函数", concepts: ["指数与对数", "三角与幂函数"] },
+    { name: "复积分", concepts: ["积分定义", "Cauchy-Goursat定理", "Cauchy积分公式"] },
+    { name: "级数展开", concepts: ["泰勒级数", "洛朗级数"] },
+    { name: "留数定理", concepts: ["奇点分类", "留数计算", "实积分应用"] },
+    { name: "共形映射", concepts: ["Mobius变换", "保角性"] },
   ];
 
   return (
     <main className="min-h-screen p-8">
-      <h1 className="text-3xl font-bold text-primary-900 mb-8">知识树：极限与连续</h1>
+      <h1 className="text-3xl font-bold text-primary-900 mb-8">知识树：复变函数</h1>
       <div className="grid gap-4 max-w-3xl">
         {topics.map((t, i) => (
           <div key={i} className="rounded-xl border border-gray-200 p-5 shadow-sm hover:border-primary-300 transition-colors">

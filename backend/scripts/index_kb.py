@@ -51,15 +51,15 @@ def index_knowledge_base(curriculum_path: str):
 
     # Recreate collection (idempotent: delete if exists, then create)
     try:
-        client.delete_collection("limits_continuity")
-        print("Deleted existing collection 'limits_continuity'")
+        client.delete_collection("complex_analysis")
+        print("Deleted existing collection 'complex_analysis'")
     except Exception:
         pass
 
     collection = client.create_collection(
-        name="limits_continuity",
+        name="complex_analysis",
         embedding_function=embedder,
-        metadata={"description": "高等数学极限与连续知识库"},
+        metadata={"description": "复变函数知识库"},
     )
 
     # Batch add chunks
@@ -76,7 +76,7 @@ def index_knowledge_base(curriculum_path: str):
     print(f"Done. Collection count: {collection.count()}")
 
 
-def test_retrieval(query: str = "等价无穷小替换什么时候不能用"):
+def test_retrieval(query: str = "C-R方程的充要条件是什么"):
     """Quick retrieval test."""
     from app.knowledge.retriever import HybridRetriever
 
@@ -97,5 +97,5 @@ if __name__ == "__main__":
     )
     index_knowledge_base(curriculum_path)
     test_retrieval()
-    test_retrieval("ε-δ语言是什么")
-    test_retrieval("sin x / x 的极限")
+    test_retrieval("留数定理怎么算围道积分")
+    test_retrieval("洛朗级数和泰勒级数的区别")

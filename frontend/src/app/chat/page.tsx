@@ -288,7 +288,7 @@ export default function ChatPage() {
               测试版
             </span>
           </h1>
-          <p className="text-xs text-gray-500">高等数学 · 极限与连续</p>
+          <p className="text-xs text-gray-500">复变函数</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Load history button */}
@@ -408,7 +408,7 @@ export default function ChatPage() {
           <div className="flex h-full flex-col items-center justify-center text-gray-400 gap-3">
             <BookOpen className="w-12 h-12 text-primary-200" />
             <p className="text-lg">开始你的数学探索吧...</p>
-            <p className="text-sm">我会通过苏格拉底式追问，帮你发现极限与连续中的盲区</p>
+            <p className="text-sm">我会通过苏格拉底式追问，帮你发现复变函数中的盲区</p>
           </div>
         )}
       </div>
