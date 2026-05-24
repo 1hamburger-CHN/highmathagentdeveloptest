@@ -145,6 +145,10 @@ class ResourceGeneratorAgent(BaseAgent):
 
         resources = result.get("resources", [])
 
+        # When user asked for specific types, discard anything else the LLM snuck in
+        if ask_specific:
+            resources = [r for r in resources if r.get("type") in wanted]
+
         # Build messages: mindmaps with mermaid fence, others as markdown
         messages: list[dict] = []
         md_parts: list[str] = []
