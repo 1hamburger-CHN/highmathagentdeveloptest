@@ -57,7 +57,16 @@ def _build_auth_url() -> str:
         f"&date={quote(date)}"
         f"&host={quote(host)}"
     )
-    logger.info(f"Spark Image Auth: host={host} date={date}")
+    logger.info(f"=== Spark Image Auth Debug ===")
+    logger.info(f"APP_ID:        {settings.spark_image_app_id}")
+    logger.info(f"API_KEY:       {settings.spark_image_api_key[:8]}...{settings.spark_image_api_key[-4:] if len(settings.spark_image_api_key) > 12 else ''}")
+    logger.info(f"API_SECRET:    {settings.spark_image_api_secret[:8]}...{settings.spark_image_api_secret[-4:] if len(settings.spark_image_api_secret) > 12 else ''}")
+    logger.info(f"host: {host}")
+    logger.info(f"date: {date}")
+    logger.info(f"tmp:  {tmp!r}")
+    logger.info(f"sig:  {signature}")
+    logger.info(f"auth_origin: {authorization_origin}")
+    logger.info(f"FULL URL: {url}")
     return url
 
 
