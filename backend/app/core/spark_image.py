@@ -7,10 +7,11 @@ import hashlib
 import hmac
 import json
 import logging
-import time
 import uuid
-from datetime import datetime, timezone
-from urllib.parse import quote, urlencode, urlparse
+from datetime import datetime
+from time import mktime
+from urllib.parse import urlencode, urlparse
+from wsgiref.handlers import format_date_time
 
 from app.config import settings
 
@@ -22,15 +23,13 @@ _SPARK_IMAGE_URL = settings.spark_image_api_url
 def _build_auth_url() -> str:
     """Build authenticated WebSocket URL with HMAC-SHA256 signature."""
     host = urlparse(_SPARK_IMAGE_URL).netloc
-    # Manually build RFC 1123 date — strftime %b is locale-dependent
-    MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    now = datetime.now(timezone.utc)
-    ts = f"{DAYS[now.weekday()]}, {now.day:02d} {MONTHS[now.month-1]} {now.year} {now.hour:02d}:{now.minute:02d}:{now.second:02d} GMT"
+    path = urlparse(_SPARK_IMAGE_URL).path or "/v2.1/image"
+
+    # RFC 1123 date per Spark spec
+    now = datetime.now()
+    ts = format_date_time(mktime(now.timetuple()))
 
     # Signature string per Spark WebSocket spec
-    path = urlparse(_SPARK_IMAGE_URL).path or "/v2.1/image"
     sig_raw = f"host: {host}\ndate: {ts}\nGET {path} HTTP/1.1"
     sig = base64.b64encode(
         hmac.new(
@@ -49,14 +48,13 @@ def _build_auth_url() -> str:
     )
     auth_b64 = base64.b64encode(auth_raw.encode()).decode()
 
-    # Manually build URL — urlencode uses quote_plus which encodes spaces as +
-    # but the HMAC signature uses literal spaces, causing auth mismatch
-    url = (
-        f"{_SPARK_IMAGE_URL}?"
-        f"authorization={quote(auth_b64, safe='')}"
-        f"&date={quote(ts, safe='')}"
-        f"&host={quote(host, safe='')}"
-    )
+    # Build URL with urlencode per Spark spec (spaces → + in params)
+    v = {
+        "authorization": auth_b64,
+        "date": ts,
+        "host": host,
+    }
+    url = f"{_SPARK_IMAGE_URL}?{urlencode(v)}"
     logger.info(f"Spark Image Auth: host={host} date={ts}")
     logger.info(f"Spark Image Auth: sig_raw={sig_raw!r}")
     return url
@@ -109,12 +107,7 @@ async def spark_image_chat(
     status = 0  # 0=first, 1=streaming, 2=complete
 
     try:
-        async with websockets.connect(
-            ws_url,
-            open_timeout=timeout,
-            ping_interval=None,
-            extra_headers={"Host": urlparse(_SPARK_IMAGE_URL).netloc},
-        ) as ws:
+        async with websockets.connect(ws_url, open_timeout=timeout, ping_interval=None) as ws:
             await ws.send(json.dumps(payload, ensure_ascii=False))
 
             while True:
