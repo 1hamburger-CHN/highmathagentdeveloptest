@@ -20,13 +20,14 @@ export default function StreamingMarkdown({ content }: Props) {
           const match = /language-(\w+)/.exec(className || "");
           const language = match?.[1];
           const codeStr = String(children).replace(/\n$/, "");
+          const isMultiline = codeStr.includes("\n");
 
           if (language === "mermaid") {
             return <MermaidBlock code={codeStr} />;
           }
 
-          // Inline code (no language)
-          if (!language) {
+          // Inline code — no language AND single-line
+          if (!language && !isMultiline) {
             return (
               <code className="bg-gray-100 text-primary-700 px-1 py-0.5 rounded text-sm" {...props}>
                 {children}
@@ -34,7 +35,7 @@ export default function StreamingMarkdown({ content }: Props) {
             );
           }
 
-          // Regular code block
+          // Code block — has language OR is multiline (fenced block without language)
           return (
             <pre className="bg-gray-900 text-gray-100 rounded-lg p-3 overflow-x-auto text-sm">
               <code className={className} {...props}>

@@ -163,7 +163,7 @@ class ResourceGeneratorAgent(BaseAgent):
                     footer = ""
                 messages.append({
                     "role": "assistant",
-                    "content": f"### {title}\n```mermaid\n{content}\n```\n{footer}",
+                    "content": f"### {title}\n```mermaid\n{content}\n```\n\n{footer}",
                 })
             else:
                 md_parts.append(f"### {title}\n\n{content}")
