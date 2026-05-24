@@ -10,7 +10,7 @@ import logging
 import time
 import uuid
 from datetime import datetime, timezone
-from urllib.parse import urlencode, urlparse
+from urllib.parse import quote, urlencode, urlparse
 
 from app.config import settings
 
@@ -108,7 +108,12 @@ async def spark_image_chat(
     status = 0  # 0=first, 1=streaming, 2=complete
 
     try:
-        async with websockets.connect(ws_url, open_timeout=timeout) as ws:
+        async with websockets.connect(
+            ws_url,
+            open_timeout=timeout,
+            ping_interval=None,
+            extra_headers={"Host": urlparse(_SPARK_IMAGE_URL).netloc},
+        ) as ws:
             await ws.send(json.dumps(payload, ensure_ascii=False))
 
             while True:
@@ -138,7 +143,11 @@ async def spark_image_chat(
                     break
 
     except Exception as e:
-        logger.exception(f"Spark Image WebSocket error: {e}")
-        return f"图片理解连接失败：{e}"
+        detail = str(e)
+        # Capture HTTP response details from websockets InvalidStatus
+        if hasattr(e, "response"):
+            detail += f" | body: {getattr(e.response, 'body', b'')[:300]}"
+        logger.exception(f"Spark Image WebSocket error: {detail}")
+        return f"图片理解连接失败：{detail}"
 
     return "".join(full_response)
