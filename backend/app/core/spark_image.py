@@ -85,6 +85,9 @@ async def spark_image_chat(
     """Send image + prompt to Spark Image API via WebSocket, return response text."""
     if image_data.startswith("data:"):
         image_data = image_data.split(",", 1)[1]
+    # Ensure clean base64 — strip whitespace, fix URL-safe chars
+    image_data = image_data.strip().replace("-", "+").replace("_", "/")
+    logger.info(f"Image base64 length: {len(image_data)}, first 20 chars: {image_data[:20]}")
 
     ws_url = _build_auth_url()
     logger.info(f"Spark Image FULL URL:\n{ws_url}")
