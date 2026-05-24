@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
-import { Send, Loader2, Brain, BookOpen, Sparkles, History, Trash2, Copy, Check } from "lucide-react";
+import { Send, Loader2, Brain, BookOpen, Sparkles, History, Trash2, Copy, Check, Image as ImageIcon, X } from "lucide-react";
 
 type Message = {
   role: "user" | "coach" | "system";
   content: string;
   nodes?: string[];
+  image?: string;  // base64 data URL for user messages with images
   plaintext?: boolean;
 };
 
@@ -55,6 +56,8 @@ export default function ChatPage() {
   const [debug, setDebug] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [profileProgress, setProfileProgress] = useState<{ assessed: number; total: number } | null>(null);
+  const [imageData, setImageData] = useState<string | null>(null);  // base64 data URL
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopy = useCallback((text: string, index: number) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -146,17 +149,35 @@ export default function ChatPage() {
     }
   }, [userId]);
 
+  // --- image upload ---
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setImageData(reader.result as string);
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleRemoveImage = useCallback(() => {
+    setImageData(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
   // --- send message ---
   const handleSend = async () => {
-    if (!input.trim() || streaming) return;
-    const userMessage = input.trim();
+    if ((!input.trim() && !imageData) || streaming) return;
+    const userMessage = input.trim() || "请分析这张图片";
+    const img = imageData;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    setImageData(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    setMessages((prev) => [...prev, { role: "user", content: userMessage, image: img || undefined }]);
     setStreaming(true);
     setStreamingContent("");
     streamingRef.current = "";
     nodesRef.current = new Set();
-    setDebug(`发送中: ${userMessage}`);
+    setDebug(`发送中: ${img ? "图片 + " : ""}${userMessage}`);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -170,6 +191,7 @@ export default function ChatPage() {
         profile: profile,
         history: messages.map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content })),
       };
+      if (img) body.image = img;
 
       const resp = await fetch(`${API_BASE}/api/chat/stream`, {
         method: "POST",
@@ -408,7 +430,12 @@ export default function ChatPage() {
                     )}
                   </>
                 ) : (
-                  <p className="whitespace-pre-wrap">{m.content}</p>
+                  <div>
+                    {m.image && (
+                      <img src={m.image} alt="uploaded" className="max-w-full rounded-lg mb-2 max-h-60 object-contain" />
+                    )}
+                    <p className="whitespace-pre-wrap">{m.content}</p>
+                  </div>
                 )}
               </div>
               {/* Copy button — always visible below the bubble */}
@@ -451,12 +478,40 @@ export default function ChatPage() {
 
       {/* Input */}
       <div className="border-t p-4">
+        {/* Image preview */}
+        {imageData && (
+          <div className="max-w-3xl mx-auto mb-2 relative inline-block">
+            <img src={imageData} alt="preview" className="max-h-32 rounded-lg border border-gray-300" />
+            <button
+              onClick={handleRemoveImage}
+              className="absolute -top-1.5 -right-1.5 rounded-full bg-gray-700 text-white p-0.5 hover:bg-gray-900 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
         <div className="flex gap-3 max-w-3xl mx-auto">
+          {/* Image upload button */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={streaming}
+            className="rounded-xl border border-gray-300 px-3 py-3 text-gray-500 hover:bg-gray-50 hover:border-primary-300 transition-colors disabled:opacity-40"
+            title="上传图片"
+          >
+            <ImageIcon className="w-5 h-5" />
+          </button>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="输入你的问题或回答... (Enter 发送, Shift+Enter 换行)"
+            placeholder={imageData ? "描述你的图片问题... (Enter 发送)" : "输入你的问题或回答... (Enter 发送, Shift+Enter 换行)"}
             rows={1}
             className="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
             disabled={streaming}
@@ -471,7 +526,7 @@ export default function ChatPage() {
           ) : (
             <button
               onClick={handleSend}
-              disabled={streaming}
+              disabled={!input.trim() && !imageData || streaming}
               className="rounded-xl bg-primary-600 px-5 py-3 font-semibold text-white hover:bg-primary-700 transition-colors disabled:opacity-40"
             >
               <Send className="w-5 h-5" />

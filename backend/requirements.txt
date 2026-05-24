@@ -25,6 +25,9 @@ requests>=2.31
 # Data
 pyyaml==6.0.2
 
+# WebSocket (Spark Image API)
+websockets>=14.0
+
 # Knowledge Base (ChromaDB + BGE-M3 embeddings)
 chromadb>=1.0.0
 sentence-transformers>=3.0.0

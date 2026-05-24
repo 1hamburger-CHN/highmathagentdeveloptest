@@ -36,10 +36,66 @@ def _save_profile_and_session(user_id: str, session_id: str, profile: dict, mess
 async def chat_stream(payload: dict):
     """SSE streaming endpoint. Runs the full LangGraph tutoring pipeline."""
     user_message = payload.get("message", "")
+    image_data = payload.get("image", "")  # base64 image data
     session_id = payload.get("session_id", uuid4().hex)
     user_id = payload.get("user_id", "anonymous")
     history = payload.get("history", [])
     existing_profile = payload.get("profile", None)
+
+    # --- Image understanding: call Spark Image API first ---
+    if image_data and user_message:
+        async def image_stream_generator():
+            yield {"event": "start", "data": json.dumps({"session_id": session_id})}
+            yield {"event": "node", "data": json.dumps({"node": "image_analysis"})}
+
+            # Call Spark Image API
+            from app.core.spark_image import spark_image_chat
+            analysis = await spark_image_chat(image_data, user_message)
+            logger.info(f"Image analysis result: {analysis[:100]}...")
+
+            yield {
+                "event": "message",
+                "data": json.dumps({
+                    "role": "assistant",
+                    "content": f"图片分析结果：\n\n{analysis}\n\n正在基于图片内容进行辅导...",
+                    "node": "image_analysis",
+                }, ensure_ascii=False),
+            }
+
+            # Feed analysis into normal coaching pipeline
+            inner_prompt = f"学生上传了一张图片，图片内容分析如下：\n\n{analysis}\n\n学生的原始问题是：{user_message}\n\n请基于图片内容进行苏格拉底式辅导。"
+            inner_payload = dict(payload)
+            inner_payload["message"] = inner_prompt
+            inner_payload.pop("image", None)
+
+            async for event in _tutor_graph.astream(
+                TutorState(
+                    session_id=session_id,
+                    user_id=user_id,
+                    current_state=AgentState.INIT,
+                    messages=history + [{"role": "user", "content": inner_prompt}],
+                    profile=existing_profile,
+                ),
+                stream_mode="updates",
+            ):
+                for node_name, node_output in event.items():
+                    yield {"event": "node", "data": json.dumps({"node": node_name})}
+                    if isinstance(node_output, dict):
+                        msgs = node_output.get("messages", [])
+                        for msg in msgs:
+                            if msg.get("content", ""):
+                                yield {
+                                    "event": "message",
+                                    "data": json.dumps({
+                                        "role": msg.get("role", "assistant"),
+                                        "content": msg.get("content", ""),
+                                        "node": node_name,
+                                    }, ensure_ascii=False),
+                                }
+
+            yield {"event": "done", "data": json.dumps({"status": "complete", "session_id": session_id})}
+
+        return EventSourceResponse(image_stream_generator())
 
     # Belt-and-suspenders: safety check at endpoint level
     last_assistant_msg = ""
