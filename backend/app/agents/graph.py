@@ -102,12 +102,17 @@ def route_quality(state: TutorState) -> str:
 
 def safety_check_node(state: TutorState) -> dict[str, Any]:
     user_msg = ""
+    assistant_msg = ""
     for m in reversed(state.messages):
-        if m.get("role") == "user":
+        role = m.get("role", "")
+        if role == "user" and not user_msg:
             user_msg = m.get("content", "")
+        elif role in ("assistant", "coach") and not assistant_msg:
+            assistant_msg = m.get("content", "")
+        if user_msg and assistant_msg:
             break
 
-    result = SafetyPipeline.filter(user_msg)
+    result = SafetyPipeline.filter(user_msg, assistant_msg)
     logger.info(f"Safety check: msg={user_msg!r} allowed={result['allowed']} reason={result['reason']}")
     if not result["allowed"]:
         return {

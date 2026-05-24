@@ -42,7 +42,12 @@ async def chat_stream(payload: dict):
     existing_profile = payload.get("profile", None)
 
     # Belt-and-suspenders: safety check at endpoint level
-    safety_result = SafetyPipeline.filter(user_message)
+    last_assistant_msg = ""
+    for m in reversed(history):
+        if m.get("role") in ("assistant", "coach"):
+            last_assistant_msg = m.get("content", "")
+            break
+    safety_result = SafetyPipeline.filter(user_message, last_assistant_msg)
     if not safety_result["allowed"]:
         async def rejected_generator():
             yield {"event": "start", "data": json.dumps({"session_id": session_id})}

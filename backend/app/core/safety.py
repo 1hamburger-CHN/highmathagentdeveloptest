@@ -162,7 +162,34 @@ class SafetyPipeline:
         return False
 
     @classmethod
-    def filter(cls, content: str) -> dict:
+    def _assistant_asked_question(cls, assistant_msg: str) -> bool:
+        """Check if the assistant's last message contains a question or prompt to the user."""
+        if not assistant_msg:
+            return False
+        # Question marks
+        if "？" in assistant_msg or "?" in assistant_msg:
+            return True
+        # Chinese question patterns
+        question_patterns = [
+            "吗", "呢", "试试", "你觉得", "能不能", "会不会",
+            "再想想", "还有呢", "比如呢", "举个例子", "说说看",
+            "你怎么理解", "你觉得呢", "怎么看",
+        ]
+        return any(p in assistant_msg for p in question_patterns)
+
+    @classmethod
+    def _is_answering_question(cls, user_msg: str, assistant_msg: str) -> bool:
+        """Check if user's message is plausibly answering the assistant's question."""
+        if not cls._assistant_asked_question(assistant_msg):
+            return False
+        # Short responses are almost always answers to questions
+        if len(user_msg.strip()) <= 30:
+            return True
+        # The user is engaging with the topic — contains keywords from the question
+        return True  # any non-trivial reply to a question counts
+
+    @classmethod
+    def filter(cls, content: str, assistant_msg: str = "") -> dict:
         """Returns {allowed: bool, content: str, reason: str}."""
         if cls.has_injection_pattern(content):
             return {"allowed": False, "content": cls._pick(cls.INJECTION_RESPONSES), "reason": "injection"}
@@ -176,6 +203,9 @@ class SafetyPipeline:
         # Resource generation requests (思维导图, 练习题, etc.) — always allowed
         if any(kw in content for kw in cls.RESOURCE_KEYWORDS):
             return {"allowed": True, "content": content, "reason": "resource_request"}
+        # User is answering a question the assistant just asked — allow, don't redirect
+        if cls._is_answering_question(content, assistant_msg):
+            return {"allowed": True, "content": content, "reason": "answering_question"}
         if not cls.is_math_related(content):
             return {"allowed": False, "content": cls._pick(cls.NON_MATH_RESPONSES), "reason": "non_math"}
         return {"allowed": True, "content": content, "reason": ""}
