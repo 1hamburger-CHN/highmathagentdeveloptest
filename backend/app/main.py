@@ -20,11 +20,60 @@ logging.basicConfig(
 logger = logging.getLogger("tutor")
 
 
+def ensure_knowledge_base_indexed():
+    """Auto-index knowledge base if ChromaDB collection is empty or missing."""
+    try:
+        import chromadb
+        from chromadb.config import Settings as ChromaSettings
+        from app.knowledge.embedder import BGEM3Embedder
+
+        client = chromadb.PersistentClient(
+            path=settings.chroma_persist_dir,
+            settings=ChromaSettings(anonymized_telemetry=False),
+        )
+        embedder = BGEM3Embedder(settings.embedding_model)
+        collection = client.get_or_create_collection(
+            name="complex_analysis",
+            embedding_function=embedder,
+        )
+        if collection.count() == 0:
+            logger.info("ChromaDB collection empty, indexing knowledge base...")
+            from app.knowledge.loader import load_curriculum
+            from app.knowledge.chunker import latex_aware_split
+
+            curriculum_path = Path(__file__).parent.parent / "data" / "seed" / "curriculum.yaml"
+            nodes = load_curriculum(str(curriculum_path))
+            chunks, metadatas, ids = [], [], []
+            for node in nodes:
+                text = node.to_chunk_text()
+                sub_chunks = latex_aware_split(text, chunk_size=512, overlap=64)
+                for i, chunk in enumerate(sub_chunks):
+                    chunk_id = f"{node.id}_{i}" if len(sub_chunks) > 1 else node.id
+                    chunks.append(chunk)
+                    ids.append(chunk_id)
+                    metadatas.append({
+                        "node_id": node.id, "title": node.title,
+                        "difficulty": node.difficulty, "bloom_level": node.bloom_level,
+                        "prerequisites": ",".join(node.prerequisites),
+                        "related": ",".join(node.related),
+                    })
+            batch_size = 10
+            for i in range(0, len(chunks), batch_size):
+                batch_end = min(i + batch_size, len(chunks))
+                collection.add(ids=ids[i:batch_end], documents=chunks[i:batch_end], metadatas=metadatas[i:batch_end])
+            logger.info(f"Knowledge base indexed: {collection.count()} chunks from {len(nodes)} nodes")
+        else:
+            logger.info(f"Knowledge base already indexed: {collection.count()} chunks")
+    except Exception:
+        logger.exception("Failed to index knowledge base, continuing without KB retrieval")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting 苏格拉底教练 server...")
     init_db()
     logger.info(f"Turso database ready at {settings.turso_url}")
+    ensure_knowledge_base_indexed()
     yield
     logger.info("Shutting down...")
 
