@@ -9,8 +9,9 @@ import json
 import logging
 import uuid
 from datetime import datetime
-from email.utils import formatdate
-from urllib.parse import quote, urlparse
+from time import mktime
+from urllib.parse import urlencode, urlparse
+from wsgiref.handlers import format_date_time
 
 from app.config import settings
 
@@ -20,12 +21,13 @@ _SPARK_IMAGE_URL = settings.spark_image_api_url
 
 
 def _build_auth_url() -> str:
-    """Build authenticated WebSocket URL per Spark official sample code."""
+    """Build authenticated WebSocket URL — per official Spark docs."""
     host = urlparse(_SPARK_IMAGE_URL).netloc
     path = urlparse(_SPARK_IMAGE_URL).path
 
-    # RFC 1123 date
-    date = formatdate(timeval=None, localtime=False, usegmt=True)
+    # Step 1: RFC 1123 date
+    now = datetime.now()
+    date = format_date_time(mktime(now.timetuple()))
 
     # Signature string
     tmp = f"host: {host}\n"
@@ -42,21 +44,22 @@ def _build_auth_url() -> str:
     # Base64 signature
     signature = base64.b64encode(tmp_sha).decode("utf-8")
 
-    # Authorization (raw, NOT base64 — URL-encoded directly per working sample)
+    # Authorization per official docs: base64(authorization_origin)
     authorization_origin = (
         f'api_key="{settings.spark_image_api_key}", '
         f'algorithm="hmac-sha256", '
         f'headers="host date request-line", '
         f'signature="{signature}"'
     )
+    authorization = base64.b64encode(authorization_origin.encode("utf-8")).decode("utf-8")
 
-    # Final URL — authorization_origin is URL-encoded, NOT base64-encoded
-    url = (
-        f"wss://{host}{path}?"
-        f"authorization={quote(authorization_origin)}"
-        f"&date={quote(date)}"
-        f"&host={quote(host)}"
-    )
+    # Final URL per official docs
+    v = {
+        "authorization": authorization,
+        "date": date,
+        "host": host,
+    }
+    url = f"wss://{host}{path}?{urlencode(v)}"
     logger.info(f"=== Spark Image Auth Debug ===")
     logger.info(f"APP_ID:        {settings.spark_image_app_id}")
     logger.info(f"API_KEY:       {settings.spark_image_api_key[:8]}...{settings.spark_image_api_key[-4:] if len(settings.spark_image_api_key) > 12 else ''}")
@@ -111,7 +114,7 @@ async def spark_image_chat(
     }
 
     try:
-        from websockets.client import connect as ws_connect
+        import websockets
     except ImportError:
         logger.error("websockets not installed")
         return "图片理解服务暂不可用（缺少 websockets 依赖）。"
@@ -119,12 +122,7 @@ async def spark_image_chat(
     full_response = []
 
     try:
-        from urllib.parse import urlparse as _up, urlunparse
-        p = _up(ws_url)
-        # Rebuild URI preserving query string explicitly
-        uri = urlunparse(("wss", p.netloc, p.path, "", p.query, ""))
-        logger.info(f"Spark Image WS URI: {uri[:200]}...")
-        async with ws_connect(uri, open_timeout=timeout, ping_interval=None) as ws:
+        async with websockets.connect(ws_url, open_timeout=timeout, ping_interval=None) as ws:
             await ws.send(json.dumps(payload, ensure_ascii=False))
 
             while True:
