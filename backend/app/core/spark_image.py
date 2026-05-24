@@ -71,6 +71,7 @@ async def spark_image_chat(
         image_data = image_data.split(",", 1)[1]
 
     ws_url = _build_auth_url()
+    logger.info(f"Spark Image FULL URL:\n{ws_url}")
 
     request_id = uuid.uuid4().hex
     payload = {
