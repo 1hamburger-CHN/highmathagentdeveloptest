@@ -141,23 +141,27 @@ class ResourceGeneratorAgent(BaseAgent):
 
         # --- Domain validation (KB check → math check) ---
         allow_out_of_domain = getattr(state, "_allow_out_of_domain", False)
+        # Resolve node IDs like "complex-2.2" to human-readable titles
+        display_concept = concept
+        if self.retriever:
+            display_concept = self.retriever.resolve_concept_name(concept)
         if self.retriever and not allow_out_of_domain:
             if not self.retriever.is_concept_in_domain(concept):
                 from app.core.safety import SafetyPipeline
-                if not SafetyPipeline.is_math_related(concept):
-                    logger.info(f"Non-math concept rejected: '{concept}'")
+                if not SafetyPipeline.is_math_related(display_concept):
+                    logger.info(f"Non-math concept rejected: '{display_concept}'")
                     return {
                         "messages": [{
                             "role": "assistant",
-                            "content": f"{concept} 不属于数学领域，请询问复变函数相关问题。",
+                            "content": f"{display_concept} 不属于数学领域，请询问复变函数相关问题。",
                         }],
                     }
-                logger.info(f"Out-of-domain math concept: '{concept}', asking for confirmation")
+                logger.info(f"Out-of-domain math concept: '{display_concept}', asking for confirmation")
                 return {
-                    "_pending_out_of_domain_concept": concept,
+                    "_pending_out_of_domain_concept": display_concept,
                     "messages": [{
                         "role": "assistant",
-                        "content": f"{concept} 不在当前复变函数知识范围内，需要我帮你搜索并生成相关内容吗？",
+                        "content": f"{display_concept} 不在当前复变函数知识范围内，需要我帮你搜索并生成相关内容吗？",
                     }],
                 }
         # --- End domain validation ---

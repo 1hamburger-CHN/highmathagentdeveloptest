@@ -53,30 +53,46 @@ class HybridRetriever:
             formatted.append({"id": id_, "content": doc, "score": score})
         return formatted
 
-    # Class-level cache for known curriculum node titles
+    # Class-level cache for known curriculum node titles and id→title map
     _known_titles: list[str] | None = None
+    _id_to_title: dict[str, str] | None = None
 
     @classmethod
-    def _load_known_titles(cls) -> list[str]:
+    def _load_curriculum_cache(cls):
         if cls._known_titles is None:
             from pathlib import Path
             from app.knowledge.loader import load_curriculum
             curriculum_path = Path(__file__).parent.parent.parent / "data" / "seed" / "curriculum.yaml"
             nodes = load_curriculum(str(curriculum_path))
             cls._known_titles = [node.title for node in nodes]
+            cls._id_to_title = {node.id: node.title for node in nodes}
+
+    @classmethod
+    def _load_known_titles(cls) -> list[str]:
+        cls._load_curriculum_cache()
         return cls._known_titles
 
-    def is_concept_in_domain(self, concept: str, threshold: float = 0.45) -> bool:
+    @classmethod
+    def resolve_concept_name(cls, concept: str) -> str:
+        """Resolve a curriculum node ID to its title, or return the original."""
+        cls._load_curriculum_cache()
+        return cls._id_to_title.get(concept, concept)
+
+    def is_concept_in_domain(self, concept: str, threshold: float = 0.35) -> bool:
         """Check if a concept is within the complex analysis knowledge base.
 
-        Uses keyword match against known titles first, then semantic search.
+        Uses token-level matching against known titles first, then semantic search.
         """
+        import jieba
+        concept_tokens = set(jieba.cut(concept))
         for title in self._load_known_titles():
+            # Direct substring match (handles exact containment)
             if concept in title or title in concept:
                 return True
-            # Significant character overlap
-            overlap = set(title) & set(concept)
-            if len(overlap) >= max(2, len(title) * 0.4):
+            # Token-level overlap — more robust than character overlap
+            title_tokens = set(jieba.cut(title))
+            common = concept_tokens & title_tokens
+            if len(common) >= 2:
                 return True
         # Semantic search fallback
         results = self.search(concept, top_k=3)
