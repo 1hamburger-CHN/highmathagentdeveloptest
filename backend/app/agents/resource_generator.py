@@ -117,8 +117,9 @@ graph LR
 
 
 class ResourceGeneratorAgent(BaseAgent):
-    def __init__(self, model_router):
+    def __init__(self, model_router, retriever=None):
         super().__init__("resource_generator", model_router)
+        self.retriever = retriever
 
     async def run(self, state: TutorState) -> dict:
         blind_spots = json.dumps(state.blind_spots, ensure_ascii=False)
@@ -137,6 +138,29 @@ class ResourceGeneratorAgent(BaseAgent):
             concept = re.sub(r"^(帮我|请|帮忙|给我|来)?(生成|做|写|制作|创建)", "", user_request).strip()
             if not concept or len(concept) < 2:
                 concept = user_request
+
+        # --- Domain validation (KB check → math check) ---
+        allow_out_of_domain = getattr(state, "_allow_out_of_domain", False)
+        if self.retriever and not allow_out_of_domain:
+            if not self.retriever.is_concept_in_domain(concept):
+                from app.core.safety import SafetyPipeline
+                if not SafetyPipeline.is_math_related(concept):
+                    logger.info(f"Non-math concept rejected: '{concept}'")
+                    return {
+                        "messages": [{
+                            "role": "assistant",
+                            "content": f"{concept} 不属于数学领域，请询问复变函数相关问题。",
+                        }],
+                    }
+                logger.info(f"Out-of-domain math concept: '{concept}', asking for confirmation")
+                return {
+                    "_pending_out_of_domain_concept": concept,
+                    "messages": [{
+                        "role": "assistant",
+                        "content": f"{concept} 不在当前复变函数知识范围内，需要我帮你搜索并生成相关内容吗？",
+                    }],
+                }
+        # --- End domain validation ---
 
         # Detect what type of resource the user wants
         ask_intro = any(kw in user_request for kw in ["介绍", "概述", "概览", "是什么", "什么是", "入门"])

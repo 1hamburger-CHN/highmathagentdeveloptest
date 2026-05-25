@@ -38,3 +38,6 @@ class TutorState:
     _has_profile: bool = False
     _is_direct_question: bool = False
     _is_resource_request: bool = False
+    _pending_out_of_domain_concept: str = ""  # concept pending user confirmation
+    _allow_out_of_domain: bool = False
+    _respond_directly: bool = False  # profile_check produced a terminal message

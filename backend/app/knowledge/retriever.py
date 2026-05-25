@@ -47,6 +47,39 @@ class HybridRetriever:
         formatted = []
         ids = results.get("ids", [[]])[0]
         docs = results.get("documents", [[]])[0]
+        distances = results.get("distances", [[]])[0] if results.get("distances") else []
         for i, (id_, doc) in enumerate(zip(ids, docs)):
-            formatted.append({"id": id_, "content": doc, "score": 1.0})
+            score = 1.0 - distances[i] if i < len(distances) else 0.0
+            formatted.append({"id": id_, "content": doc, "score": score})
         return formatted
+
+    # Class-level cache for known curriculum node titles
+    _known_titles: list[str] | None = None
+
+    @classmethod
+    def _load_known_titles(cls) -> list[str]:
+        if cls._known_titles is None:
+            from pathlib import Path
+            from app.knowledge.loader import load_curriculum
+            curriculum_path = Path(__file__).parent.parent.parent / "data" / "seed" / "curriculum.yaml"
+            nodes = load_curriculum(str(curriculum_path))
+            cls._known_titles = [node.title for node in nodes]
+        return cls._known_titles
+
+    def is_concept_in_domain(self, concept: str, threshold: float = 0.45) -> bool:
+        """Check if a concept is within the complex analysis knowledge base.
+
+        Uses keyword match against known titles first, then semantic search.
+        """
+        for title in self._load_known_titles():
+            if concept in title or title in concept:
+                return True
+            # Significant character overlap
+            overlap = set(title) & set(concept)
+            if len(overlap) >= max(2, len(title) * 0.4):
+                return True
+        # Semantic search fallback
+        results = self.search(concept, top_k=3)
+        if not results:
+            return False
+        return any(r.get("score", 0) >= threshold for r in results)

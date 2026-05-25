@@ -13,16 +13,18 @@ from app.agents.socratic_coach import SocraticCoachAgent
 from app.agents.state import AgentState, TutorState
 from app.core.llm import ModelRouter
 from app.core.safety import SafetyPipeline
+from app.knowledge.retriever import HybridRetriever
 
 logger = logging.getLogger("tutor.graph")
 
 # Shared model router (initialized once at graph build time)
 _router = ModelRouter()
+_retriever = HybridRetriever()
 
 _profile_builder = ProfileBuilderAgent(_router)
 _diagnostician = DiagnosticianAgent(_router)
 _socratic_coach = SocraticCoachAgent(_router)
-_resource_generator = ResourceGeneratorAgent(_router)
+_resource_generator = ResourceGeneratorAgent(_router, _retriever)
 _assessor = AssessorAgent(_router)
 _quality_gate = QualityGateAgent(_router)
 
@@ -50,7 +52,7 @@ def build_tutor_graph() -> StateGraph:
     workflow.add_conditional_edges(
         "profile_check",
         route_profile_check,
-        {"build_profile": "build_profile", "diagnose": "diagnose", "coach": "coach", "generate": "generate"},
+        {"build_profile": "build_profile", "diagnose": "diagnose", "coach": "coach", "generate": "generate", "respond": "respond"},
     )
     workflow.add_edge("build_profile", "coach")
     workflow.add_edge("diagnose", "coach")
@@ -78,6 +80,9 @@ def route_safety(state: TutorState) -> str:
 
 
 def route_profile_check(state: TutorState) -> str:
+    # Decline/refusal → respond directly
+    if getattr(state, "_respond_directly", False):
+        return "respond"
     # Resource request → skip everything, go straight to generate
     if getattr(state, "_is_resource_request", False):
         return "generate"
@@ -124,12 +129,39 @@ def safety_check_node(state: TutorState) -> dict[str, Any]:
 
 def profile_check_node(state: TutorState) -> dict[str, Any]:
     has_profile = bool(state.profile and state.profile.get("knowledge_mastery"))
-    # Detect if user asked a direct math question — skip profile building to save time
     user_msg = ""
     for m in reversed(state.messages):
         if m.get("role") == "user":
             user_msg = m.get("content", "").strip()
             break
+
+    # --- Out-of-domain confirmation handling ---
+    pending = getattr(state, "_pending_out_of_domain_concept", "")
+    if pending:
+        if _is_out_of_domain_confirmation(user_msg):
+            return {
+                "current_state": AgentState.PROFILE_CHECK,
+                "_has_profile": has_profile,
+                "_is_resource_request": True,
+                "_is_direct_question": False,
+                "_allow_out_of_domain": True,
+                "current_concept": pending,
+                "_pending_out_of_domain_concept": "",
+            }
+        elif _is_out_of_domain_decline(user_msg):
+            return {
+                "current_state": AgentState.PROFILE_CHECK,
+                "_has_profile": has_profile,
+                "_is_resource_request": False,
+                "_is_direct_question": False,
+                "_pending_out_of_domain_concept": "",
+                "_respond_directly": True,
+                "messages": [{"role": "assistant", "content": "好的，有其他复变函数的问题可以随时问我。"}],
+            }
+        else:
+            logger.info(f"Clearing pending out-of-domain concept '{pending}' — unrelated message")
+            # Fall through to normal detection (pending implicitly cleared)
+
     is_direct_question = _is_direct_math_question(user_msg)
     is_resource_request = _is_resource_request(user_msg)
     return {
@@ -137,6 +169,7 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
         "_has_profile": has_profile,
         "_is_direct_question": is_direct_question,
         "_is_resource_request": is_resource_request,
+        "_pending_out_of_domain_concept": "",
     }
 
 
@@ -165,6 +198,26 @@ def _is_resource_request(text: str) -> bool:
     return any(kw in text for kw in resource_keywords)
 
 
+def _is_out_of_domain_confirmation(text: str) -> bool:
+    """Detect user confirming they want out-of-domain content generated."""
+    keywords = [
+        "好的", "可以", "行", "没问题", "好", "嗯", "是", "对",
+        "要", "需要", "搜", "搜索", "帮我搜", "帮我搜索",
+        "帮我生成", "生成吧", "做吧", "搞", "ok", "yes", "yeah",
+        "确认", "是的", "对的", "来吧", "搞起", "生成",
+    ]
+    return any(kw in text for kw in keywords)
+
+
+def _is_out_of_domain_decline(text: str) -> bool:
+    """Detect user declining out-of-domain generation."""
+    keywords = [
+        "不用", "不要", "算了", "不了", "取消", "换一个",
+        "不需要", "不用了", "别", "no",
+    ]
+    return any(kw in text for kw in keywords)
+
+
 async def build_profile_node(state: TutorState) -> dict[str, Any]:
     result = await _profile_builder.run(state)
     result["current_state"] = AgentState.BUILD_PROFILE
@@ -190,6 +243,7 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
 async def generate_node(state: TutorState) -> dict[str, Any]:
     result = await _resource_generator.run(state)
     result["current_state"] = AgentState.GENERATE
+    result["_pending_out_of_domain_concept"] = ""
     return result
 
 

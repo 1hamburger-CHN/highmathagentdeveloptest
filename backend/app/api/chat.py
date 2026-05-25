@@ -15,11 +15,27 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+def _extract_pending_out_of_domain_concept(messages: list[dict]) -> str:
+    """Check if last assistant message is an out-of-domain asking message.
+
+    Pattern: '<concept> 不在当前复变函数知识范围内，需要我帮你搜索并生成相关内容吗？'
+    """
+    if not messages:
+        return ""
+    for m in reversed(messages):
+        if m.get("role") == "assistant":
+            content = m.get("content", "")
+            if "不在当前复变函数知识范围内" in content and "需要我帮你搜索并生成相关内容吗" in content:
+                return content.split(" 不在当前复变函数知识范围内")[0].strip()
+            return ""
+    return ""
+
 # Build the LangGraph graph once at module level
 _tutor_graph = build_tutor_graph()
 
 # Intermediate agents that work silently — their messages are hidden from user
-_SILENT_NODES = {"build_profile", "diagnose", "profile_check"}
+_SILENT_NODES = {"build_profile", "diagnose"}
 
 
 def _save_profile_and_session(user_id: str, session_id: str, profile: dict, messages: list[dict]):
@@ -128,6 +144,11 @@ async def chat_stream(payload: dict):
         profile=existing_profile,
     )
 
+    # Restore pending out-of-domain concept from previous turn
+    _pending = _extract_pending_out_of_domain_concept(full_transcript)
+    if _pending:
+        initial_state._pending_out_of_domain_concept = _pending
+
     async def event_generator():
         yield {"event": "start", "data": json.dumps({"session_id": session_id})}
 
@@ -229,6 +250,10 @@ async def chat_send(payload: dict):
         messages=list(full_transcript),
         profile=existing_profile,
     )
+
+    _pending = _extract_pending_out_of_domain_concept(full_transcript)
+    if _pending:
+        initial_state._pending_out_of_domain_concept = _pending
 
     try:
         final_state = await _tutor_graph.ainvoke(initial_state)
