@@ -164,6 +164,23 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
 
     is_direct_question = _is_direct_math_question(user_msg)
     is_resource_request = _is_resource_request(user_msg)
+
+    # Out-of-domain direct question → redirect to generate (don't do Socratic coaching)
+    if is_direct_question and not is_resource_request:
+        concept = _extract_concept_from_question(user_msg)
+        if concept and len(concept) >= 2 and not _retriever.is_concept_in_domain(concept):
+            from app.core.safety import SafetyPipeline
+            if SafetyPipeline.is_math_related(concept):
+                logger.info(f"Out-of-domain math question: '{concept}', redirect to generate")
+                return {
+                    "current_state": AgentState.PROFILE_CHECK,
+                    "_has_profile": has_profile,
+                    "_is_resource_request": True,
+                    "_is_direct_question": False,
+                    "current_concept": concept,
+                    "_pending_out_of_domain_concept": "",
+                }
+
     return {
         "current_state": AgentState.PROFILE_CHECK,
         "_has_profile": has_profile,
@@ -216,6 +233,18 @@ def _is_out_of_domain_decline(text: str) -> bool:
         "不需要", "不用了", "别", "no",
     ]
     return any(kw in text for kw in keywords)
+
+
+def _extract_concept_from_question(text: str) -> str:
+    """Extract the likely math concept from a question."""
+    import re
+    concept = re.sub(
+        r"^(什么是|啥是|什么叫|什么是|解释一下|讲讲|请问|问一下|"
+        r"怎么理解|如何理解|怎么证|证明一下|帮我|请|帮忙|给我)",
+        "", text,
+    )
+    concept = re.sub(r"[?？。！!，,：:]+$", "", concept)
+    return concept.strip()
 
 
 async def build_profile_node(state: TutorState) -> dict[str, Any]:
