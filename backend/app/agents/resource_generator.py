@@ -1,8 +1,11 @@
 import json
+import logging
 import re
 
 from app.agents.base import BaseAgent, safe_json_parse
 from app.agents.state import TutorState
+
+logger = logging.getLogger("tutor")
 
 RESOURCE_GENERATOR_PROMPT = """你是"苏格拉底教练"系统中的学习资源生成专家。当学生被诊断出知识盲区后，你负责生成针对性的补救材料。
 
@@ -130,13 +133,20 @@ class ResourceGeneratorAgent(BaseAgent):
 
         # If user explicitly asked for a resource, prioritize their request
         if not concept and user_request:
-            concept = user_request
+            # Strip common "generate X" prefixes to get the actual topic
+            concept = re.sub(r"^(帮我|请|帮忙|给我|来)?(生成|做|写|制作|创建)", "", user_request).strip()
+            if not concept or len(concept) < 2:
+                concept = user_request
 
         # Detect what type of resource the user wants
         ask_intro = any(kw in user_request for kw in ["介绍", "概述", "概览", "是什么", "什么是", "入门"])
         ask_mindmap = any(kw in user_request for kw in ["思维导图", "脑图", "导图", "知识图谱", "知识地图"])
         ask_exercise = any(kw in user_request for kw in ["练习题", "习题", "题目", "出题", "试卷", "练习"])
         ask_lecture = any(kw in user_request for kw in ["讲义", "课件", "教程", "讲解", "笔记", "总结", "归纳"])
+        ask_generic = any(kw in user_request for kw in ["生成", "做", "写", "制作", "创建"])
+        # "生成X" with no specific type → default to lecture
+        if not ask_intro and not ask_mindmap and not ask_exercise and not ask_lecture and ask_generic:
+            ask_lecture = True
         ask_specific = ask_intro or ask_mindmap or ask_exercise or ask_lecture
 
         if ask_specific:
@@ -159,7 +169,8 @@ class ResourceGeneratorAgent(BaseAgent):
         response = await self.generate(RESOURCE_GENERATOR_PROMPT, user_prompt)
         try:
             result = safe_json_parse(response)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logger.warning(f"ResourceGenerator JSON parse failed: {e}, raw ({len(response)} chars): {response[:500]}")
             result = {"resources": []}
 
         resources = result.get("resources", [])

@@ -22,13 +22,92 @@ def repair_latex_json(text: str) -> str:
     return re.sub(r"(?<!\\)\\([a-zA-Z]{2,})", r"\\\\\1", text)
 
 
+def _extract_json_braces(text: str) -> str:
+    """Extract the outermost JSON object/array from text that may have surrounding prose."""
+    # Find first { or [ and last } or ]
+    start = None
+    end = None
+    for i, ch in enumerate(text):
+        if ch in ("{", "[") and start is None:
+            start = i
+        if ch in ("}", "]"):
+            end = i
+    if start is not None and end is not None and start < end:
+        return text[start : end + 1]
+    return text
+
+
+def _close_truncated_json(text: str) -> str:
+    """Attempt to close a truncated JSON string by adding missing terminators."""
+    # Count unclosed braces/brackets and close them
+    stack: list[str] = []
+    in_string = False
+    escaped = False
+    for ch in text:
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\":
+            escaped = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch in ("{", "["):
+            stack.append("}" if ch == "{" else "]")
+        elif ch in ("}", "]"):
+            if stack and stack[-1] == ch:
+                stack.pop()
+    if not stack:
+        return text
+    # Close from innermost to outermost
+    closing = "".join(reversed(stack))
+    return text + closing
+
+
 def safe_json_parse(text: str) -> Any:
-    """Parse JSON with fallback repair for unescaped LaTeX backslashes."""
+    """Parse JSON with cascading fallback for common LLM output issues."""
+    # 1. Direct parse
     try:
         return json.loads(text)
     except json.JSONDecodeError:
+        pass
+
+    # 2. Repair unescaped LaTeX backslashes
+    try:
         repaired = repair_latex_json(text)
         return json.loads(repaired)
+    except json.JSONDecodeError:
+        pass
+
+    # 3. Extract JSON from surrounding prose, then try again
+    extracted = _extract_json_braces(text)
+    if extracted != text:
+        try:
+            return json.loads(extracted)
+        except json.JSONDecodeError:
+            repaired = repair_latex_json(extracted)
+            try:
+                return json.loads(repaired)
+            except json.JSONDecodeError:
+                pass
+
+    # 4. Try to close truncated JSON + LaTeX repair
+    closed = _close_truncated_json(extracted)
+    if closed != extracted:
+        try:
+            repaired = repair_latex_json(closed)
+            return json.loads(repaired)
+        except json.JSONDecodeError:
+            pass
+
+    raise json.JSONDecodeError(
+        f"All parse strategies failed (raw {len(text)} chars)",
+        text[:200],
+        0,
+    )
 
 
 class BaseAgent:
