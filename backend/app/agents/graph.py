@@ -204,7 +204,7 @@ def _is_out_of_domain_confirmation(text: str) -> bool:
         "好的", "可以", "行", "没问题", "好", "嗯", "是", "对",
         "要", "需要", "搜", "搜索", "帮我搜", "帮我搜索",
         "帮我生成", "生成吧", "做吧", "搞", "ok", "yes", "yeah",
-        "确认", "是的", "对的", "来吧", "搞起", "生成",
+        "确认", "是的", "对的", "来吧", "搞起",
     ]
     return any(kw in text for kw in keywords)
 
