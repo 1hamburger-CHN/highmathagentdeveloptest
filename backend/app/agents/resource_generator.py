@@ -136,6 +136,13 @@ class ResourceGeneratorAgent(BaseAgent):
         if not concept and user_request:
             # Strip common "generate X" prefixes to get the actual topic
             concept = re.sub(r"^(帮我|请|帮忙|给我|来)?(生成|做|写|制作|创建)", "", user_request).strip()
+            # Also strip trailing question words
+            concept = re.sub(
+                r"(是什么|是什么意思|什么意思|怎么理解|如何理解|怎么用|"
+                r"怎么算|怎么证|怎么计算|怎么做|怎么求|是什么鬼|"
+                r"的定义|的性质|的公式|的推导|的证明|能讲讲吗|能说说吗)$",
+                "", concept,
+            )
             if not concept or len(concept) < 2:
                 concept = user_request
 
