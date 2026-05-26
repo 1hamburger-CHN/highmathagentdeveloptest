@@ -85,6 +85,10 @@ class HybridRetriever:
         """
         import jieba
         concept_tokens = set(jieba.cut(concept))
+        # Short queries (e.g. "C-R方程") often tokenise poorly — build bigrams for them
+        if len(concept) <= 10:
+            bigrams = {concept[i:i+2] for i in range(len(concept)-1)}
+            concept_tokens |= bigrams
         for title in self._load_known_titles():
             # Direct substring match (handles exact containment)
             if concept in title or title in concept:
@@ -94,8 +98,12 @@ class HybridRetriever:
             common = concept_tokens & title_tokens
             if len(common) >= 2:
                 return True
-        # Semantic search fallback
+            # Single-token match is enough when concept is very short
+            if len(concept) <= 10 and len(common) >= 1:
+                return True
+        # Semantic search fallback (lower threshold for short queries)
+        sem_threshold = max(threshold - 0.10, 0.20) if len(concept) <= 10 else threshold
         results = self.search(concept, top_k=3)
         if not results:
             return False
-        return any(r.get("score", 0) >= threshold for r in results)
+        return any(r.get("score", 0) >= sem_threshold for r in results)

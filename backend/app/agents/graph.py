@@ -246,10 +246,18 @@ def _extract_concept_from_question(text: str) -> str:
     import re
     concept = re.sub(
         r"^(什么是|啥是|什么叫|什么是|解释一下|讲讲|请问|问一下|"
-        r"怎么理解|如何理解|怎么证|证明一下|帮我|请|帮忙|给我)",
+        r"怎么理解|如何理解|怎么证|证明一下|帮我|请|帮忙|给我|"
+        r"你能|能|可以|能不能|可不可以|说一下|说说)",
         "", text,
     )
+    # Strip trailing punctuation AND question words
     concept = re.sub(r"[?？。！!，,：:]+$", "", concept)
+    concept = re.sub(
+        r"(是什么|是什么意思|什么意思|怎么理解|如何理解|怎么用|"
+        r"怎么算|怎么证|怎么计算|怎么做|怎么求|是什么鬼|"
+        r"的定义|的性质|的公式|的推导|的证明|能讲讲吗|能说说吗)$",
+        "", concept,
+    )
     return concept.strip()
 
 
