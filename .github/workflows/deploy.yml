@@ -9,12 +9,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.LIGHTHOUSE_HOST }}
           username: root
           key: ${{ secrets.LIGHTHOUSE_SSH_KEY }}
+          port: 22
+          timeout: 60s
           script: |
             cd /opt/mathagent
             git pull origin master
