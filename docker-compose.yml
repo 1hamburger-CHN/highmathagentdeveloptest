@@ -10,6 +10,7 @@ services:
       - chroma_data:/app/data/chromadb
     environment:
       - PYTHONUNBUFFERED=1
+      - HF_ENDPOINT=https://hf-mirror.com
     env_file:
       - ./backend/.env
     restart: unless-stopped
