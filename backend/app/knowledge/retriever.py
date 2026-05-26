@@ -83,6 +83,11 @@ class HybridRetriever:
 
         Uses token-level matching against known titles first, then semantic search.
         """
+        # Resolve node IDs (e.g. "complex-2.2") to titles BEFORE matching
+        resolved = self.resolve_concept_name(concept)
+        if resolved != concept:
+            concept = resolved  # it was an ID — now use the title
+
         import jieba
         concept_tokens = set(jieba.cut(concept))
         # Short queries (e.g. "C-R方程") often tokenise poorly — build bigrams for them
