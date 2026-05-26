@@ -1,5 +1,6 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
+RUN npm config set registry https://mirrors.cloud.tencent.com/npm/
 COPY package.json package-lock.json* ./
 RUN npm ci
 
