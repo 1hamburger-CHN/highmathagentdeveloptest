@@ -147,6 +147,7 @@ class ResourceGeneratorAgent(BaseAgent):
                 concept = user_request
 
         # --- Domain validation (KB check → math check) ---
+        logger.info(f"RG domain check: concept={concept!r} current_concept={state.current_concept!r}")
         allow_out_of_domain = getattr(state, "_allow_out_of_domain", False)
         # Resolve node IDs like "complex-2.2" to human-readable titles
         display_concept = concept
