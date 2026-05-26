@@ -179,6 +179,8 @@ class ModelRouter:
         "resource_generator": ModelTier.PRO,
         "assessor": ModelTier.MAX,
         "quality_gate": ModelTier.LITE,
+        "animation_generator": ModelTier.PRO,
+        "animation_selector": ModelTier.LITE,
     }
 
     def __init__(self):

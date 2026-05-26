@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import assess, chat, generate, path_planner, profile, sessions
+from app.api import animation, assess, chat, generate, path_planner, profile, sessions
 from app.config import settings
 from app.models.db_models import init_db
 
@@ -110,6 +110,7 @@ app.include_router(generate.router, prefix="/api/generate", tags=["generate"])
 app.include_router(assess.router, prefix="/api/assess", tags=["assess"])
 app.include_router(path_planner.router, prefix="/api/path", tags=["path"])
 app.include_router(sessions.router, prefix="/api/sessions", tags=["sessions"])
+app.include_router(animation.router, prefix="/api/animation", tags=["animation"])
 
 # Serve frontend static files after API routes
 _STATIC_DIR = Path(__file__).parent.parent / "static"

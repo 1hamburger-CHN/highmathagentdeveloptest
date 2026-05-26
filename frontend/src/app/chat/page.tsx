@@ -5,11 +5,12 @@ import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
 import { Send, Loader2, Brain, BookOpen, Sparkles, History, Trash2, Copy, Check, Image as ImageIcon, X } from "lucide-react";
 
 type Message = {
-  role: "user" | "coach" | "system";
+  role: "user" | "coach" | "system" | "animation";
   content: string;
   nodes?: string[];
   image?: string;  // base64 data URL for user messages with images
   plaintext?: boolean;
+  title?: string;  // animation title
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -106,9 +107,10 @@ export default function ChatPage() {
       const resp = await fetch(`${API_BASE}/api/sessions/${userId}/latest`);
       const data = await resp.json();
       if (data.messages && data.messages.length > 0) {
-        const msgs: Message[] = data.messages.map((m: { role: string; content: string }) => ({
-          role: m.role === "user" ? "user" : "coach",
+        const msgs: Message[] = data.messages.map((m: { role: string; content: string; title?: string }) => ({
+          role: m.role === "user" ? "user" : m.role === "animation" ? "animation" : "coach",
           content: m.content,
+          title: m.title,
         }));
         setMessages(msgs);
         setHistoryLoaded(true);
@@ -280,6 +282,15 @@ export default function ChatPage() {
       });
     }
     if (data.role && data.content) {
+      // Animation resource — add directly as message
+      if (data.role === "animation") {
+        setMessages((msgs) => [...msgs, {
+          role: "animation",
+          content: data.content as string,
+          title: (data.title as string) || "数学动画",
+        }]);
+        return;
+      }
       streamingRef.current += data.content as string;
       setStreamingContent(streamingRef.current);
     }
@@ -401,7 +412,21 @@ export default function ChatPage() {
                     : "bg-gray-100 text-gray-900"
                 }`}
               >
-                {m.role === "coach" ? (
+                {m.role === "animation" ? (
+                  <div className="w-full max-w-[400px]">
+                    <video
+                      src={API_BASE + m.content}
+                      controls
+                      className="w-full rounded-lg"
+                      preload="metadata"
+                    >
+                      您的浏览器不支持视频播放
+                    </video>
+                    {m.title && (
+                      <p className="text-xs text-gray-500 mt-1 text-center">{m.title}</p>
+                    )}
+                  </div>
+                ) : m.role === "coach" ? (
                   <>
                     {m.plaintext ? (
                       <div className="text-sm text-gray-900 whitespace-pre-wrap">{m.content}</div>

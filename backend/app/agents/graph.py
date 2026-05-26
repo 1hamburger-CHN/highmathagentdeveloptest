@@ -4,6 +4,7 @@ from typing import Any
 
 from langgraph.graph import END, StateGraph
 
+from app.agents.animation_generator import AnimationGeneratorAgent
 from app.agents.assessor import AssessorAgent
 from app.agents.diagnostician import DiagnosticianAgent
 from app.agents.profile_builder import ProfileBuilderAgent
@@ -27,6 +28,7 @@ _socratic_coach = SocraticCoachAgent(_router)
 _resource_generator = ResourceGeneratorAgent(_router, _retriever)
 _assessor = AssessorAgent(_router)
 _quality_gate = QualityGateAgent(_router)
+_animation_generator = AnimationGeneratorAgent(_router)
 
 
 def build_tutor_graph() -> StateGraph:
@@ -40,6 +42,7 @@ def build_tutor_graph() -> StateGraph:
     workflow.add_node("generate", generate_node)
     workflow.add_node("assess", assess_node)
     workflow.add_node("quality_gate", quality_gate_node)
+    workflow.add_node("animation_render", animation_render_node)
     workflow.add_node("respond", respond_node)
 
     workflow.set_entry_point("safety_check")
@@ -59,9 +62,10 @@ def build_tutor_graph() -> StateGraph:
     workflow.add_conditional_edges(
         "coach",
         route_coach,
-        {"generate": "generate", "assess": "assess"},
+        {"generate": "generate", "assess": "assess", "animation_render": "animation_render"},
     )
     workflow.add_edge("generate", "respond")
+    workflow.add_edge("animation_render", "generate")
     workflow.add_edge("assess", "quality_gate")
     workflow.add_conditional_edges(
         "quality_gate",
@@ -96,6 +100,8 @@ def route_profile_check(state: TutorState) -> str:
 
 
 def route_coach(state: TutorState) -> str:
+    if getattr(state, "_animation_pending", False):
+        return "animation_render"
     return "assess" if state.coach_confidence > 0.7 else "generate"
 
 
@@ -266,6 +272,16 @@ async def diagnose_node(state: TutorState) -> dict[str, Any]:
 async def coach_node(state: TutorState) -> dict[str, Any]:
     result = await _socratic_coach.run(state)
     result["current_state"] = AgentState.COACH
+
+    # Trigger animation when student is struggling with a diagnosed concept
+    confidence = result.get("coach_confidence", state.coach_confidence)
+    has_blind_spot = bool(state.blind_spots and any(
+        bs.get("concept_id", "").startswith("complex-") for bs in state.blind_spots
+    ))
+    if confidence < 0.3 and has_blind_spot:
+        result["_animation_pending"] = True
+        logger.info(f"Animation triggered: confidence={confidence:.2f}")
+
     return result
 
 
@@ -285,6 +301,12 @@ async def assess_node(state: TutorState) -> dict[str, Any]:
 async def quality_gate_node(state: TutorState) -> dict[str, Any]:
     result = await _quality_gate.run(state)
     result["current_state"] = AgentState.QUALITY_GATE
+    return result
+
+
+async def animation_render_node(state: TutorState) -> dict[str, Any]:
+    result = await _animation_generator.run(state)
+    result["current_state"] = AgentState.GENERATE  # sequence → generate next
     return result
 
 

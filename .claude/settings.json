@@ -13,7 +13,13 @@
       "Read(//c/ProgramData/**)",
       "Bash(ls /c/Python*/python.exe)",
       "Bash(npm --version)",
-      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"d:\\\\mathagentdevelop\\\\temp_ocr.ps1\")"
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File \"d:\\\\mathagentdevelop\\\\temp_ocr.ps1\")",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(python3 -c ' *)",
+      "Bash(/c/Users/31622/anaconda3/python.exe -c ' *)",
+      "WebFetch(domain:www.xfyun.cn)",
+      "WebSearch"
     ]
   }
 }
