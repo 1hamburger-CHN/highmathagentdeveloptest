@@ -8,7 +8,7 @@ RUN sed -i 's/deb.debian.org/mirrors.tencent.com/g' /etc/apt/sources.list.d/debi
     gcc g++ \
     ffmpeg \
     libcairo2-dev libpango1.0-dev pkg-config \
-    texlive-latex-extra texlive-fonts-recommended \
+    texlive-latex-extra texlive-fonts-recommended dvisvgm \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
