@@ -15,7 +15,7 @@ logger = logging.getLogger("tutor.animation")
 
 RENDER_TIMEOUT = 120  # seconds
 HEARTBEAT_INTERVAL = 2  # seconds
-OUTPUT_DIR = Path("backend/static/animations")
+OUTPUT_DIR = Path("static/animations")
 
 
 class ManimRenderer:
@@ -37,7 +37,7 @@ class ManimRenderer:
         if cache_path.exists():
             logger.info(f"Animation cache hit: {cache_path}")
             return AnimationResource(
-                mp4_url=f"/static/animations/{cache_path.name}",
+                mp4_url=f"/animations/{cache_path.name}",
                 title=f"{template.template_name} 动画",
                 template_used=template.template_name,
                 params=params,
@@ -105,7 +105,7 @@ class ManimRenderer:
             "url": f"/static/animations/{cache_path.name}",
         })
         return AnimationResource(
-            mp4_url=f"/static/animations/{cache_path.name}",
+            mp4_url=f"/animations/{cache_path.name}",
             title=f"{template.template_name} 动画",
             template_used=template.template_name,
             params=params,
