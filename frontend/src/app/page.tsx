@@ -10,8 +10,8 @@ export default function LandingPage() {
         </div>
         <h1 className="mb-3 text-5xl font-bold tracking-tight text-primary-900">
           苏格拉底教练
-          <span className="ml-3 inline-flex rounded-lg bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700 align-middle">
-            测试版
+          <span className="ml-3 inline-flex rounded-lg bg-primary-100 px-3 py-1 text-sm font-medium text-primary-700 align-middle">
+            v2.0
           </span>
         </h1>
         <p className="mb-2 text-xl text-primary-700">多智能体复变函数辅导系统</p>

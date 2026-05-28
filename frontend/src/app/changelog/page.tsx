@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Sparkles, Brain, BookOpen, Bot, Palette, Database, Wrench, Zap, MessageCircle, CheckCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Brain, BookOpen, Bot, Palette, Database, Wrench, Zap, MessageCircle, CheckCircle, Film } from "lucide-react";
 
 interface ChangeEntry {
   date: string;
@@ -11,6 +11,20 @@ interface ChangeEntry {
 }
 
 const changelog: ChangeEntry[] = [
+  {
+    date: "2026-05-27",
+    title: "v2.0 正式版 — Manim 数学动画子系统",
+    icon: <Film className="w-4 h-4" />,
+    items: [
+      "基于 Manim Community v0.20.1 的模板库 + LLM 参数提取混合架构，自动生成复变函数数学动画",
+      "首批 3 个动画模板：留数定理（围道+极点）、共形映射（z→w 网格变形）、围道积分（参数化路径+质点动画）",
+      "中文渲染方案：Text() (Pango/Cairo) 处理中文 + Tex()/MathTex() 处理数学公式",
+      "SSE 流式推送渲染进度，前端 <video> 标签内联播放 mp4",
+      "Docker 镜像优化 7.42GB → 3.38GB (-54%)：切换 PyTorch CPU 版，移除 CUDA 包",
+      "6 个模板管线 bug 修复：f-string 转义、参数注入、LaTeX 中文崩溃、dvisvgm 缺失、静态路径双写、nginx 路由",
+      "部署至腾讯云 Lighthouse 2核2GB，GitHub Actions CI/CD 自动部署",
+    ],
+  },
   {
     date: "2026-05-25",
     title: "领域校验与智能边界控制",
@@ -141,8 +155,8 @@ export default function ChangelogPage() {
           </Link>
           <h1 className="text-3xl font-bold text-primary-900 mb-2">更新日志</h1>
           <p className="text-gray-500">苏格拉底教练 — 多智能体复变函数辅导系统</p>
-          <div className="mt-3 inline-flex rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-            测试版
+          <div className="mt-3 inline-flex rounded-md bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">
+            v2.0
           </div>
         </div>
 
