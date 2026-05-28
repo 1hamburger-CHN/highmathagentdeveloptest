@@ -1,8 +1,10 @@
 name: Deploy to Lighthouse
 
 on:
-  push:
-    branches: [master]
+  # GitHub Actions IPs are blocked by server firewall — disable auto-deploy.
+  # Instead use: ssh root@82.156.84.213 'cd /opt/mathagent && git pull && docker compose up -d --build'
+  # push:
+  #   branches: [master]
   workflow_dispatch:
 
 jobs:
