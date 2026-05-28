@@ -296,7 +296,9 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
 async def generate_node(state: TutorState) -> dict[str, Any]:
     result = await _resource_generator.run(state)
     result["current_state"] = AgentState.GENERATE
-    result["_pending_out_of_domain_concept"] = ""
+    # Preserve pending out-of-domain concept for multi-turn confirmation flow
+    if "_pending_out_of_domain_concept" not in result:
+        result["_pending_out_of_domain_concept"] = ""
     return result
 
 

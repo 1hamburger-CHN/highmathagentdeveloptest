@@ -59,7 +59,9 @@ class HybridRetriever:
 
     # Common abbreviation/synonym → curriculum title mapping
     # jieba + embedding matching fails on mixed-script abbreviations like "C-R方程"
+    # Also handles English snake_case terms that LLMs output as concept identifiers
     _concept_aliases: dict[str, str] = {
+        # --- Chinese abbreviations / synonyms ---
         "C-R方程": "解析函数与Cauchy-Riemann方程",
         "CR方程": "解析函数与Cauchy-Riemann方程",
         "柯西-黎曼方程": "解析函数与Cauchy-Riemann方程",
@@ -72,6 +74,43 @@ class HybridRetriever:
         "棣莫弗公式": "复数的几何表示与棣莫弗公式",
         "De Moivre公式": "复数的几何表示与棣莫弗公式",
         "欧拉公式": "复数的几何表示与棣莫弗公式",
+        # --- English snake_case / keyword terms LLMs often output ---
+        "complex_number": "复数定义与运算",
+        "complex_numbers": "复数定义与运算",
+        "complex_plane": "复数的几何表示与棣莫弗公式",
+        "de_moivre": "复数的几何表示与棣莫弗公式",
+        "euler_formula": "复数的几何表示与棣莫弗公式",
+        "complex_limit": "复变函数的极限与连续",
+        "complex_continuity": "复变函数的极限与连续",
+        "analytic_function": "解析函数与Cauchy-Riemann方程",
+        "cauchy_riemann": "解析函数与Cauchy-Riemann方程",
+        "cauchy_riemann_equation": "解析函数与Cauchy-Riemann方程",
+        "holomorphic": "解析函数与Cauchy-Riemann方程",
+        "harmonic_function": "调和函数与共轭调和函数",
+        "conjugate_harmonic": "调和函数与共轭调和函数",
+        "complex_exponential": "复指数函数与对数函数",
+        "complex_logarithm": "复指数函数与对数函数",
+        "complex_power": "复幂函数与三角函数",
+        "complex_trigonometric": "复幂函数与三角函数",
+        "complex_integration": "复积分的定义与基本性质",
+        "complex_integral": "复积分的定义与基本性质",
+        "cauchy_goursat": "Cauchy-Goursat定理",
+        "cauchy_theorem": "Cauchy-Goursat定理",
+        "cauchy_integral_formula": "Cauchy积分公式与高阶导数公式",
+        "taylor_series": "泰勒级数",
+        "laurent_series": "洛朗级数",
+        "singularity": "孤立奇点分类",
+        "isolated_singularity": "孤立奇点分类",
+        "essential_singularity": "孤立奇点分类",
+        "removable_singularity": "孤立奇点分类",
+        "pole": "孤立奇点分类",
+        "residue": "留数与留数定理",
+        "residue_theorem": "留数与留数定理",
+        "contour_integration": "留数在实积分中的应用",
+        "conformal_mapping": "共形映射与分式线性变换",
+        "mobius_transformation": "共形映射与分式线性变换",
+        "mobius_transform": "共形映射与分式线性变换",
+        "linear_fractional": "共形映射与分式线性变换",
     }
 
     @classmethod
@@ -109,6 +148,24 @@ class HybridRetriever:
         alias_title = self._concept_aliases.get(concept)
         if alias_title:
             concept = alias_title
+
+        # Normalize snake_case English terms (e.g. "complex_number" → check each word alias)
+        # LLMs often output these as concept identifiers; jieba can't tokenise them
+        if "_" in concept and concept.isascii():
+            if not alias_title:
+                # Try underscore-replaced form as alias key first
+                normalized = concept.replace("_", " ")
+                alias_title = self._concept_aliases.get(normalized)
+                if alias_title:
+                    concept = alias_title
+            if not alias_title:
+                # Fallback: check each English word individually as an alias key
+                words = [w for w in concept.replace("_", " ").lower().split() if len(w) > 1]
+                for word in words:
+                    word_alias = self._concept_aliases.get(word)
+                    if word_alias:
+                        concept = word_alias
+                        break
 
         import jieba
         concept_tokens = set(jieba.cut(concept))
