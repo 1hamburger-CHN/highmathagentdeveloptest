@@ -148,5 +148,6 @@ class SocraticCoachAgent(BaseAgent):
             "coach_level": result.get("level", state.coach_level),
             "coach_confidence": result.get("confidence", 0.5),
             "current_concept": result.get("target_concept", state.current_concept),
+            "_should_generate_resource": result.get("should_generate_resource", False),
             "messages": [{"role": "assistant", "content": result.get("message", "")}],
         }

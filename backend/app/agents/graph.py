@@ -104,14 +104,13 @@ def route_coach(state: TutorState) -> str:
         return "animation_render"
     if state.coach_confidence > 0.7:
         return "assess"
-    # Direct question → coach already answered, skip resource generation.
-    # The diagnostician may have set blind_spots but they're pre-coach
-    # speculations, not evidence of misunderstanding that needs remediation.
+    # Direct question → coach already answered, skip resource generation
     if getattr(state, "_is_direct_question", False):
         return "respond"
-    if not state.blind_spots:
-        return "respond"
-    return "generate"
+    # Coach explicitly requests resources (confidence < 0.3 + 2+ rounds of questioning)
+    if getattr(state, "_should_generate_resource", False):
+        return "generate"
+    return "respond"
 
 
 def route_quality(state: TutorState) -> str:

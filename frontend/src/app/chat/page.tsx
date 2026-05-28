@@ -61,10 +61,24 @@ export default function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopy = useCallback((text: string, index: number) => {
-    navigator.clipboard.writeText(text).then(() => {
+    // navigator.clipboard requires HTTPS; fall back to execCommand for HTTP
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 1500);
+      }).catch(() => {});
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (_) { /* noop */ }
+      document.body.removeChild(ta);
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 1500);
-    });
+    }
   }, []);
 
   // --- init: load identity, profile, and history on mount ---
