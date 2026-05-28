@@ -57,6 +57,23 @@ class HybridRetriever:
     _known_titles: list[str] | None = None
     _id_to_title: dict[str, str] | None = None
 
+    # Common abbreviation/synonym → curriculum title mapping
+    # jieba + embedding matching fails on mixed-script abbreviations like "C-R方程"
+    _concept_aliases: dict[str, str] = {
+        "C-R方程": "解析函数与Cauchy-Riemann方程",
+        "CR方程": "解析函数与Cauchy-Riemann方程",
+        "柯西-黎曼方程": "解析函数与Cauchy-Riemann方程",
+        "柯西黎曼方程": "解析函数与Cauchy-Riemann方程",
+        "柯西积分公式": "Cauchy积分公式与高阶导数公式",
+        "柯西定理": "Cauchy-Goursat定理",
+        "柯西-古萨定理": "Cauchy-Goursat定理",
+        "莫比乌斯变换": "共形映射与分式线性变换",
+        "Mobius变换": "共形映射与分式线性变换",
+        "棣莫弗公式": "复数的几何表示与棣莫弗公式",
+        "De Moivre公式": "复数的几何表示与棣莫弗公式",
+        "欧拉公式": "复数的几何表示与棣莫弗公式",
+    }
+
     @classmethod
     def _load_curriculum_cache(cls):
         if cls._known_titles is None:
@@ -87,6 +104,11 @@ class HybridRetriever:
         resolved = self.resolve_concept_name(concept)
         if resolved != concept:
             concept = resolved  # it was an ID — now use the title
+
+        # Resolve common abbreviations/synonyms to curriculum titles
+        alias_title = self._concept_aliases.get(concept)
+        if alias_title:
+            concept = alias_title
 
         import jieba
         concept_tokens = set(jieba.cut(concept))
