@@ -111,6 +111,25 @@ class HybridRetriever:
         "mobius_transformation": "共形映射与分式线性变换",
         "mobius_transform": "共形映射与分式线性变换",
         "linear_fractional": "共形映射与分式线性变换",
+        # --- Individual English word fallbacks (for decomposition of unknown snake_case) ---
+        "complex": "复数定义与运算",
+        "cauchy": "解析函数与Cauchy-Riemann方程",
+        "riemann": "解析函数与Cauchy-Riemann方程",
+        "analytic": "解析函数与Cauchy-Riemann方程",
+        "holomorphic": "解析函数与Cauchy-Riemann方程",
+        "harmonic": "调和函数与共轭调和函数",
+        "exponential": "复指数函数与对数函数",
+        "logarithm": "复指数函数与对数函数",
+        "trigonometric": "复幂函数与三角函数",
+        "integration": "复积分的定义与基本性质",
+        "integral": "复积分的定义与基本性质",
+        "taylor": "泰勒级数",
+        "laurent": "洛朗级数",
+        "contour": "留数在实积分中的应用",
+        "conformal": "共形映射与分式线性变换",
+        "mobius": "共形映射与分式线性变换",
+        "de_moivre": "复数的几何表示与棣莫弗公式",
+        "euler": "复数的几何表示与棣莫弗公式",
     }
 
     @classmethod
