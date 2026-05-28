@@ -62,7 +62,7 @@ def build_tutor_graph() -> StateGraph:
     workflow.add_conditional_edges(
         "coach",
         route_coach,
-        {"generate": "generate", "assess": "assess", "animation_render": "animation_render"},
+        {"generate": "generate", "assess": "assess", "animation_render": "animation_render", "respond": "respond"},
     )
     workflow.add_edge("generate", "respond")
     workflow.add_edge("animation_render", "generate")
@@ -102,7 +102,13 @@ def route_profile_check(state: TutorState) -> str:
 def route_coach(state: TutorState) -> str:
     if getattr(state, "_animation_pending", False):
         return "animation_render"
-    return "assess" if state.coach_confidence > 0.7 else "generate"
+    if state.coach_confidence > 0.7:
+        return "assess"
+    # Direct question with no diagnosed blind spots → coach already answered,
+    # no need to generate remedial resources
+    if getattr(state, "_is_direct_question", False) and not state.blind_spots:
+        return "respond"
+    return "generate"
 
 
 def route_quality(state: TutorState) -> str:
