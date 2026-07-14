@@ -429,7 +429,16 @@
       "Bash(ssh -o ConnectTimeout=20 root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 5 2>&1\")",
       "Bash(ssh -o ConnectTimeout=10 root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 10 2>&1\")",
       "Bash(curl -s -m 30 -X POST http://82.156.84.213:8000/api/chat/send -H \"Content-Type: application/json\" -d '{\"message\":\"复数是什么\",\"user_id\":\"deploy_test\",\"session_id\":\"deploy_test\"}')",
-      "Bash(curl -s -m 60 -X POST \"http://82.156.84.213/api/chat/send\" -H \"Content-Type: application/json\" -d '{\"message\":\"什么是复数\",\"user_id\":\"test\",\"session_id\":\"test\"}')"
+      "Bash(curl -s -m 60 -X POST \"http://82.156.84.213/api/chat/send\" -H \"Content-Type: application/json\" -d '{\"message\":\"什么是复数\",\"user_id\":\"test\",\"session_id\":\"test\"}')",
+      "Bash(ssh -o ConnectTimeout=20 root@82.156.84.213 \"echo ok\")",
+      "Bash(ssh root@82.156.84.213 \"cd /opt/mathagent && docker compose restart backend 2>&1\")",
+      "Bash(ssh -o ConnectTimeout=10 root@82.156.84.213 \"cd /opt/mathagent && docker compose logs backend --tail 10 2>&1\")",
+      "Bash(ssh root@82.156.84.213 \"cp -r /opt/mathagent/data /opt/mathagent/backend/data 2>&1 && ls /opt/mathagent/backend/data/hit_textbook_full.txt 2>&1\")",
+      "Bash(ssh root@82.156.84.213 \"ls /opt/mathagent/data/hit_textbook_full.txt 2>&1 && cp -r /opt/mathagent/data /opt/mathagent/backend/data && ls /opt/mathagent/backend/data/hit_textbook_full.txt 2>&1\")",
+      "Bash(ssh root@82.156.84.213 \"cp -rv /opt/mathagent/data /opt/mathagent/backend/ 2>&1 | tail -5 ; echo '---' ; ls /opt/mathagent/backend/data/ 2>&1\")",
+      "Bash(ssh root@82.156.84.213 \"cd /opt/mathagent && docker compose restart backend 2>&1 && sleep 15 && docker compose logs backend --tail 10 2>&1\")",
+      "Bash(ssh -o ConnectTimeout=10 root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 5 2>&1\")",
+      "Bash(curl -s -m 5 -o /dev/null -w \"%{http_code}\" http://82.156.84.213/)"
     ],
     "additionalDirectories": [
       "C:\\Users\\31622\\.ssh",

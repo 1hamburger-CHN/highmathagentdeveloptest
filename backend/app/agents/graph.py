@@ -262,7 +262,10 @@ def _is_animation_request(text: str) -> bool:
 def _clean_animation_concept(concept: str) -> str:
     """Strip animation-related words from extracted concept."""
     import re
-    return re.sub(r"(生成|做|画|制作|的)?\s*(动画|可视化|演示)", "", concept).strip()
+    # Remove animation words from both ends
+    concept = re.sub(r"^(帮我|请|帮忙|给我|来)?\s*(生成|做|画|制作|创建)\s*", "", concept)
+    concept = re.sub(r"\s*(的?\s*(动画|可视化|演示|视频))\s*$", "", concept)
+    return concept.strip()
 
 
 def _is_resource_request(text: str) -> bool:
