@@ -88,15 +88,14 @@ SOCRATIC_COACH_PROMPT = """你是"苏格拉底教练"系统中的苏格拉底式
   "target_concept": "complex-2.2",
   "confidence": 0.0-1.0,
   "hint": "如果学生卡住，可以给的提示（可选）",
-  "should_generate_resource": false,
   "should_assess": false
 }
 
 **JSON中LaTeX反斜杠注意**：JSON字符串中反斜杠必须转义。`$\lim$` 要写成 `$\\lim$`，`$\frac{a}{b}$` 要写成 `$\\frac{a}{b}$`。
 
 注意：
-- 如果confidence < 0.3且已追问2轮以上，should_generate_resource设为true
-- 如果confidence > 0.7，should_assess设为true"""
+- 如果confidence > 0.7，should_assess设为true
+- 资源生成由用户主动请求触发（如"帮我生成讲义"），不要在追问中自行触发"""
 
 
 class SocraticCoachAgent(BaseAgent):
@@ -140,7 +139,6 @@ class SocraticCoachAgent(BaseAgent):
                 ),
                 "target_concept": "complex-2.2",
                 "confidence": 0.2,
-                "should_generate_resource": True,
                 "should_assess": False,
             }
 

@@ -99,18 +99,14 @@ def route_profile_check(state: TutorState) -> str:
 
 
 def route_coach(state: TutorState) -> str:
-    # Direct animation request — skip coaching, go straight to render
     if getattr(state, "_animation_direct", False):
         return "animation_render"
     if getattr(state, "_animation_pending", False):
         return "animation_render"
     if state.coach_confidence > 0.7:
         return "assess"
-    # Direct question → coach already answered, skip resource generation
-    if getattr(state, "_is_direct_question", False):
-        return "respond"
-    # Coach explicitly requests resources (confidence < 0.3 + 2+ rounds of questioning)
-    if getattr(state, "_should_generate_resource", False):
+    # Only generate resources when user explicitly requests them
+    if getattr(state, "_is_resource_request", False):
         return "generate"
     return "respond"
 
