@@ -28,7 +28,7 @@ class TutorState:
     profile: dict | None = None
     blind_spots: list[dict] = field(default_factory=list)
     current_concept: str = ""
-    coach_level: int = 1  # L1/L2/L3
+    coach_level: int = 0  # L0(讲解)/L1(复述)/L2(边界)/L3(反例), start at L0
     coach_confidence: float = 0.5
     generated_resources: list[dict] = field(default_factory=list)
     assessment_result: dict | None = None
