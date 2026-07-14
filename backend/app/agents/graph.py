@@ -112,7 +112,12 @@ def route_coach(state: TutorState) -> str:
 
 
 def route_quality(state: TutorState) -> str:
-    return "regenerate" if state.quality_retries < 2 else "respond"
+    # Only regenerate if assessment actually failed (not on first pass)
+    assessment = getattr(state, "assessment_result", None)
+    if assessment and not assessment.get("correct", True):
+        if state.quality_retries < 2:
+            return "regenerate"
+    return "respond"
 
 
 # --- Nodes ---
