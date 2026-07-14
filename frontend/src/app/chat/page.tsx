@@ -96,7 +96,7 @@ export default function ChatPage() {
           const km = (data.profile as Record<string, unknown>).knowledge_mastery as Array<{ score: number }> | undefined;
           if (km) {
             const assessed = km.filter((c) => c.score > 0).length;
-            setProfileProgress({ assessed, total: 17 });
+            setProfileProgress({ assessed, total: 19 });
           }
         }
       })
@@ -324,7 +324,7 @@ export default function ChatPage() {
         const km = (data.profile as Record<string, unknown>).knowledge_mastery as Array<{ score: number }> | undefined;
         if (km) {
           const assessed = km.filter((c) => c.score > 0).length;
-          setProfileProgress({ assessed, total: 17 });
+          setProfileProgress({ assessed, total: 19 });
         }
       }
       setDebug("");

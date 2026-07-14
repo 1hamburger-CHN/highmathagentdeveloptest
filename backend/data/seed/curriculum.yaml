@@ -563,3 +563,68 @@ nodes:
         - '共形映射是唯一的限制条件很强的映射 — 实际上黎曼映射定理表明任何单连通真子区域都可以共形映射到单位圆盘'
     prerequisites: ["complex-2.2"]
     related: ["complex-2.2"]
+
+  # ============================================================
+  # 8. 积分变换（教材第7-8章扩展）
+  # ============================================================
+
+  - id: 'complex-8.1'
+    title: '傅里叶变换的基本概念与性质'
+    difficulty: 3
+    bloom_level: 3
+    content:
+      definition: |
+        **傅里叶积分定理**：若 $f(t)$ 在 $(-\infty, \infty)$ 上满足 Dirichlet 条件且绝对可积，则：
+        $$f(t) = \frac{1}{2\pi}\int_{-\infty}^{\infty} \left[\int_{-\infty}^{\infty} f(\tau)e^{-i\omega\tau}\,d\tau\right] e^{i\omega t}\,d\omega$$
+
+        **傅里叶变换对**：
+        $$F(\omega) = \mathcal{F}[f(t)] = \int_{-\infty}^{\infty} f(t)e^{-i\omega t}\,dt$$
+        $$f(t) = \mathcal{F}^{-1}[F(\omega)] = \frac{1}{2\pi}\int_{-\infty}^{\infty} F(\omega)e^{i\omega t}\,d\omega$$
+
+        $F(\omega)$ 称为 $f(t)$ 的**频谱函数**，$|F(\omega)|$ 为振幅谱。
+      theorems:
+        - statement: '线性性质: $\mathcal{F}[af + bg] = aF(\omega) + bG(\omega)$'
+        - statement: '微分性质: $\mathcal{F}[f''(t)] = i\omega F(\omega)$, $\mathcal{F}[f^{(n)}(t)] = (i\omega)^n F(\omega)$'
+        - statement: '卷积定理: $\mathcal{F}[f * g] = F(\omega)G(\omega)$'
+      examples:
+        - question: '求矩形脉冲 $f(t)$ 的傅里叶变换（$|t|<a$ 时为1，否则为0）'
+          solution: |
+            $F(\omega) = 2a\frac{\sin(\omega a)}{\omega a}$，典型的 sinc 函数。
+        - question: '求 $f(t) = e^{-|t|}$ 的傅里叶变换'
+          solution: |
+            $F(\omega) = \frac{2}{1+\omega^2}$，Lorentz 线型。
+      misconceptions:
+        - '傅里叶变换只对周期函数有意义 — 傅里叶级数针对周期函数，傅里叶变换针对非周期绝对可积函数'
+        - '傅里叶变换和拉普拉斯变换没有关系 — 傅里叶变换是拉普拉斯变换在 $s=i\omega$ 时的特例'
+    prerequisites: ["complex-1.2", "complex-3.1"]
+    related: ["complex-8.2", "complex-3.1"]
+
+  - id: 'complex-8.2'
+    title: '拉普拉斯变换及其应用'
+    difficulty: 3
+    bloom_level: 3
+    content:
+      definition: |
+        设 $f(t)$ 在 $t \geq 0$ 上有定义，**拉普拉斯(Laplace)变换**定义为：
+        $$F(s) = \mathcal{L}[f(t)] = \int_0^{\infty} f(t)e^{-st}\,dt$$
+
+        其中 $s = \sigma + i\omega$ 是**复变量**（这正是复变函数在工程中的核心应用！）。
+
+        **拉普拉斯逆变换**（利用留数定理）：
+        $$f(t) = \frac{1}{2\pi i}\int_{\sigma-i\infty}^{\sigma+i\infty} F(s)e^{st}\,ds = \sum \operatorname{Res}[F(s)e^{st}, s_k]$$
+      theorems:
+        - statement: '微分性质: $\mathcal{L}[f''(t)] = sF(s) - f(0)$, $\mathcal{L}[f''''(t)] = s^2F(s) - sf(0) - f''(0)$'
+        - statement: '位移性质: $\mathcal{L}[e^{at}f(t)] = F(s-a)$'
+        - statement: '卷积定理: $\mathcal{L}[f * g] = F(s)G(s)$'
+      examples:
+        - question: 用拉普拉斯变换解 y''+3y'+2y=0, y(0)=1, y'(0)=0
+          solution: |
+            $Y(s) = \frac{2}{s+1} - \frac{1}{s+2}$，取逆变换得 $y(t) = 2e^{-t} - e^{-2t}$
+        - question: '拉普拉斯逆变换为何需要复变函数的留数定理？'
+          solution: |
+            逆变换是复平面上的积分，利用留数定理转化为奇点处留数之和。
+      misconceptions:
+        - '拉普拉斯变换就是傅里叶变换乘个衰减因子 — 可以粗略理解，但逆变换涉及复分析留数定理'
+        - '拉普拉斯逆变换只有一种方法 — 实际上有部分分式展开、留数法、卷积法和查表法'
+    prerequisites: ["complex-6.2", "complex-6.3"]
+    related: ["complex-8.1", "complex-6.2", "complex-6.3"]

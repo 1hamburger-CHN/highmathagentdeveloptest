@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .env
+.env.local
 .venv/
 venv/
 node_modules/
@@ -9,6 +10,11 @@ chromadb/
 *.db
 .DS_Store
 .gstack/
+.claude/
 frontend/out/
 issue1.*
-SparkChain_Android_v1.1.5_rc1.zip
+*.traineddata
+data/tmp/
+data/chromadb/
+*.code-workspace
+*.tsbuildinfo

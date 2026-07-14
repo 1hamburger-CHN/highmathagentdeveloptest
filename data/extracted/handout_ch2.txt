@@ -1,0 +1,457 @@
+[Page 1]
+复 变 函数 与 积分 变换
+82 解析 函数
+曲 QHITMCM
+哈工大 (威海 ) 数学 系
+http://10.246.16.88/
+CS
+证 末年 汉 |
+
+[Page 2]
+人 @ 解析 函数 的 概念
+
+人 @ 解析 的 充 要 条 件
+全 解析 函数 与 调和 函数
+人 @ 初等 复 变 函 数
+
+[Page 3]
+@ 解析 函数 的 概念
+。 导数
+9 导数 运算
+e 解析 函数
+
+[Page 4]
+EeeaRERERR 地 Ri)
+
+定义 1 (导数 )
+
+设 函 数 />) 在 点 z 的 某 邻 域内 有 定义 , 若
+im 了 CH 人 -TO = 包 (2)
+
+存在 , 则 称 jz) 在 点 z 处 可 导 , 该 极限 值 为 j(z) 在 > 处 的 导数 .
+
+注 ， 极 限 值 与 Az 一 0 的 路 径 无 关 .
+
+嘻 可 导 > 连续 几 可 导 .
+
+定义 2 (可 微 )
+
+车 函数 jz) 在 点 z 处 的 增 量 Aj = jz+Az) 一 jz) 可 表 为 Az 的 线性 主 部 与 高 阶 无 穷 小 的 和 , 即
+J(z+Az)-jf(z)=c:Az+3Y(Az.Az, 且 当 Az 一 0 时 , Y(Az) 一 0，
+
+则 称 jz) 在 = 处 可 微 .
+
+由 定义 YE+Sa=f 四 =c+T(Aa) 一 c, Az 一 0.
+
+注 ， jz) 在 点 :> 可 微 必 在 > 可 导 , 导数 户 (2)=c. 反之 也 成 立 .
+
+[Page 5]
+WE
+例 2.11. 求 j 相 二 到 的 导数 .
+解 . 由 导数 的 定义 , 有
+|
+例 2.1.2. 证 明 jz)=z 处 处 不 可 导 ( 妃 (>) 处 处 不 存在 )
+证 (导数 定义 )
+1 国王 苦 - 人 计 ，
+当 人 = 总 和 0 时 di 全 半生 -1
+当 A=-0 时 Jo 和 全 = Ja 雹 =
+故 f(z)=z 的 导数 处 处 不 存在 .
+喇 f(z)== 处 处 连续 , 处 处 不 可 导 .
+嘻 jz)=z5 的 实 部 v(z,y) 与 虚 部 v(z,y) 在 复 平面 上 处 处 都 有 偏 导数 , 但 jz) 却 处 处 不 可 导 .
+
+[Page 6]
+Eee
+性 质 1 (导数 运算 -微分 法 则 )
+设 7(z)，9(?) 在 区 域 忆 内 可 微 , 则
+GD C'=0;
+(C) (7(z) 主 9(2)) = 产 (z) 士 %(2);
+(3) (1(z):9(2)) =7(z)g(z)+7(z)g (ai
+(0 (起 )=2eseiiree Gog(a)z0;
+(5) (17(g(3)) =7).g(a);
+(6 (Mo) = 7 Paz0.
+例 2.1.4. 已 知 f(z)= 站-， 求 败 (0)，7G).
+解 PrG)=( 问 )=a，
+7OJ=2 7G=ar=
+RE 下
+
+[Page 7]
+EeeaEERR 地 地 地 地 RAR〔RiORA 人 O 人 AA
+定义 3 (解析 函数 -正则 函数 )
+若 函 数 /2) 在 区 域 忆 内 可 微 , 则 称 7(2) 是 万 内 的 解析 函数 , 或 称 了 2) 在 万 内 解析 .
+喇 1(3) 在 区 域 忆 内 解析 等 价 于 (2) 在 刀 内 可 导 .
+奇 点 : 若 函数 1(2) 在 点 20 处 不 解析 , 但 在 0 的 任 一 邻 域内 , 总 有 若干 个 点 使 /(2) 解 析 . 如 ，7(z) 一 二
+Th 在 区 域 忆 内 解析 的 两 个 单 值 函 数 /(:).0(2) 的 和 , 差 , 积 , 商 (分 母 丈 0), 复 念 , 在 区 域 刀 内 仍 解析
+如 1(z)=aszn+…+alz+ao(ai 为 常数 ) 在 整个 平面 上 解析 ，
+了 (一 吕 汪 上 二 全 寺 在 分 母 天 0 的 每 一 点 处 解析 -
+人
+人 7 在 aa 解 机 二 (7C) 在 可 导
+人
+[Ca
+
+[Page 8]
+全 解析 的 充 要 条 件
+e C-R 条 件
+e 定理
+ea 导数 运算
+
+[Page 9]
+We 和 和
+定理 1 (可 微 的 充 要 条 件 )
+车 函 数 f(z)=u(z, 人 +iu(z, 幼 在 点 z=z 十 这 的 某 邻 域内 有 定义 且 vw(z, 妇 和 vu(z, 妇 在 点 > 可 微 ，
+则 jz) 在 > 可 微 的 充 要 条 件 是 在 > 处 :
+au bu au bu
+天 = 元, 贡 = 一 元 ( 柯 西 黎 曼 方程 )
+证 ， 必 要 性 : 设 jz) 在 > 可 微 , 即
+= 全 = Im erasy+AyjHia(erenaheg) ca)+inc 巧 )
+假设 Az 雪 氏 ,0, 即 Ay=0，Az=Az-0，
+GD= dim， az 十 Az,a) 一 zy) 号 auf(z 十 Az:y) 一 v(zy) 三 全 下 ，
+假设 Az 点 红 ,0, 即 Az=0，Az=iAy 一 0，
+-An (ee 2AW-wea] ieew+A=sG) -这 + 中 ，
+比较 上 述 极限 , 有 器 = 沉 ， 品 = 一 全
+
+[Page 10]
+和
+充分 性 : 设 ]z) 在 > 满足 : 器 = 器 ， 品 =- 侣 .
+由 于 vw(z, 力 和"(z,y) 可 微 , 其 全 增 量 可 表 为
+Au= 器 Az+ 器 Ay+mlAal，
+Au= 器 Az+ 器 Ay+?2|Aal，
+其 中 , |Azl= VAzzTA, 当 |Azl 一 0 时 ,， 一 072 一 0.
+由 于 Ajf=Au+iAu, Az=Az+iAy, 从 而
+Af _Autiauw 器 Az+ 器 Ay+mlAzl+Hi( 器 Az+ 器 Ay+TmlAz
+Az= 一 ArHiay = Aiay
+器 +i 器 )Az+( 器 +i 器 )As z
+一 (和 0 人 二 纤 )e 十 (1 +ina) 共 3
+器 Hi 器)Az+ili 器 + 器)Ay ， 本
+一 人生) 和 全- 各)so+ Oni+inojRS
+=( 器 +i 哟 )+(a+ina) 击 一 器 +i 器 , Az 一 0
+由 此 得 ,72)= im 竺 = 器 +i 全 ， 品
+二
+[二
+
+[Page 11]
+函数 j(z)=u(zy)+iu(zy) 在 区 域 忆 内 解析 的 充 要 条 件 是 : u(z.y) 和 utz,y) 在 万 内 任 一 点 :=z+ 壹 可
+
+微 , 且 满 足 C-R 方 程 .
+
+定理 3 (可 微 的 充分 条 件 )
+
+设 函 数 j(z)=uwtz,y)+iu(z, 切 在 包含 20 的 某 开 集 刀 内 有 定义
+
+若 uw(z, 妇 和 u(z, 切 的 一 阶 偏 导数 在 万 内 存在 且 在 2 连续, 且 在 2 满足 C-R 方 程 , 则 jz) 在 20 可 微 .
+
+若 w(z, 妨 和 vtz, 的 一 阶 偏 导数 在 万 内 连续 , 且 C-R 方 程 在 万 内 成 立 , 则
+
+若 函 数 (>) 在 区 域 万 内 解析 且 其 导数 处 处 为 0, 则 /2) 在 万 内 为 常数 .
+
+证 南 于 帮 避 在 万 内 导数 你 允 为 0 二 Ti EU
+
+所 以 , w= 必 一 必 = 节 =0，
+
+故 u(z, 妨 和 wz, 攻 在 万 内 都 是 常数 , 所 以 jz) 在 万 内 也 是 常数 品
+注意
+
+| 人 本 , 则 /(z) 在 定义 域内 解析 , 但 不 是 常数 . |
+
+[Page 12]
+We
+车 矿 (z) 存 在 , 则
+的 汪 交 名 上 其 且 绝 攻 和 汪 作 上 疙 本
+页” 均 动 下 下 动 盐 四
+例 2.2.1. 设 函 数 j(z)=z2+azy 二 by2+itcz2 二 dzy 十 刀 ), 试 确定 wbcd 的 值 , 使 /(2) 在 =- 平面 上 解析 -
+解 ， 设 wz 一 z2+azg 十 b2，u(z, 轨 =cz2+dzy 十 刀 , 且
+器 =2z+ay， 器 =az+2by， 器 =2cz+d， 器 =dzr+2y，
+由 C-R 条 件 , 得 ao=2,，!= -1,，c=-1，d=2.
+例 2.2.2. 讨论 下 列 复 变 函数 的 可 导 性 及 解析 性 .
+(D， 7(a)=z2-y-z+il2zy 一 记 ); (2)， 7(z)=zRez。
+解 ，(1). 由 u(z 切 =z-y-z， oz 如 =2zg 一 内 , 有
+器 =27-1, 器 =-1, 器 =2y， 器 =27 一 2y，
+因此 ,C-R 方 程 仅 当 27 一 1=27 一 2/, -1= 一 2 时 成 立 ，
+故 j(z) 在 /一 二 上 可 导 , 在 复 平面 上 处 处 不 解析 . DR
+(2).F(a)=zRez=(z+igjz=z2 二 in
+
+[Page 13]
+We
+例 2.1.3，j(z)=|z|? 在 复 平面 上 除 z=0 外 的 其 他 点 都 不 可 导 .
+解 ， jz)=|zP=22 二 内，
+由 wu(z 切 =22+ 刀 ,ul 人)=0, 有 器 =27,， 器 =2/， 器 =0, 雾 =0，
+因此 ,C-R 方 程 仅 当 z=0, y 一 0 时 成 立 , 故 jz) 仅 在 :=0 可 导 , 在 复 平面 上 处 处 下 解析-
+例 1-18. 证 明 f(z)== 处 处 不 可 导 ( 尹 (>) 处 处 不 存在 ).
+证 (CR 条件)
+fa]=3=2 过 =z 一 过 故
+ut(z 妇 =z，uz 轨 = 一 分
+而 wz=l, w= 一 |, 不 满足 C-R 条 件 , 所 以 尹 (>) 处 处 不 存在 .
+唔 f(z]=Rez，jf(z)j=Imz，f(z)=z， (2)=|z| ,都 不 解析
+例 1L-17. 证 明 函 数 j(z)=(z2+ 幼 +i(j2 一 z) 处 处 不 解析 -
+证 ， 由 wz 加 =z2+y， ulz 妇 = 刀 -z, 有
+问 =2z, 名 =2， 器 =1, 器 =-1，
+因此 , C-R 方 程 仅 当 z=y 时 成 立 , 而 不 存在 使 C-R 方 程 同时 成 立 的 开 集 , 所 以 ，f(z) 处 处 不 解析 .
+
+[Page 14]
+WIRE
+
+例 2.2.3. 证 明 j(z)=e 是 解析 函数 , 并 求 导数 .
+
+解 ，j(z)=ez=ezti=ercosy+iezsiny, 则
+ua, 切 =ezcosy，u(zg)=ezsiny
+
+因 心 =ercosy=w， 由 二 -ersiny 一 一 w， 满足 C-R 条 件 ，
+
+故 /(z)=e= 解 析 .
+
+思 (2)=wa 二 iuz=ercosy 二 iersiny 一 e=
+
+例 . 证 明 7(z)=z2 是 解析 函数 , 并 求 导数 .
+
+解 ， (3)=z2=(z 二 i)2= 妇 一 大 二 27 而 , 则
+(zi 切 =z2 一 P， olz 切 =2zy
+
+因 心 =2z=w， 由 二 -2 二 一心 ,满足 CR 条 件 , 故 /2) 解 析
+
+户 (2)=w+iuz=27+i2y 一 2z.
+
+[Page 15]
+WeRRRIIRRRRR
+例 2.2.5. 证 明 函 数 ./(z)= Vzg 在 点 :=0 处 满足 C-R 方 程 , 但 并 不 可 和 导 .
+证 .由 题 知 , v= V1zy, 2=0, 在 点 z=0 处 ，
+器 -= dm， 人 so 和 一 瑞生 =0，
+过 Lo=aims 2AWee) 一 im V0 下 车 -0
+显然 器 |.-o= 响 |--o=0，
+从 而 jz) 在 点 z=0 处 满足 C-R 方 程 .
+但 由 定义 式 知 ，
+VE 0， 站 Ay=0,Az 一 0+
+Ai DAT+Q- Az=Ay 一 0
+故 可 知 j 帮 2) 在 点 z=0 处 不 可 导 .
+二
+
+[Page 16]
+鲜 解析 函数 与 调和 函数
+sa 调和 函数
+
+[Page 17]
+和 和
+
+EX
+若 实 二 元 函数 wz,y) 在 区 域 忆 内 有 二 阶 连续 偏 导数 , 目 满足 Laplace 方 各
+
+器 + 噩 -0，
+则 称 wz, 切 为 刀 内 的 调和 函数 .
+Th 车 1( 习 =ulz:b)+in(zg 在 区 域 万 内 解析 , 则 utz, 妨 和 (zy 为 万 内 的 调和 函数 .
+证 ， 在 CR 方程 中 器 = 吕 对 微分 品 = 一 器 对 = 微分 , 得
+
+琵 = 笋 ,- 闫 = 党 ，
+从 而 ， 呈 十 器 =0. 口
+在 区 域 万 内 满足 C-R 方 程 的 两 个 调和 函数 (z,y),u(z, 攻 中 ,utz, 切 称 为 wz 的 共 却 调和 函数
+Th. 在 区 域 忆 内 , 函数 J(z)=v(z, 妇 +iu(z, 攻 解析 的 充 要 条 件 是 wz 为 wz, 的 共 却 调和 范 数 .
+推论 . 给 定单 连通 区 域 刀 内 的 调和 函数 wz.), 总 可 以 作出 一 族 解析 函数 , 使 其 实 部 (或 虚 部 ) 为 P(z,y)，
+这 族 解析 函数 中 的 任何 两 个 至 多 相差 一 个 纯 虚 数 (或 实数 )
+对 于 解析 函数 j(a), 由 C-R 条 件 , 已 知 vtz, 妇 和"(z, 切 中 的 一 个 , 就 可 确定 出 男 一 个 , 至 多 相差 一 个
+任意 常数 , 从 而 可 求 /(z)=u(z, 妇 二 ip(z, 切 .
+
+[Page 18]
+RN
+例 . 已 知 v(z 力 =23 一 3z2， 且 帮 0)=i, 试 确定 解析 函数 /2)
+解 1. 由 C-R 条 件 , ww=uwz=3z2 一 3%2 ,得
+ulz 妇 =Jovdy=J3z2 一 3y2)dy=3z2gy 一 只 +e(z).
+又 由 C-R 条 件 , we 一 wy=6zy, 有
+6zgy 上 +ec(z)=6zy，
+所 以 c(z)=0, 由 此 得 clz)=c, 故
+ul(z 攻 =3z2y 一 妇 十 c.
+因 j(0)=i, 所 以 w(0,0)=1=c, 因而
+(2)=z3 一 3zg2 上 +i(3z2% 一 轨 二 1) 一 23 十 i.
+解 2. 由 C-R 条 件 , wuz=wuz=-, 得
+j(z)=uz+ioz=uz 一 iuy=3z2 一 3%2+i6zy 一 3z2，
+从 而 j(z)= 关 +c
+又 f(0)=i, 有 c=i
+故 f(z])=z+i =
+呵 技 贰 ; 念 y=0, 得 j(o), 把 z 换 成 z, 得 /(2)。
+
+[Page 19]
+RN
+例 2.3.1. 已 知 w(z, 轨 =ercosy+z+y, 且 j(0O)=1, 试 确定 解析 函数 />).
+解 . 由 C-R 条 件 , wz=wyuz= 下 ,得
+包 (z)=wa+iuz=wz 一 iuy=ercosy+1-i( 一 ersiny+1)=ez 二 1 一 i，
+从 而 /(z)=ez+(1-i)z+c.
+又 f(0)=1, 有 c=0. 故 /(z)=ez+(1-i>
+例 2.3.2. 已 知 u(z, 妇 =z2 一 只 +zy, 且 F(0O)=0, 试 确定 解析 函数 /(z) .
+解 . 由 C-R 条 件 , wz=vwuz= 一 ,得
+j(z)=wz+iuz=uz-iuy=2z+y-i( 一 2y+z)=(2 一 i)z，
+从 而 /(z)=(1 一 二 22+c
+又 f(0)=0, 有 c=0. 故 /(z)=(1 一 引 )22.
+例 2.3.4. 已 知 uu 二 za 一 如 +3z2y 一 3z 妇 一 27 一 2y， 试 确定 解析 函数 72)
+解 .w+oz=3z2+6zy 一 392 一 2，u 十 刀 = 一 302 十 3z2 一 6zy 一 2，
+又 CR 条 件 ,wu=wuz= 一 ww, 解 得 心 =3z2 一 32 一 2，uz 一 6zy
+包 (z)=wz+iuz=3z2 一 32 一 2+i6zy 一 322 一 2， DR
+从 而 上 F(z) 王 中 一 2z 二 es
+
+[Page 20]
+RN
+例 1-23. 已 知 v(z, 轨 =4z3y 一 4z 凤 , 且 j70)=0, 试 确定 解析 函数 />) .
+解 . 由 C-R 条 件 , wz=wyuz= 下 ,得
+j(z)=w+iuz=w+ioz=4z3 一 12zy2 二 i(12z2% 一 403) 一 423，
+从 而 /(z)=z4+c
+又 f(0)=0, 有 c=0
+故 j(z)=2.
+
+[Page 21]
+全 初等 复 变 函数
+量 e
+ea 三 角 函 数
+日 Lnz
+e 函 数
+e 反 三 角 函 数 与 反 双 曲 函数
+
+[Page 22]
+WO
+指数 函数 :
+。e== 并， ( 井 级 数 /泰勒 展 式 )
+e -ez(cosytiany， (z=z+ 芭 )
+证 明定 义 的 等 价 性 : 设 >=i9, 有
+吧 = 开 兴 o 让 乞 =Po 这 页 T 开 这 生 区
+= 民 Eo(-D)5 人 Hi 王 o(-1 全 半 =cosg+ising
+欧 拉 公式 (恒等式 )
+攻 ，
+
+[Page 23]
+RE 全 让 交 人 和
+过 指数 函数 性 质 :
+1) ez 一 er+iy 一 er.eiy 一 er.(cosy 二 ising，
+z=z(y=0) 时 ，e==er，
+z= 动 (z=0) 时 ，eiy=cosy 二 isiny
+了 四 有 和 [EEEece | ny or-err ne2
+3 横 [EEe =
+WE
+4)， 解析 性 :
+人 在 复 平面 上 解析 , 目 (ez)'=e= |
+5) 周期 性 :
+ez 以 了 =2kri 为 周期 ,ez =e*+2kmi，
+ez=er(cosy+isingy) =er (cos(y 十 2kTr) 二 isin(y 十 2kT))
+一 ezr.ei(y+2kr) 一 e(z+iy)+i2kr 一 ez 二 2Kmi
+ez=1 全 := 一 2KTi.
+e5 一 e2 全 2 一 2 十 2Kri.
+本
+
+[Page 24]
+WIRE 半生 党 村 村 站 丙 生 生生 站 ne
+
+6). 无 穷 远 点 的 极限 :
+
+Tim ez 不 存在 , 即 es 无 意义 .
+
+lim ez=oo， limn ez=0.
+2 一 工 一 十 oo 二 一 工 一 一 co
+lim ez 一 ez0 .
+
+2 一 2kri 十 20 一 co
+7) 因 e-z.ez=e0=1, 从 而
+
+e== 雪 ， 晤 一 ea
+吃 对 任意 的 所 弘 - 有 [ESGSETE]
+
+[Page 25]
+和
+三 角 函 数 :
+osinz= 寺 (ee 一 er)， cosz 一 3(eE +eri)，
+二 中 (天 蒜 且 cosz 三 达 0(D 就 1，
+喇 三 角 函 数 性 质
+1)，>=z(ze 有 R) 时 ，sin zicosz 与 通常 的 正弦 余弦 定义 一 到
+2). 解析 性 :
+在 复 平面 上 解析 , 目 | Gin 二 COS2 (CS 二 sinz |
+(sinz)'= 南 (ee 一 er-i)' 二 (ez 十 erE)=cosz.
+3). 奇偶 性 : sin > 为 奇 函 数 ，cosz 为 偶 函 数 .
+4 sin2z 十 cos2z 一 1，sin2z 一 2sinz.cosz，
+sin(21 士 z2)=sinzlcosz2 士 coszlsinzz，
+cos(21 士 2) 一 coszlcos22 干 sinzlsinzo2，…
+5 局 基 性 [ESRR|
+6)， sinz 的 零点 : >=Am, KEZ，
+cosz 的 零点 : > 一 Kr 十 了 ,人 EZ.
+中
+
+[Page 26]
+RE
+7). 无 界 性 :
+在 复数 域内 , 不 再 有 |sinz|<1， |cosz|sl;
+cos(ig)=3(eit)+erito))= 二 (eye 人 > 学 ,>0.
+8). 正切 : tanz= 型 = 余 切 : cotz= ss .
+正 制 : secz= 已- ， 余 庆 : cscz=L-
+解析 性 : 在 分 母 不 为 零 的 点 处 解析 , 且 (tan zj' 一 sec2z，(cotzj' 一 一 csc2z，(secz)' 一 secztanz，
+(cscz)' 一 一 csczcotz-
+唔 几何 意义 :
+中 区
+2ising
+寺 - 人 埋
+cosg=3(eio+erig)， sing= 雪 (ee -er-i9). 耳
+
+[Page 27]
+RE
+双 曲 函数 :
+hz 一 ，chz= 宇 tb 一.
+thz= 旺 ， cthz= 赴 .
+sechz= 二 ， cschz= 寺 .
+嘻 双 曲 函 数 性 质
+[as
+2) 周期 性 : [了 =2kzil
+3). 解析 性 : | (shz)'=chz，(chz)'=shz|
+4 sinz=chysinz 十 ishycosz，
+cosz=chycosz 一 ishysinz
+5)，(chz)2 一 (shz)2=1.
+去
+攻
+
+[Page 28]
+WII
+对 数 函 数 : 满足 方程 "= 的 函数 w=Ln(2).
+嘻 对 数 函 数 性 质 :
+1). 多 值 性 :
+因 e==e*+ikr，Lnz: :的 对 数 的 完全 表达 式 .
+2). 设 Lnz=u 十 i, 则 > 一 er 一 ex+in 一 eeiw，|z| 一 所，Argz 一 U
+Lnz=ln|zl+iArgz=n|zl+iargz 十 2kri (z 天 0,co)
+nz 的 本 仁 [nz= Eggz|
+3). 运算 ，Ln(2za)=Inaa 十 Lnza，Ln 生 =Ina 一 Lnzo
+4). 解析 性 : Inz,Lnz 在 除去 原点 及 负 实 轴 的 复 平面 上 解析 ， 恒 开 := 引
+iD 原点 : in|z| 与 argz 均 没有 定义 ;
+站 负 实 轴 ， im argz=m， imuargz 一 一
+例 2.4.4.Lni=In 人 +iArgi=In1+i( 于 十 2kr) 一 这 十 2kmi，
+Ini= 这 .
+二
+
+[Page 29]
+RERRR ee
+晖 函数 : 2 =e" ,其 中 z 关 0 为 复数 ，a 为 任意 复数 .
+喇 曲 函 数 性 质 :
+J1). 多 值 性 .
+ea 为 整数 , nEN+
+- a=m， 2 一 各 一 ennzei2nkr 一 enlnz.
+- a=-n, ze=z "=ern"m 一 as 一 二.
+- a=0， 22=z0=1
+s a= ?为 有 理 数 (与 4 为 互 质 的 整数 , 9>0), 有 4 个 不 同 的 值
+sa 为 其 他 值 时 , 函数 z? 为 无 穷 多 值 函数 .
+2). 解析 性 : 在 除去 原点 及 负 实 轴 的 复 平面 上 解析 ， 恒 C)=az- |
+例 1-41. 计算 主 .
+解 ，i-eirni 一 ei(nlilHilargit2km)) 一 ei(i( 缉 +2km)) 一 e-( 弛 +2kn) 有 GZ
+例 . 21+i 一 e(L+iLn2 一 e(1+i)(ln2 十 2kri) 一 e(ln2 一 2kr)+ifln2 二 2kT) 一 2e 一 2kr .eiln2 9
+例 2.4.5. 求 (1+ 证 的 值 .
+解 ，(1+ii 一 eirn(l+) 一 ei(ln|1+il+iarg(1+i+i2kr) 一 e 一 (于 +2kr)eilnV5
+
+[Page 30]
+ER
+反 三 角 函 数 : 三 角 函 数 的 反 函 数 .
+Arcsinz=-iLnfiz+VI= 交 )
+Arccosz=-iLn(z 十 V22=T)
+
+Arctanz= 一 :Lu 扩 这
+
+喧 多 值 函数 .
+
+反 双 曲 函 数 : 双 曲 函数 的 反 函 数
+Arshz=Ln(z 十 V22+IT)
+
+Archz=ILn(z+V252=DT)
+
+Arthz=3Ln 扩 2
+
+号 多 值 函数 、
+
+例 2.4.6. 求 Arcsin3 的 值 .
+
+解 ，Arcsin3=-iLn(3i+VI 一 35)= 一 iLn(3 士 2V3)i 一 …
+

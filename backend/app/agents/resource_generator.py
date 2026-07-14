@@ -194,9 +194,56 @@ class ResourceGeneratorAgent(BaseAgent):
         else:
             type_instruction = "至少1-2种类型。不要生成练习题（exercise）和思维导图（mindmap），练习题和思维导图需用户主动要求才生成。"
 
+        # --- Enrich with knowledge base search results ---
+        enrichment_parts = []
+        if self.retriever and concept:
+            # 1. Textbook
+            try:
+                tb = self.retriever.search_textbook(concept, top_k=2)
+                if tb:
+                    passages = [r.get("content", "")[:300] for r in tb]
+                    enrichment_parts.append(
+                        "【教材参考】（哈工大《复变函数与积分变换》教材）\n"
+                        + "\n---\n".join(passages)
+                    )
+            except Exception as e:
+                logger.warning(f"Textbook search failed: {e}")
+
+            # 2. Handouts (only for lecture-type requests)
+            try:
+                if ask_lecture or ask_generic or not ask_specific:
+                    ho = self.retriever.search_handouts(concept, top_k=2)
+                    if ho:
+                        passages = [r.get("content", "")[:300] for r in ho]
+                        enrichment_parts.append(
+                            "【讲义参考】（哈工大课堂讲义）\n"
+                            + "\n---\n".join(passages)
+                        )
+            except Exception as e:
+                logger.warning(f"Handout search failed: {e}")
+
+            # 3. Exercises (only for exercise requests)
+            try:
+                if ask_exercise:
+                    ex = self.retriever.search_exercises(concept, top_k=3)
+                    if ex:
+                        passages = [r.get("content", "")[:300] for r in ex]
+                        enrichment_parts.append(
+                            "【习题参考】（薪火复变综合训练题库）\n"
+                            + "\n---\n".join(passages)
+                        )
+            except Exception as e:
+                logger.warning(f"Exercise search failed: {e}")
+
+        enrichment_text = "\n\n".join(enrichment_parts) if enrichment_parts else ""
+        if enrichment_text:
+            enrichment_text = "\n\n" + enrichment_text
+            logger.info(f"Enriched prompt with {len(enrichment_parts)} source(s) for '{concept}'")
+
         user_prompt = f"""学生的请求：{user_request}
 目标概念：{concept}
 已诊断的盲区：{blind_spots}
+{enrichment_text}
 
 {type_instruction}
 {'学生直接请求生成资源，请根据请求内容生成。' if user_request and not blind_spots else '请针对以上盲区生成个性化学习资源。'}返回JSON。"""

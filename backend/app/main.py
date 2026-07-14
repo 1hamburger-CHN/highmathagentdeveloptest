@@ -68,6 +68,64 @@ def ensure_knowledge_base_indexed():
         logger.exception("Failed to index knowledge base, continuing without KB retrieval")
 
 
+def ensure_textbook_indexed():
+    """Auto-index OCR'd textbook if ChromaDB 'textbook' collection is empty or missing."""
+    try:
+        import chromadb
+        from chromadb.config import Settings as ChromaSettings
+        from app.knowledge.embedder import BGEM3Embedder
+
+        client = chromadb.PersistentClient(
+            path=settings.chroma_persist_dir,
+            settings=ChromaSettings(anonymized_telemetry=False),
+        )
+        embedder = BGEM3Embedder(settings.embedding_model)
+
+        try:
+            collection = client.get_collection(name="textbook", embedding_function=embedder)
+            if collection.count() > 0:
+                logger.info(f"Textbook already indexed: {collection.count()} chunks")
+                return
+        except Exception:
+            pass
+
+        textbook_path = Path(__file__).parent.parent / "data" / "hit_textbook_full.txt"
+        if not textbook_path.exists():
+            logger.info("Textbook OCR file not found, skipping textbook index")
+            return
+
+        logger.info("Indexing textbook into ChromaDB...")
+        from app.knowledge.textbook_loader import load_textbook
+
+        chunks = load_textbook(str(textbook_path))
+        if not chunks:
+            logger.info("No textbook chunks extracted (OCR may be incomplete)")
+            return
+
+        try:
+            client.delete_collection("textbook")
+        except Exception:
+            pass
+        collection = client.create_collection(
+            name="textbook",
+            embedding_function=embedder,
+            metadata={"description": "哈工大复变函数与积分变换教材"},
+        )
+
+        batch_size = 20
+        for i in range(0, len(chunks), batch_size):
+            batch_end = min(i + batch_size, len(chunks))
+            batch = chunks[i:batch_end]
+            collection.add(
+                ids=[c.id for c in batch],
+                documents=[c.to_searchable_text() for c in batch],
+                metadatas=[c.to_metadata() for c in batch],
+            )
+        logger.info(f"Textbook indexed: {collection.count()} chunks from {len(chunks)} raw chunks")
+    except Exception:
+        logger.exception("Failed to index textbook, continuing without textbook retrieval")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting 苏格拉底教练 server...")
@@ -75,6 +133,7 @@ async def lifespan(app: FastAPI):
     logger.info(f"Turso database ready at {settings.turso_url}")
     import asyncio
     asyncio.get_running_loop().run_in_executor(None, ensure_knowledge_base_indexed)
+    asyncio.get_running_loop().run_in_executor(None, ensure_textbook_indexed)
     yield
     logger.info("Shutting down...")
 

@@ -6,7 +6,10 @@ from app.knowledge.embedder import BGEM3Embedder
 
 
 class HybridRetriever:
-    """Hybrid retrieval: dense (BGE-M3) + sparse (keyword fallback)."""
+    """Hybrid retrieval: dense (BGE-M3) + sparse (keyword fallback).
+
+    Searches across both the curriculum knowledge base and the textbook.
+    """
 
     def __init__(self):
         self.client = chromadb.PersistentClient(
@@ -18,6 +21,30 @@ class HybridRetriever:
             name="complex_analysis",
             embedding_function=self.embedder,
         )
+        # Textbook collection — may not exist if not yet indexed
+        try:
+            self.textbook_collection = self.client.get_collection(
+                name="textbook",
+                embedding_function=self.embedder,
+            )
+        except Exception:
+            self.textbook_collection = None
+        # Handout collection (chapter lecture slides)
+        try:
+            self.handout_collection = self.client.get_collection(
+                name="handouts",
+                embedding_function=self.embedder,
+            )
+        except Exception:
+            self.handout_collection = None
+        # Exercise collection (practice problems)
+        try:
+            self.exercise_collection = self.client.get_collection(
+                name="exercises",
+                embedding_function=self.embedder,
+            )
+        except Exception:
+            self.exercise_collection = None
 
     def search(self, query: str, top_k: int = 5) -> list[dict]:
         try:
@@ -52,6 +79,47 @@ class HybridRetriever:
             score = 1.0 - distances[i] if i < len(distances) else 0.0
             formatted.append({"id": id_, "content": doc, "score": score})
         return formatted
+
+    def search_textbook(self, query: str, top_k: int = 3) -> list[dict]:
+        """Search the textbook collection for supplementary content."""
+        if self.textbook_collection is None:
+            return []
+        try:
+            results = self.textbook_collection.query(query_texts=[query], n_results=top_k)
+            return self._format_results(results)
+        except Exception:
+            return []
+
+    def search_handouts(self, query: str, top_k: int = 3) -> list[dict]:
+        """Search chapter handouts (lecture slides)."""
+        if self.handout_collection is None:
+            return []
+        try:
+            results = self.handout_collection.query(query_texts=[query], n_results=top_k)
+            return self._format_results(results)
+        except Exception:
+            return []
+
+    def search_exercises(self, query: str, top_k: int = 3) -> list[dict]:
+        """Search practice exercises (multiple choice, fill-in-the-blank)."""
+        if self.exercise_collection is None:
+            return []
+        try:
+            results = self.exercise_collection.query(query_texts=[query], n_results=top_k)
+            return self._format_results(results)
+        except Exception:
+            return []
+
+    def search_all(self, query: str, top_k: int = 3) -> dict[str, list[dict]]:
+        """Search across all collections. Returns dict with keys: kb, textbook, handouts, exercises."""
+        result = {"kb": self.search(query, top_k=top_k)}
+        if self.textbook_collection:
+            result["textbook"] = self.search_textbook(query, top_k=top_k)
+        if self.handout_collection:
+            result["handouts"] = self.search_handouts(query, top_k=top_k)
+        if self.exercise_collection:
+            result["exercises"] = self.search_exercises(query, top_k=top_k)
+        return result
 
     # Class-level cache for known curriculum node titles and id→title map
     _known_titles: list[str] | None = None
@@ -305,6 +373,31 @@ class HybridRetriever:
         "conformal":             "共形映射与分式线性变换",
         "mobius":                "共形映射与分式线性变换",
         "angle_preserving":      "共形映射与分式线性变换",
+
+        # ==================================================================
+        # complex-8.1  傅里叶变换的基本概念与性质
+        # ==================================================================
+        "傅里叶变换":            "傅里叶变换的基本概念与性质",
+        "傅里叶":                "傅里叶变换的基本概念与性质",
+        "Fourier变换":           "傅里叶变换的基本概念与性质",
+        "傅立叶变换":            "傅里叶变换的基本概念与性质",
+        "频谱":                  "傅里叶变换的基本概念与性质",
+        "频谱函数":              "傅里叶变换的基本概念与性质",
+        "fourier_transform":     "傅里叶变换的基本概念与性质",
+        "fourier":               "傅里叶变换的基本概念与性质",
+        "FT":                    "傅里叶变换的基本概念与性质",
+
+        # ==================================================================
+        # complex-8.2  拉普拉斯变换及其应用
+        # ==================================================================
+        "拉普拉斯变换":          "拉普拉斯变换及其应用",
+        "拉普拉斯":              "拉普拉斯变换及其应用",
+        "Laplace变换":           "拉普拉斯变换及其应用",
+        "拉氏变换":              "拉普拉斯变换及其应用",
+        "s域分析":               "拉普拉斯变换及其应用",
+        "传递函数":              "拉普拉斯变换及其应用",
+        "laplace_transform":     "拉普拉斯变换及其应用",
+        "laplace":               "拉普拉斯变换及其应用",
     }
     # fmt: on
 
