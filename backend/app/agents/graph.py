@@ -88,14 +88,14 @@ def route_profile_check(state: TutorState) -> str:
         return "respond"
     if getattr(state, "_is_resource_request", False):
         return "generate"
-    # Animation request → skip everything, go straight to coach→animation_render
     if getattr(state, "_animation_direct", False):
         return "coach"
+    # Has real profile data → diagnose + coach
     if state.profile and state.profile.get("knowledge_mastery"):
         return "diagnose"
-    if getattr(state, "_is_direct_question", False):
-        return "coach"
-    return "build_profile"
+    # No profile yet → go straight to coach, don't block first response
+    # Profile will be built incrementally via diagnostician on later turns
+    return "coach"
 
 
 def route_coach(state: TutorState) -> str:
@@ -224,12 +224,23 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
                     "_pending_out_of_domain_concept": "",
                 }
 
+    # Init minimal profile on first visit so later turns can diagnose
+    if not has_profile:
+        init_profile = {
+            "knowledge_mastery": [],
+            "blind_spots": [],
+            "behavior": {"response_style": "cautious", "resource_preference": "visual"},
+        }
+    else:
+        init_profile = None
+
     return {
         "current_state": AgentState.PROFILE_CHECK,
-        "_has_profile": has_profile,
+        "_has_profile": has_profile or init_profile is not None,
         "_is_direct_question": is_direct_question,
         "_is_resource_request": is_resource_request,
         "_pending_out_of_domain_concept": "",
+        **({"profile": init_profile} if init_profile else {}),
     }
 
 
