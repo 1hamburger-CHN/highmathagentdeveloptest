@@ -308,22 +308,28 @@ def _is_resource_request(text: str) -> bool:
 
 
 def _is_out_of_domain_confirmation(text: str) -> bool:
-    """Detect user confirming they want out-of-domain content generated."""
+    """Detect user confirming they want out-of-domain content generated.
+
+    Must be a SHORT confirmation message, not a detailed math response
+    that accidentally contains a keyword substring.
+    """
+    # Not a confirmation if it's a long, detailed message
+    if len(text) > 12:
+        return False
     keywords = [
-        "好的", "可以", "行", "没问题", "好", "嗯", "是", "对",
-        "要", "需要", "搜", "搜索", "帮我搜", "帮我搜索",
-        "帮我生成", "生成吧", "做吧", "搞", "ok", "yes", "yeah",
-        "确认", "是的", "对的", "来吧", "搞起",
+        "好的", "可以", "行", "没问题", "嗯", "是",
+        "要", "需要", "搜一下", "搜索一下", "帮我搜",
+        "帮我生成", "生成吧", "做吧", "ok", "yes",
+        "确认", "是的", "来吧",
     ]
     return any(kw in text for kw in keywords)
 
 
 def _is_out_of_domain_decline(text: str) -> bool:
     """Detect user declining out-of-domain generation."""
-    keywords = [
-        "不用", "不要", "算了", "不了", "取消", "换一个",
-        "不需要", "不用了", "别", "no",
-    ]
+    if len(text) > 10:
+        return False
+    keywords = ["不用", "不要", "算了", "不了", "取消", "不需要", "别"]
     return any(kw in text for kw in keywords)
 
 
