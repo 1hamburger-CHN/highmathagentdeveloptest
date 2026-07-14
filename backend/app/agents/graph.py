@@ -210,7 +210,7 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
 
     # Out-of-domain direct question → redirect to generate (don't do Socratic coaching)
     # Only check if this looks like a NEW question, not a response to the coach
-    if is_direct_question and not is_resource_request and _looks_like_new_question(user_msg):
+    if is_direct_question and not is_resource_request and _looks_like_new_question(user_msg, bool(state.messages)):
         concept = _extract_concept_from_question(user_msg)
         if concept and len(concept) >= 2 and not _retriever.is_concept_in_domain(concept):
             from app.core.safety import SafetyPipeline
@@ -257,27 +257,18 @@ def _is_direct_math_question(text: str) -> bool:
     return len(text) > 4 or score >= 1
 
 
-def _looks_like_new_question(text: str) -> bool:
+def _looks_like_new_question(text: str, has_history: bool = False) -> bool:
     """Check if this message is asking a NEW question vs responding to the coach.
 
-    Conversational responses (answering coach's question) should NOT trigger
-    out-of-domain detection. Only new topic-initiating questions should.
+    If there's conversation history, it's almost certainly a response to the coach.
+    Out-of-domain detection should only apply to the FIRST message in a session.
     """
-    # Response patterns — user is answering the coach, NOT asking a new question
-    response_patterns = [
-        r"^(学过|知道|不懂|不会|不太|好像|大概|可能|也许|不确定)",
-        r"^(是|对|嗯|哦|好|可以|行|明白了|懂了|理解了)",
-        r"^(学过|了解|知道|记得|忘了|忘记了)",
-        r"对吧[？?]?$", r"是吗[？?]?$", r"对吗[？?]?$",
-    ]
-    import re
-    for pat in response_patterns:
-        if re.search(pat, text):
-            return False  # Not a new question, skip out-of-domain check
-    # Short messages are usually responses
-    if len(text) < 8:
+    # With existing conversation, always treat as a response
+    if has_history:
         return False
-    return True
+    # First message: check if it looks like a domain-specific question
+    # Short ambiguous first messages are allowed through
+    return len(text) > 15
 
 
 def _is_animation_request(text: str) -> bool:
