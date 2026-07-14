@@ -90,8 +90,8 @@ def route_profile_check(state: TutorState) -> str:
         return "generate"
     if getattr(state, "_animation_direct", False):
         return "coach"
-    # Has real profile data → diagnose + coach
-    if state.profile and state.profile.get("knowledge_mastery"):
+    # Has profile (even if empty) → diagnose to start building it
+    if state.profile:
         return "diagnose"
     # No profile yet → go straight to coach, don't block first response
     # Profile will be built incrementally via diagnostician on later turns
