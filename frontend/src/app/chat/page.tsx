@@ -37,7 +37,13 @@ function getUserId(): string {
 }
 
 function getSessionId(): string {
-  return crypto.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36);
+  if (typeof window === "undefined") return "";
+  let sid = localStorage.getItem("tutor_session_id");
+  if (!sid) {
+    sid = crypto.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem("tutor_session_id", sid);
+  }
+  return sid;
 }
 
 export default function ChatPage() {

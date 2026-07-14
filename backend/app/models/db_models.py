@@ -102,7 +102,7 @@ def get_latest_session(user_id: str) -> dict | None:
         return None
     try:
         result = _execute(
-            "SELECT id, user_id, messages_json FROM sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+            "SELECT id, user_id, messages_json FROM sessions WHERE user_id = ? ORDER BY rowid DESC LIMIT 1",
             [user_id],
         )
         rows = result.get("rows", []) if result else []
