@@ -42,6 +42,7 @@ class TutorState:
     _allow_out_of_domain: bool = False
     _respond_directly: bool = False  # profile_check produced a terminal message
     _animation_pending: bool = False  # coach diagnosed misconception → trigger animation
+    _animation_direct: bool = False  # user explicitly requested animation → skip coach
     _should_generate_resource: bool = False  # coach explicitly requests resource generation
     animation_resource: dict | None = None  # rendered AnimationResource
     _sse_queue: object | None = None  # asyncio.Queue for SSE heartbeat events

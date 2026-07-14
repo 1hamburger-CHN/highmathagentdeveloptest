@@ -100,6 +100,9 @@ def route_profile_check(state: TutorState) -> str:
 
 
 def route_coach(state: TutorState) -> str:
+    # Direct animation request — skip coaching, go straight to render
+    if getattr(state, "_animation_direct", False):
+        return "animation_render"
     if getattr(state, "_animation_pending", False):
         return "animation_render"
     if state.coach_confidence > 0.7:
@@ -178,6 +181,22 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
 
     is_direct_question = _is_direct_math_question(user_msg)
     is_resource_request = _is_resource_request(user_msg)
+    is_animation_request = _is_animation_request(user_msg)
+
+    # Manual animation request → skip coaching, go straight to animation
+    if is_animation_request:
+        concept = _extract_concept_from_question(user_msg)
+        if concept and len(concept) >= 2:
+            logger.info(f"Animation requested for concept: '{concept}'")
+            return {
+                "current_state": AgentState.PROFILE_CHECK,
+                "_has_profile": has_profile,
+                "_is_direct_question": False,
+                "_is_resource_request": False,
+                "_animation_pending": True,
+                "_animation_direct": True,
+                "current_concept": concept,
+            }
 
     # Out-of-domain direct question → redirect to generate (don't do Socratic coaching)
     if is_direct_question and not is_resource_request:
@@ -214,6 +233,23 @@ def _is_direct_math_question(text: str) -> bool:
     score = sum(1 for ind in indicators if ind in text)
     # Long messages or messages with math indicators are likely direct questions
     return len(text) > 4 or score >= 1
+
+
+def _is_animation_request(text: str) -> bool:
+    """Check if user is explicitly requesting an animation."""
+    animation_keywords = [
+        "生成动画", "做动画", "画动画", "动画演示",
+        "帮我生成.*动画", "做个动画", "可视化",
+        "做个.*动画", "生成.*动画", "制作动画",
+    ]
+    import re
+    for kw in animation_keywords:
+        if re.search(kw, text):
+            return True
+    # Also check simple "动画" + concept pattern
+    if "动画" in text and len(text) < 30:
+        return True
+    return False
 
 
 def _is_resource_request(text: str) -> bool:

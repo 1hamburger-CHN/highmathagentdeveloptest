@@ -1,30 +1,72 @@
 @echo off
-chcp 65001 >nul
-echo ============================================
-echo   苏格拉底教练 2.0 — 复变函数辅导系统
-echo ============================================
+cd /d "%~dp0"
+
+echo ========================================
+echo   Socratic Coach 2.0
+echo ========================================
 echo.
 
-docker --version >nul 2>&1
+rem ---- find Python ----
+set PYTHON=
+for %%p in (
+    "C:\Users\%USERNAME%\anaconda3\python.exe"
+    "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python313\python.exe"
+    "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python312\python.exe"
+    "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe"
+    "C:\Program Files\Python313\python.exe"
+    "C:\Program Files\Python312\python.exe"
+) do (
+    if exist %%p if "%PYTHON%"=="" set PYTHON=%%~p
+)
+
+if "%PYTHON%"=="" (
+    python --version >nul 2>&1 && set PYTHON=python
+)
+if "%PYTHON%"=="" (
+    echo [ERROR] Python not found. Install Anaconda or Python 3.11+
+    pause & exit /b 1
+)
+echo [OK] Python: %PYTHON%
+
+rem ---- find Node ----
+node --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [错误] 未检测到 Docker，请先安装 Docker Desktop
-    echo 下载: https://www.docker.com/products/docker-desktop
-    pause
-    exit /b 1
+    echo [ERROR] Node.js not found.
+    pause & exit /b 1
 )
+echo [OK] Node: found
 
-if not exist "backend\.env" (
-    echo [提示] 从 .env.example 创建配置文件...
-    copy "backend\.env.example" "backend\.env"
-    echo 请编辑 backend\.env 填入 API 密钥后重新运行
-    pause
-    exit /b 1
-)
-
-echo 构建并启动服务...
-docker compose up -d --build
-
+rem ---- install backend ----
 echo.
-echo 启动完成！访问 http://localhost
-echo 停止服务: docker compose down
-pause
+echo [1/3] Installing backend dependencies...
+cd backend
+%PYTHON% -m pip install -r requirements.txt -q
+if %errorlevel% neq 0 (
+    echo [ERROR] Backend install failed
+    pause & exit /b 1
+)
+echo [OK] Backend ready
+cd ..
+
+rem ---- install frontend ----
+echo [2/3] Installing frontend dependencies...
+cd frontend
+call npm install --silent
+if %errorlevel% neq 0 (
+    echo [ERROR] Frontend install failed
+    pause & exit /b 1
+)
+echo [OK] Frontend ready
+cd ..
+
+rem ---- launch ----
+echo [3/3] Starting services...
+echo.
+echo   Frontend: http://localhost:3000
+echo   Backend:  http://localhost:8000
+echo   Close windows to stop
+echo ========================================
+
+start "" http://localhost:3000
+start "Backend" cmd /k "cd /d "%~dp0backend" && %PYTHON% -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+start "Frontend" cmd /k "cd /d "%~dp0frontend" && npx next dev --port 3000"

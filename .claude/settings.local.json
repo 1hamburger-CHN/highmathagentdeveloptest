@@ -406,7 +406,10 @@
       "Bash(HF_ENDPOINT=https://hf-mirror.com /c/Users/31622/anaconda3/python.exe -c ' *)",
       "Bash(node scripts/extract_handouts.cjs)",
       "Bash(HF_ENDPOINT=https://hf-mirror.com /c/Users/31622/anaconda3/python.exe backend/scripts/index_handouts.py)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(cmd.exe /c \"python --version\")",
+      "Bash(cmd.exe /c \"python3 --version\")",
+      "Bash(cmd.exe /c \"node --version\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\31622\\.ssh",
