@@ -84,16 +84,15 @@ def route_safety(state: TutorState) -> str:
 
 
 def route_profile_check(state: TutorState) -> str:
-    # Decline/refusal → respond directly
     if getattr(state, "_respond_directly", False):
         return "respond"
-    # Resource request → skip everything, go straight to generate
     if getattr(state, "_is_resource_request", False):
         return "generate"
-    # Already have profile → diagnose → coach
+    # Animation request → skip everything, go straight to coach→animation_render
+    if getattr(state, "_animation_direct", False):
+        return "coach"
     if state.profile and state.profile.get("knowledge_mastery"):
         return "diagnose"
-    # Direct math question → skip both profile AND diagnose, straight to coach
     if getattr(state, "_is_direct_question", False):
         return "coach"
     return "build_profile"
@@ -186,8 +185,18 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
     # Manual animation request → skip coaching, go straight to animation
     if is_animation_request:
         concept = _extract_concept_from_question(user_msg)
+        concept = _clean_animation_concept(concept)
         if concept and len(concept) >= 2:
-            logger.info(f"Animation requested for concept: '{concept}'")
+            # Resolve concept name to curriculum node ID (e.g. "留数定理" → "complex-6.2")
+            resolved_id = _retriever.resolve_concept_name(concept)
+            alias_title = _retriever._concept_aliases.get(concept)
+            if alias_title:
+                # Reverse lookup: find node ID for this title
+                for nid, ntitle in _retriever._id_to_title.items():
+                    if ntitle == alias_title:
+                        resolved_id = nid
+                        break
+            logger.info(f"Animation: '{concept}' → resolved to '{resolved_id}'")
             return {
                 "current_state": AgentState.PROFILE_CHECK,
                 "_has_profile": has_profile,
@@ -195,7 +204,8 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
                 "_is_resource_request": False,
                 "_animation_pending": True,
                 "_animation_direct": True,
-                "current_concept": concept,
+                "current_concept": resolved_id,
+                "blind_spots": [{"concept_id": resolved_id, "type": "concept", "description": f"用户请求{concept}动画演示"}],
             }
 
     # Out-of-domain direct question → redirect to generate (don't do Socratic coaching)
@@ -237,19 +247,22 @@ def _is_direct_math_question(text: str) -> bool:
 
 def _is_animation_request(text: str) -> bool:
     """Check if user is explicitly requesting an animation."""
-    animation_keywords = [
-        "生成动画", "做动画", "画动画", "动画演示",
-        "帮我生成.*动画", "做个动画", "可视化",
-        "做个.*动画", "生成.*动画", "制作动画",
-    ]
     import re
-    for kw in animation_keywords:
-        if re.search(kw, text):
+    animation_patterns = [
+        r"生成.*动画", r"做.*动画", r"画.*动画", r"制作.*动画",
+        r"动画.*演示", r"可视化.*演示",
+        r"动画.*生成", r"来个.*动画",
+    ]
+    for pat in animation_patterns:
+        if re.search(pat, text):
             return True
-    # Also check simple "动画" + concept pattern
-    if "动画" in text and len(text) < 30:
-        return True
     return False
+
+
+def _clean_animation_concept(concept: str) -> str:
+    """Strip animation-related words from extracted concept."""
+    import re
+    return re.sub(r"(生成|做|画|制作|的)?\s*(动画|可视化|演示)", "", concept).strip()
 
 
 def _is_resource_request(text: str) -> bool:
