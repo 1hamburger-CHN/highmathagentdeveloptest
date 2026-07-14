@@ -338,6 +338,12 @@ async def diagnose_node(state: TutorState) -> dict[str, Any]:
 
 
 async def coach_node(state: TutorState) -> dict[str, Any]:
+    # Direct animation request — skip coach, just pass through to animation_render
+    if getattr(state, "_animation_direct", False):
+        return {
+            "current_state": AgentState.COACH,
+            "_animation_pending": True,
+        }
     result = await _socratic_coach.run(state)
     result["current_state"] = AgentState.COACH
 

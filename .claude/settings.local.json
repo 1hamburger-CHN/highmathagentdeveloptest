@@ -438,7 +438,10 @@
       "Bash(ssh root@82.156.84.213 \"cp -rv /opt/mathagent/data /opt/mathagent/backend/ 2>&1 | tail -5 ; echo '---' ; ls /opt/mathagent/backend/data/ 2>&1\")",
       "Bash(ssh root@82.156.84.213 \"cd /opt/mathagent && docker compose restart backend 2>&1 && sleep 15 && docker compose logs backend --tail 10 2>&1\")",
       "Bash(ssh -o ConnectTimeout=10 root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 5 2>&1\")",
-      "Bash(curl -s -m 5 -o /dev/null -w \"%{http_code}\" http://82.156.84.213/)"
+      "Bash(curl -s -m 5 -o /dev/null -w \"%{http_code}\" http://82.156.84.213/)",
+      "Bash(ssh root@82.156.84.213 \"cp -r /opt/mathagent/data /opt/mathagent/backend/ 2>&1 && echo copied && sleep 20 && docker logs mathagent-backend-1 --tail 5 2>&1\")",
+      "Bash(ssh -o ConnectTimeout=10 root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 20 2>&1\")",
+      "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 5 --since 5m 2>&1\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\31622\\.ssh",
