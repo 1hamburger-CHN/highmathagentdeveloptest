@@ -365,8 +365,31 @@ async def build_profile_node(state: TutorState) -> dict[str, Any]:
 async def diagnose_node(state: TutorState) -> dict[str, Any]:
     result = await _diagnostician.run(state)
     result["current_state"] = AgentState.DIAGNOSE
-    # Strip messages — diagnostician works silently in background
     result.pop("messages", None)
+
+    # Merge diagnosis into profile so frontend progress bar updates
+    profile = dict(state.profile) if state.profile else {}
+    existing_mastery = {m["concept_id"]: m for m in profile.get("knowledge_mastery", [])}
+    mastered = result.get("mastered_concepts", []) or []
+    blind = result.get("blind_spots", []) or []
+
+    # Update mastery: mark diagnosed concepts with scores
+    for cid in mastered:
+        if cid not in existing_mastery:
+            existing_mastery[cid] = {"concept_id": cid, "score": 0.7, "confidence": 0.6}
+        else:
+            existing_mastery[cid]["score"] = max(existing_mastery[cid].get("score", 0), 0.7)
+
+    # Mark concepts with blind spots at lower scores
+    for bs in blind:
+        cid = bs.get("concept_id", "")
+        if cid and cid not in existing_mastery:
+            existing_mastery[cid] = {"concept_id": cid, "score": 0.2, "confidence": 0.5}
+
+    profile["knowledge_mastery"] = list(existing_mastery.values())
+    profile["blind_spots"] = blind
+    result["profile"] = profile
+
     return result
 
 
