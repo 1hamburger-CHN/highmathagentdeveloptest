@@ -5,8 +5,8 @@ class SafetyPipeline:
     """Four-layer safety: greetings OK → block injection → catch low-quality → require math relevance."""
 
     PROMPT_INJECTION_PATTERNS = [
-        "ignore", "forget", "system prompt", "previous instructions",
-        "忽略", "忘记", "之前", "系统提示",
+        "ignore all", "forget all", "system prompt", "previous instructions",
+        "忽略以上", "忘记以上", "之前的指令", "系统提示",
         "do anything", "bypass", "jailbreak", "pretend",
     ]
 
