@@ -443,7 +443,12 @@
       "Bash(ssh -o ConnectTimeout=10 root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 20 2>&1\")",
       "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 5 --since 5m 2>&1\")",
       "Bash(ssh root@82.156.84.213 \"cp -r /opt/mathagent/data /opt/mathagent/backend/ && sleep 8 && docker logs mathagent-backend-1 --tail 5 2>&1\")",
-      "Bash(ssh -o ConnectTimeout=15 root@82.156.84.213 \"echo ok\")"
+      "Bash(ssh -o ConnectTimeout=15 root@82.156.84.213 \"echo ok\")",
+      "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 2>&1 | grep -A2 'NameError\\\\|ERROR\\\\|Traceback' | tail -20\")",
+      "Bash(ssh root@82.156.84.213 \"docker exec mathagent-backend-1 grep -n 'logger' /app/api/chat.py | head -10\")",
+      "Bash(ssh root@82.156.84.213 \"docker exec mathagent-backend-1 grep -n 'logger' /app/app/api/chat.py\")",
+      "Bash(ssh root@82.156.84.213 \"docker exec mathagent-backend-1 grep -n 'logger' /app/app/agents/resource_generator.py\")",
+      "Bash(ssh root@82.156.84.213 \"docker exec mathagent-backend-1 grep -n 'logger' /app/app/agents/graph.py\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\31622\\.ssh",

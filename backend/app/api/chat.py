@@ -1,6 +1,7 @@
 """Chat API — SSE streaming and non-streaming endpoints with profile persistence."""
 import json
 import logging
+import traceback
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
@@ -216,6 +217,7 @@ async def chat_stream(payload: dict):
 
         except Exception as e:
             logger.error(f"Chat stream error (session={session_id}): {type(e).__name__}: {e}")
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
             yield {"event": "error", "data": json.dumps({"message": "服务暂时不可用，请稍后重试"})}
         finally:
             # Always persist — even if the stream errored, save what we have
