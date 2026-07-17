@@ -20,15 +20,18 @@ const TABS = [
 ];
 
 function fixLatexEnvs(content: string): string {
-  // Auto-wrap naked \begin{...}...\end{...} blocks with $$ delimiters
-  // LLMs sometimes output aligned/cases/etc. without wrapping them in $$
-  return content
-    .replace(/(?<!\$\$)\n?(\\begin\{aligned\})/g, "\n$$\n$1")
-    .replace(/(\\end\{aligned\})(?!\s*\$\$)/g, "$1\n$$\n")
-    .replace(/(?<!\$\$)\n?(\\begin\{cases\})/g, "\n$$\n$1")
-    .replace(/(\\end\{cases\})(?!\s*\$\$)/g, "$1\n$$\n")
-    .replace(/(?<!\$\$)\n?(\\begin\{bmatrix\})/g, "\n$$\n$1")
-    .replace(/(\\end\{bmatrix\})(?!\s*\$\$)/g, "$1\n$$\n");
+  // If content has lots of LaTeX but no display math delimiters, wrap it
+  const latexCmdCount = (content.match(/\\[a-zA-Z]{2,}/g) || []).length;
+  const hasDisplayMath = /\$\$/.test(content);
+  if (latexCmdCount > 5 && !hasDisplayMath) {
+    // Wrap the whole thing — it's clearly math content
+    return `$$\n${content}\n$$`;
+  }
+  // Auto-wrap \begin...\end blocks without $$
+  let c = content;
+  c = c.replace(/(?<!\$\$)\n?(\\begin\{(aligned|cases|bmatrix|array|gathered)\})/g, "\n$$\n$1");
+  c = c.replace(/(\\end\{(aligned|cases|bmatrix|array|gathered)\})(?!\s*\$\$)/g, "$1\n$$\n");
+  return c;
 }
 
 const CONCEPTS = [
