@@ -666,28 +666,61 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
         profile = dict(state.profile) if state.profile else {}
         existing_mastery = {m["concept_id"]: m for m in profile.get("knowledge_mastery", [])}
 
-        # Map coach_confidence to progressive score (0.1–0.9)
-        # Coach confidence reflects the student's current understanding level
-        progressive_score = max(0.1, min(0.9, confidence))
+        # Score based on coach's actual feedback, not LLM's subjective confidence
+        coach_msg = result.get("messages", [{}])
+        coach_text = ""
+        if coach_msg:
+            coach_text = coach_msg[0].get("content", "") if isinstance(coach_msg, list) else ""
+
+        # Analyze coach feedback for quality signals
+        _excellent = any(kw in coach_text for kw in [
+            "完全正确", "非常准确", "很到位", "非常棒", "非常清晰",
+            "你分析得很好", "理解很透彻", "非常到位",
+        ])
+        _good = any(kw in coach_text for kw in [
+            "正确", "很好", "不错", "很好", "对了", "准确",
+            "可以", "说得对", "说得很好", "总结得很",
+        ]) and not _excellent
+        _partial = any(kw in coach_text for kw in [
+            "差不多", "接近", "再想想", "不对", "不太",
+            "不是", "不满足", "有问题", "有偏差", "不完全",
+        ])
+        _is_hint = any(kw in coach_text for kw in [
+            "提示", "试试", "再算", "换个角度",
+        ])
+
+        # Determine score increment based on feedback quality
+        if _excellent:
+            score_inc = 0.20
+        elif _good:
+            score_inc = 0.12
+        elif _partial:
+            score_inc = 0.05
+        elif _is_hint:
+            score_inc = 0
+        else:
+            score_inc = 0.08  # neutral/default improvement
+
+        # Clamp score increment to reasonable range
+        old_score = existing_mastery.get(concept, {}).get("score", 0) if concept in existing_mastery else 0
+        new_score = min(1.0, old_score + score_inc)
+        confidence_val = 0.7 if _excellent else 0.5 if _good else 0.3
 
         if concept not in existing_mastery:
             existing_mastery[concept] = {
-                "concept_id": concept, "score": progressive_score, "confidence": 0.5
+                "concept_id": concept, "score": new_score, "confidence": confidence_val,
             }
-        else:
-            # Only update if new score is higher (progress is monotonic upward)
-            existing_mastery[concept]["score"] = max(
-                existing_mastery[concept].get("score", 0), progressive_score
-            )
+        elif new_score > old_score:
+            existing_mastery[concept]["score"] = new_score
             existing_mastery[concept]["confidence"] = max(
-                existing_mastery[concept].get("confidence", 0), 0.5
+                existing_mastery[concept].get("confidence", 0), confidence_val,
             )
 
         profile["knowledge_mastery"] = list(existing_mastery.values())
         result["profile"] = profile
         logger.info(
             f"Profile updated: {concept} → score={existing_mastery[concept]['score']:.2f} "
-            f"(coach confidence={confidence:.2f})"
+            f"(coach feedback: excellent={_excellent} good={_good} partial={_partial})"
         )
 
     # Trigger animation when student is struggling with a diagnosed concept
