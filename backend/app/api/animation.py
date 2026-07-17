@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/api/animation", tags=["animation"])
+router = APIRouter(tags=["animation"])
 
 
 @router.get("/list")
