@@ -94,5 +94,6 @@ class TemplateSelector:
                                   "  type: str — \"removable\" | \"pole\" | \"essential\"\n"
                                   "  point: str — location (e.g. \"0\")\n"
                                   "  label: str — description (e.g. \"极点: 1/z\")",
+            "BranchCut": "function: str — complex function with branch cut (e.g. \"Ln(z)\", \"sqrt(z)\")",
         }
         return hints.get(template.template_name, "params: dict — template-specific parameters")

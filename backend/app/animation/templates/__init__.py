@@ -7,6 +7,7 @@ from app.animation.templates.cr_equations import CREquationsTemplate
 from app.animation.templates.taylor_series import TaylorSeriesTemplate
 from app.animation.templates.laurent_series import LaurentSeriesTemplate
 from app.animation.templates.pole_classification import PoleClassificationTemplate
+from app.animation.templates.branch_cut import BranchCutTemplate
 
 ALL_TEMPLATES = [
     ResidueTheoremTemplate,
@@ -16,4 +17,5 @@ ALL_TEMPLATES = [
     TaylorSeriesTemplate,
     LaurentSeriesTemplate,
     PoleClassificationTemplate,
+    BranchCutTemplate,
 ]
