@@ -7,9 +7,9 @@ interface RadarProps {
 
 export default function RadarChart({ data, size = 280 }: RadarProps) {
   const chartData = data.length > 0 ? data : [
-    { label: "复数与复平面", value: 0 },
+    { label: "复数基础", value: 0 },
     { label: "解析函数", value: 0 },
-    { label: "初等复函数", value: 0 },
+    { label: "初等函数", value: 0 },
     { label: "复积分", value: 0 },
     { label: "级数展开", value: 0 },
     { label: "留数定理", value: 0 },
@@ -47,7 +47,7 @@ export default function RadarChart({ data, size = 280 }: RadarProps) {
     return (
       <text key={`label-${i}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
             className="fill-gray-600" fontSize="11" fontFamily="system-ui">
-        {d.label.length > 5 ? d.label.slice(0, 5) + "…" : d.label}
+        {d.label.length > 6 ? d.label.slice(0, 5) + "…" : d.label}
       </text>
     );
   });
