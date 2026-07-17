@@ -30,13 +30,9 @@ const changelog: ChangeEntry[] = [
     title: "v2.0 — Manim 数学动画子系统",
     icon: <Film className="w-4 h-4" />,
     items: [
-      "基于 Manim Community v0.20.1 的模板库 + LLM 参数提取混合架构，自动生成复变函数数学动画",
-      "首批 3 个动画模板：留数定理（围道+极点）、共形映射（z→w 网格变形）、围道积分（参数化路径+质点动画）",
-      "中文渲染方案：Text() (Pango/Cairo) 处理中文 + Tex()/MathTex() 处理数学公式",
-      "SSE 流式推送渲染进度，前端 <video> 标签内联播放 mp4",
-      "Docker 镜像优化 7.42GB → 3.38GB (-54%)：切换 PyTorch CPU 版，移除 CUDA 包",
-      "6 个模板管线 bug 修复：f-string 转义、参数注入、LaTeX 中文崩溃、dvisvgm 缺失、静态路径双写、nginx 路由",
-      "部署至腾讯云 Lighthouse 2核2GB，GitHub Actions CI/CD 自动部署",
+      "上线 3 个数学动画：留数定理、共形映射、围道积分",
+      "数学公式全平台 KaTeX 渲染，告别纯文本拼凑",
+      "聊天支持流式输出，逐字显示回复内容",
     ],
   },
   {
