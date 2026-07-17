@@ -22,6 +22,19 @@ logger = logging.getLogger("tutor.graph")
 _router = ModelRouter()
 _retriever = HybridRetriever()
 
+# Build prerequisite map from curriculum for score propagation
+_prerequisites: dict[str, list[str]] = {}
+try:
+    from pathlib import Path
+    from app.knowledge.loader import load_curriculum
+    _curriculum_path = Path(__file__).parent.parent.parent / "data" / "seed" / "curriculum.yaml"
+    _nodes = load_curriculum(str(_curriculum_path))
+    for node in _nodes:
+        _prerequisites[node.id] = node.prerequisites or []
+    logger.info(f"Loaded prerequisite map: {len(_prerequisites)} concepts")
+except Exception:
+    logger.warning("Failed to load prerequisite map, score propagation disabled")
+
 _profile_builder = ProfileBuilderAgent(_router)
 _diagnostician = DiagnosticianAgent(_router)
 _socratic_coach = SocraticCoachAgent(_router)
@@ -426,6 +439,26 @@ async def diagnose_node(state: TutorState) -> dict[str, Any]:
         cid = bs.get("concept_id", "")
         if cid and cid not in existing_mastery:
             existing_mastery[cid] = {"concept_id": cid, "score": 0.2, "confidence": 0.5}
+
+    # Propagate inferred scores to prerequisites
+    # If student proves mastery of a concept, its prerequisites likely known
+    for cid in list(existing_mastery.keys()):
+        score = existing_mastery[cid].get("score", 0)
+        if score >= 0.5:
+            prereqs = _prerequisites.get(cid, [])
+            for prereq_id in prereqs:
+                inferred_score = 0.35 if score >= 0.7 else 0.25
+                inferred_conf = 0.25
+                if prereq_id not in existing_mastery:
+                    existing_mastery[prereq_id] = {
+                        "concept_id": prereq_id, "score": inferred_score, "confidence": inferred_conf,
+                    }
+                    logger.info(f"Profile inferred: {prereq_id} → {inferred_score:.2f} (prereq of {cid})")
+                elif existing_mastery[prereq_id].get("score", 0) < inferred_score:
+                    existing_mastery[prereq_id]["score"] = inferred_score
+                    existing_mastery[prereq_id]["confidence"] = max(
+                        existing_mastery[prereq_id].get("confidence", 0), inferred_conf,
+                    )
 
     profile["knowledge_mastery"] = list(existing_mastery.values())
     profile["blind_spots"] = blind

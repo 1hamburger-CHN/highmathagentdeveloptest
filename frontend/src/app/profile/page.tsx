@@ -68,7 +68,10 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/profile/anonymous`)
+    const uid = typeof window !== "undefined"
+      ? localStorage.getItem("tutor_user_id") || "anonymous"
+      : "anonymous";
+    fetch(`${API_BASE}/api/profile/${uid}`)
       .then((r) => r.json())
       .then((data) => setProfile(data.profile || data))
       .catch(() => {})
