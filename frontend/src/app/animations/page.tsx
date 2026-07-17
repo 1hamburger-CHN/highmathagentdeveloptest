@@ -257,7 +257,9 @@ export default function AnimationsPage() {
                             {/* Per-video detail dropdown */}
                             {videoDetail && expandedVideoInfo.has(animKey) && (
                               <div className="px-5 py-2.5 bg-amber-50/50 border-t border-amber-100 mx-5 mb-2 rounded-lg">
-                                <p className="text-xs text-gray-600">{videoDetail}</p>
+                                <div className="text-xs text-gray-600 prose prose-xs max-w-none">
+                                  <StreamingMarkdown content={videoDetail} />
+                                </div>
                               </div>
                             )}
                           </div>
