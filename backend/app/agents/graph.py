@@ -22,6 +22,99 @@ logger = logging.getLogger("tutor.graph")
 _router = ModelRouter()
 _retriever = HybridRetriever()
 
+# Build valid concept ID set + alias reverse map
+_valid_concept_ids: set[str] = set()
+_alias_to_id: dict[str, str] = {}
+_concept_id_to_title: dict[str, str] = {}
+try:
+    from pathlib import Path
+    from app.knowledge.loader import load_curriculum
+    _curriculum_path = Path(__file__).parent.parent.parent / "data" / "seed" / "curriculum.yaml"
+    _nodes = load_curriculum(str(_curriculum_path))
+    for node in _nodes:
+        _valid_concept_ids.add(node.id)
+        _concept_id_to_title[node.id] = node.title
+    # Build alias → ID map from retriever's aliases
+    for alias, title in _retriever._concept_aliases.items():
+        if title in _retriever._id_to_title.values():
+            for nid, ntitle in _retriever._id_to_title.items():
+                if ntitle == title:
+                    _alias_to_id[alias] = nid
+                    break
+    # Also add title → ID
+    for nid, ntitle in _retriever._id_to_title.items():
+        _alias_to_id[ntitle] = nid
+        # Lowercase
+        _alias_to_id[ntitle.lower()] = nid
+    # English variants from concept aliases (e.g. "residue_theorem" → complex-6.2)
+    for alias, title in _retriever._concept_aliases.items():
+        if "_" in alias or alias.isascii():
+            for nid, ntitle in _retriever._id_to_title.items():
+                if ntitle == title:
+                    _alias_to_id[alias.lower()] = nid
+                    _alias_to_id[alias.replace("_", " ").lower()] = nid
+                    break
+    logger.info(f"Built concept normalizer: {len(_valid_concept_ids)} IDs, {len(_alias_to_id)} aliases")
+except Exception as e:
+    logger.warning(f"Failed to build concept normalizer: {e}")
+
+
+def _normalize_concept_id(raw: str) -> str | None:
+    """Normalize an LLM-generated concept ID/name to a valid curriculum ID.
+
+    Returns the normalized complex-* ID, or None if no match.
+    """
+    if not raw:
+        return None
+    raw = str(raw).strip()
+    # 1. Already valid
+    if raw in _valid_concept_ids:
+        return raw
+    # 2. Direct alias match
+    if raw in _alias_to_id:
+        return _alias_to_id[raw]
+    # 3. Lowercase match
+    if raw.lower() in _alias_to_id:
+        return _alias_to_id[raw.lower()]
+    # 4. Fuzzy: check if raw contains a known concept title
+    for title, nid in _alias_to_id.items():
+        if len(title) >= 3 and title in raw:
+            return nid
+    # 5. Try to match via retriever domain check
+    try:
+        if _retriever.is_concept_in_domain(raw):
+            for nid in _valid_concept_ids:
+                if _concept_id_to_title.get(nid, "") in raw:
+                    return nid
+    except Exception:
+        pass
+    # 6. Heuristic: LLM often outputs things like "residue-6.0.0" — try prefix match
+    import re
+    residue_match = re.match(r"residue[-_]?(\d)", raw, re.IGNORECASE)
+    if residue_match:
+        return "complex-6.2"  # 留数定理
+    # More heuristics for common LLM patterns
+    heuristic_map = {
+        r"复数|complex[_ ]?number": "complex-1.1",
+        r"解析|analytic|holomorphic": "complex-2.2",
+        r"cauchy.*riemann|cr[_ ]?equation": "complex-2.2",
+        r"cauchy.*(integral|formula)": "complex-4.3",
+        r"cauchy.*goursat|cauchy.*theorem": "complex-4.2",
+        r"contour|围道|路径积分": "complex-4.1",
+        r"积分.*定义|复积分": "complex-4.1",
+        r"taylor|泰勒": "complex-5.1",
+        r"laurent|洛朗": "complex-5.2",
+        r"residue|留数": "complex-6.2",
+        r"singularity|奇点": "complex-6.1",
+        r"conformal|共形|保角|保形": "complex-7.1",
+        r"fourier|傅里叶|傅立叶": "complex-8.1",
+        r"laplace|拉普拉斯|拉氏": "complex-8.2",
+    }
+    for pattern, nid in heuristic_map.items():
+        if re.search(pattern, raw, re.IGNORECASE):
+            return nid
+    return None
+
 # Build prerequisite map from curriculum for score propagation
 _prerequisites: dict[str, list[str]] = {}
 try:
@@ -429,16 +522,26 @@ async def diagnose_node(state: TutorState) -> dict[str, Any]:
 
     # Update mastery: mark diagnosed concepts with scores
     for cid in mastered:
-        if cid not in existing_mastery:
-            existing_mastery[cid] = {"concept_id": cid, "score": 0.7, "confidence": 0.6}
+        normalized = _normalize_concept_id(cid)
+        if normalized is None:
+            logger.warning(f"Diagnostician returned unknown concept ID: '{cid}', skipped")
+            continue
+        if normalized not in existing_mastery:
+            existing_mastery[normalized] = {"concept_id": normalized, "score": 0.7, "confidence": 0.6}
         else:
-            existing_mastery[cid]["score"] = max(existing_mastery[cid].get("score", 0), 0.7)
+            existing_mastery[normalized]["score"] = max(existing_mastery[normalized].get("score", 0), 0.7)
 
     # Mark concepts with blind spots at lower scores
     for bs in blind:
         cid = bs.get("concept_id", "")
-        if cid and cid not in existing_mastery:
-            existing_mastery[cid] = {"concept_id": cid, "score": 0.2, "confidence": 0.5}
+        if not cid:
+            continue
+        normalized = _normalize_concept_id(cid)
+        if normalized is None:
+            logger.warning(f"Diagnostician returned unknown blind spot ID: '{cid}', skipped")
+            continue
+        if normalized not in existing_mastery:
+            existing_mastery[normalized] = {"concept_id": normalized, "score": 0.2, "confidence": 0.5}
 
     # Propagate inferred scores to prerequisites
     # If student proves mastery of a concept, its prerequisites likely known
@@ -497,22 +600,12 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
     confidence = result.get("coach_confidence", state.coach_confidence)
     concept = state.current_concept
 
-    # Resolve concept: try aliases and domain matching if not already a complex- ID
-    if concept and not concept.startswith("complex-"):
-        coach_target = result.get("current_concept", "")
-        if coach_target and coach_target.startswith("complex-"):
-            concept = coach_target
-        else:
-            resolved = _retriever.resolve_concept_name(concept)
-            if resolved != concept:
-                concept = resolved
-            else:
-                alias_title = _retriever._concept_aliases.get(concept)
-                if alias_title:
-                    for nid, ntitle in _retriever._id_to_title.items():
-                        if ntitle == alias_title:
-                            concept = nid
-                            break
+    # Normalize concept: LLM may output non-standard IDs
+    coach_target = result.get("current_concept", "")
+    raw_concept = concept or coach_target or ""
+    normalized_concept = _normalize_concept_id(raw_concept)
+    if normalized_concept:
+        concept = normalized_concept
 
     if concept and concept.startswith("complex-"):
         profile = dict(state.profile) if state.profile else {}
