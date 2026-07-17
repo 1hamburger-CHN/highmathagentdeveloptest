@@ -8,6 +8,8 @@ from app.animation.templates.taylor_series import TaylorSeriesTemplate
 from app.animation.templates.laurent_series import LaurentSeriesTemplate
 from app.animation.templates.pole_classification import PoleClassificationTemplate
 from app.animation.templates.branch_cut import BranchCutTemplate
+from app.animation.templates.riemann_sphere import RiemannSphereTemplate
+from app.animation.templates.complex_plane_transform import ComplexPlaneTransformTemplate
 
 ALL_TEMPLATES = [
     ResidueTheoremTemplate,
@@ -18,4 +20,6 @@ ALL_TEMPLATES = [
     LaurentSeriesTemplate,
     PoleClassificationTemplate,
     BranchCutTemplate,
+    RiemannSphereTemplate,
+    ComplexPlaneTransformTemplate,
 ]

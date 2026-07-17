@@ -95,5 +95,7 @@ class TemplateSelector:
                                   "  point: str — location (e.g. \"0\")\n"
                                   "  label: str — description (e.g. \"极点: 1/z\")",
             "BranchCut": "function: str — complex function with branch cut (e.g. \"Ln(z)\", \"sqrt(z)\")",
+            "RiemannSphere": "function: str — mapping function for projection (e.g. \"z\", \"1/z\")",
+            "ComplexPlaneTransform": "function: str — complex transform (e.g. \"z+1\", \"e^(i*PI/4)*z\")",
         }
         return hints.get(template.template_name, "params: dict — template-specific parameters")
