@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Film, ArrowLeft, ChevronDown, ChevronRight, Play, X, FileVideo, BookOpen } from "lucide-react";
 import Link from "next/link";
+import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -198,9 +199,9 @@ export default function AnimationsPage() {
                         </button>
                         {expandedExplanations.has(template) && (
                           <div className="px-5 py-3 bg-blue-50/50 border-y border-blue-100">
-                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                              {TEMPLATE_EXPLANATIONS[template]}
-                            </p>
+                            <div className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none prose-p:text-gray-700 prose-strong:text-gray-900">
+                              <StreamingMarkdown content={TEMPLATE_EXPLANATIONS[template]} />
+                            </div>
                           </div>
                         )}
                       </>
