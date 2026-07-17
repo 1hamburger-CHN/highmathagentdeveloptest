@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BookOpen, FileText, GitBranch, Library, ArrowLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
 import MermaidBlock from "@/components/chat/MermaidBlock";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -123,11 +124,13 @@ export default function ResourcesPage() {
                   {r.concept && <span className="text-xs text-gray-400">{r.concept}</span>}
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{r.title}</h3>
-                {r.type === "mindmap" ? (
-                  <MermaidBlock code={r.content} />
-                ) : (
-                  <p className="text-sm text-gray-600 line-clamp-3">{r.content.slice(0, 200)}</p>
-                )}
+                <div className="prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900">
+                  {r.type === "mindmap" ? (
+                    <MermaidBlock code={r.content} />
+                  ) : (
+                    <StreamingMarkdown content={r.content} />
+                  )}
+                </div>
                 {r.created_at && (
                   <p className="text-xs text-gray-400 mt-2">
                     {new Date(r.created_at).toLocaleDateString("zh-CN")}
