@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, FileText, GitBranch, Library, ArrowLeft, Plus } from "lucide-react";
+import { BookOpen, FileText, GitBranch, Library, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
@@ -76,13 +76,36 @@ export default function ResourcesPage() {
 
   const filtered = tab === "all" ? resources : resources.filter((r) => r.type === tab);
 
+  const uid = typeof window !== "undefined"
+    ? localStorage.getItem("tutor_user_id") || "anonymous"
+    : "anonymous";
+
+  const handleDeleteOne = async (rid: string) => {
+    await fetch(`${API_BASE}/api/sessions/${uid}/resources/${rid}`, { method: "DELETE" });
+    setResources((prev) => prev.filter((r) => `${r.type}:${r.title}` !== rid));
+  };
+
+  const handleDeleteAll = async () => {
+    if (!confirm("确认删除全部资源？")) return;
+    await fetch(`${API_BASE}/api/sessions/${uid}/resources`, { method: "DELETE" });
+    setResources([]);
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary-600 mb-6">
           <ArrowLeft className="w-4 h-4" /> 返回首页
         </Link>
-        <h1 className="text-2xl font-bold text-primary-900 mb-6">资源中心</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-primary-900">资源中心</h1>
+          {resources.length > 0 && (
+            <button onClick={handleDeleteAll}
+              className="flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors">
+              <Trash2 className="w-3.5 h-3.5" /> 删除全部
+            </button>
+          )}
+        </div>
 
         {/* Quick Generate */}
         <div className="mb-6 rounded-xl bg-white border border-gray-200 p-4">
@@ -141,9 +164,18 @@ export default function ResourcesPage() {
               const isLong = r.content.length > 400;
               return (
               <div key={i} className="rounded-xl bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs rounded-full bg-primary-50 px-2 py-0.5 text-primary-700">{r.type}</span>
-                  {r.concept && <span className="text-xs text-gray-400">{r.concept}</span>}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs rounded-full bg-primary-50 px-2 py-0.5 text-primary-700">{r.type}</span>
+                    {r.concept && <span className="text-xs text-gray-400">{r.concept}</span>}
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteOne(`${r.type}:${r.title}`); }}
+                    className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                    title="删除"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{r.title}</h3>
                 <div className={`${isExpanded || !isLong ? "" : "max-h-[200px] overflow-hidden relative"} prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900`}>

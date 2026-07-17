@@ -170,3 +170,25 @@ def list_resources(user_id: str) -> list[dict]:
     except Exception as e:
         logger.error(f"list_resources failed: {e}")
         return []
+
+
+def delete_resource(resource_id: str) -> bool:
+    if not _available:
+        return False
+    try:
+        _execute("DELETE FROM resources WHERE id = ?", [resource_id])
+        return True
+    except Exception as e:
+        logger.error(f"delete_resource failed: {e}")
+        return False
+
+
+def delete_all_resources(user_id: str) -> int:
+    if not _available:
+        return 0
+    try:
+        result = _execute("DELETE FROM resources WHERE user_id = ?", [user_id])
+        return result.get("rows_affected", 0) or 0 if result else 0
+    except Exception as e:
+        logger.error(f"delete_all_resources failed: {e}")
+        return 0

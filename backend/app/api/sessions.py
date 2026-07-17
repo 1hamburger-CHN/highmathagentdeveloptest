@@ -5,7 +5,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.models.db_models import delete_sessions_for_user, get_latest_session, list_resources, upsert_session
+from app.models.db_models import delete_all_resources, delete_resource, delete_sessions_for_user, get_latest_session, list_resources, upsert_session
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,24 @@ async def user_resources(user_id: str):
     except Exception as e:
         logger.error(f"Failed to load resources for {user_id}: {e}")
         return {"resources": []}
+
+
+@router.delete("/{user_id}/resources/{resource_id}")
+async def delete_one_resource(user_id: str, resource_id: str):
+    try:
+        delete_resource(resource_id)
+        return {"status": "deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{user_id}/resources")
+async def delete_user_resources(user_id: str):
+    try:
+        deleted = delete_all_resources(user_id)
+        return {"deleted_count": deleted, "status": "deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{user_id}")
