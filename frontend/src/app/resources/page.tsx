@@ -32,6 +32,7 @@ export default function ResourcesPage() {
   const [loading, setLoading] = useState(true);
   const [showGenerate, setShowGenerate] = useState(false);
   const [genConcept, setGenConcept] = useState("");
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const router = useRouter();
 
   const quickGenerate = (type: string) => {
@@ -117,27 +118,46 @@ export default function ResourcesPage() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {filtered.map((r, i) => (
+            {filtered.map((r, i) => {
+              const isExpanded = expandedIds.has(i);
+              const isLong = r.content.length > 400;
+              return (
               <div key={i} className="rounded-xl bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs rounded-full bg-primary-50 px-2 py-0.5 text-primary-700">{r.type}</span>
                   {r.concept && <span className="text-xs text-gray-400">{r.concept}</span>}
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{r.title}</h3>
-                <div className="prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900">
+                <div className={`${isExpanded || !isLong ? "" : "max-h-[200px] overflow-hidden relative"} prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-primary-600 prose-code:text-primary-700 prose-strong:text-gray-900`}>
                   {r.type === "mindmap" ? (
                     <MermaidBlock code={r.content} />
                   ) : (
                     <StreamingMarkdown content={r.content} />
                   )}
+                  {isLong && !isExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
+                  )}
                 </div>
+                {isLong && (
+                  <button onClick={() => {
+                    setExpandedIds(prev => {
+                      const next = new Set(prev);
+                      if (next.has(i)) next.delete(i); else next.add(i);
+                      return next;
+                    });
+                  }}
+                    className="mt-2 text-xs text-primary-600 hover:text-primary-700 font-medium"
+                  >
+                    {isExpanded ? "收起 ▲" : "展开全部 ▼"}
+                  </button>
+                )}
                 {r.created_at && (
                   <p className="text-xs text-gray-400 mt-2">
                     {new Date(r.created_at).toLocaleDateString("zh-CN")}
                   </p>
                 )}
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
