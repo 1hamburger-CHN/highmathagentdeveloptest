@@ -820,6 +820,14 @@ export default function ChatPage() {
             </button>
           </div>
         )}
+        {/* Math live preview */}
+        {input.includes("$") && (
+          <div className="max-w-3xl mx-auto mb-2 px-5 py-2 bg-gray-50 rounded-xl border border-gray-200 min-h-[2rem]">
+            <div className="prose prose-sm max-w-none text-sm text-gray-700">
+              <StreamingMarkdown content={input} />
+            </div>
+          </div>
+        )}
         <div className="flex gap-3 max-w-3xl mx-auto">
           {/* Image upload button */}
           <input
