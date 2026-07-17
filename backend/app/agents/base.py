@@ -14,12 +14,20 @@ logger = logging.getLogger("tutor")
 def repair_latex_json(text: str) -> str:
     """Fix unescaped LaTeX backslashes inside JSON strings.
 
-    Many LLMs output raw LaTeX (e.g. \\lim, \\frac) inside JSON strings without
-    escaping the backslash.  JSON requires \\\\, so we double single backslashes
-    that start LaTeX command names (2+ letters) while leaving JSON's own escapes
+    Many LLMs output raw LaTeX (e.g. \\lim, \\frac, \\bar) inside JSON strings
+    without escaping the backslash.  JSON requires \\\\, so we double single
+    backslashes that start LaTeX command names while leaving JSON's own escapes
     (\\n, \\r, \\t, etc.) alone.
+
+    Special handling for \\b: \\b is valid JSON (backspace U+0008), but when
+    followed by letters (\\bar, \\beta, \\binom) it's actually LaTeX.
+    We pre-escape these BEFORE json.loads corrupts them.
     """
-    return re.sub(r"(?<!\\)\\([a-zA-Z]{2,})", r"\\\\\1", text)
+    # First: fix \\b followed by a letter — must be LaTeX, not JSON backspace
+    text = re.sub(r"(?<!\\)\\b(?=[a-zA-Z])", r"\\\\b", text)
+    # Then: fix all other LaTeX commands (2+ letters after backslash)
+    text = re.sub(r"(?<!\\)\\([a-zA-Z]{2,})", r"\\\\\1", text)
+    return text
 
 
 def _extract_json_braces(text: str) -> str:
