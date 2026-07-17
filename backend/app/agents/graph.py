@@ -80,15 +80,7 @@ def _normalize_concept_id(raw: str) -> str | None:
     for title, nid in _alias_to_id.items():
         if len(title) >= 3 and title in raw:
             return nid
-    # 5. Try to match via retriever domain check
-    try:
-        if _retriever.is_concept_in_domain(raw):
-            for nid in _valid_concept_ids:
-                if _concept_id_to_title.get(nid, "") in raw:
-                    return nid
-    except Exception:
-        pass
-    # 6. Heuristic: LLM often outputs things like "residue-6.0.0" — try prefix match
+    # 5. Heuristic: LLM often outputs things like "residue-6.0.0" — try prefix match
     import re
     residue_match = re.match(r"residue[-_]?(\d)", raw, re.IGNORECASE)
     if residue_match:
