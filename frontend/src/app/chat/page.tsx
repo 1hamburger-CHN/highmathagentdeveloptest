@@ -241,18 +241,22 @@ export default function ChatPage() {
       .catch(() => {});
   }, []);
 
-  // Auto-send diagnose request when arriving from profile blind spot
+  // Auto-send diagnose/generate requests from URL params
   useEffect(() => {
     if (!userId || !sessionId || loading) return;
     const params = new URLSearchParams(window.location.search);
     const concept = params.get("diagnose");
-    if (!concept) return;
-    // Remove param from URL to prevent re-trigger on refresh
+    const msg = params.get("msg");
+    // Remove params from URL
     const url = new URL(window.location.href);
     url.searchParams.delete("diagnose");
+    url.searchParams.delete("msg");
     window.history.replaceState({}, "", url.toString());
-    // Auto-send
-    handleSend(`请检测我对${concept}的掌握程度`);
+    if (concept) {
+      handleSend(`请检测我对${concept}的掌握程度`);
+    } else if (msg) {
+      setInput(msg);
+    }
   }, [userId, sessionId, loading]);
 
   // --- load saved history ---

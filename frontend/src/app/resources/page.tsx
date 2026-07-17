@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, FileText, GitBranch, Library, ArrowLeft } from "lucide-react";
+import { BookOpen, FileText, GitBranch, Library, ArrowLeft, Plus } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import MermaidBlock from "@/components/chat/MermaidBlock";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -17,10 +18,32 @@ const TABS = [
   { key: "reading", label: "拓展阅读", icon: BookOpen },
 ];
 
+const CONCEPTS = [
+  "复数定义与运算", "C-R方程", "调和函数", "指数与对数函数",
+  "复积分定义与性质", "Cauchy-Goursat定理", "Cauchy积分与高阶导数",
+  "泰勒级数", "洛朗级数", "孤立奇点分类", "留数与留数定理",
+  "共形映射与Mobius变换", "傅里叶变换", "拉普拉斯变换",
+];
+
 export default function ResourcesPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [tab, setTab] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [showGenerate, setShowGenerate] = useState(false);
+  const [genConcept, setGenConcept] = useState("");
+  const router = useRouter();
+
+  const quickGenerate = (type: string) => {
+    const concept = genConcept || "复变函数";
+    const prompts: Record<string, string> = {
+      lecture: `帮我生成${concept}的教学讲义`,
+      exercise: `帮我生成${concept}的分层练习题`,
+      mindmap: `帮我生成${concept}的思维导图`,
+      reading: `帮我生成${concept}的拓展阅读材料`,
+    };
+    const msg = prompts[type] || `帮我生成${concept}的学习资源`;
+    router.push(`/chat?msg=${encodeURIComponent(msg)}`);
+  };
 
   useEffect(() => {
     const uid = localStorage.getItem("tutor_user_id") || "anonymous";
@@ -40,6 +63,36 @@ export default function ResourcesPage() {
           <ArrowLeft className="w-4 h-4" /> 返回首页
         </Link>
         <h1 className="text-2xl font-bold text-primary-900 mb-6">资源中心</h1>
+
+        {/* Quick Generate */}
+        <div className="mb-6 rounded-xl bg-white border border-gray-200 p-4">
+          <button onClick={() => setShowGenerate(!showGenerate)}
+            className="flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700">
+            <Plus className="w-4 h-4" /> 快速生成新资源
+          </button>
+          {showGenerate && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-xs text-gray-500 whitespace-nowrap">知识点：</span>
+                <select value={genConcept} onChange={(e) => setGenConcept(e.target.value)}
+                  className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:border-primary-400 focus:outline-none">
+                  <option value="">选一个知识点（或留空默认）</option>
+                  {CONCEPTS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {TABS.filter(t => t.key !== "all").map((t) => (
+                  <button key={t.key} onClick={() => quickGenerate(t.key)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-100 transition-colors"
+                  >
+                    <t.icon className="w-3.5 h-3.5" /> 生成{t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-2 mb-6 overflow-x-auto">
           {TABS.map((t) => (
             <button key={t.key} onClick={() => setTab(t.key)}
