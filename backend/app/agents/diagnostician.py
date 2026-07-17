@@ -52,6 +52,18 @@ class DiagnosticianAgent(BaseAgent):
         history = json.dumps(state.messages[-10:] if state.messages else [], ensure_ascii=False)
         profile = json.dumps(state.profile, ensure_ascii=False) if state.profile else "无"
 
+        kb_context = getattr(state, "_kb_context", {}) or {}
+        kb_text = ""
+        if kb_context:
+            textbook = kb_context.get("textbook", [])
+            handouts = kb_context.get("handouts", [])
+            if textbook:
+                kb_text += "\n## 教材参考（哈工大《复变函数与积分变换》）\n" + "\n---\n".join(textbook)
+            if handouts:
+                kb_text += "\n## 讲义参考（哈工大复变课堂讲义）\n" + "\n---\n".join(handouts)
+            if kb_text:
+                kb_text = "\n请确保你的诊断基于以上教材定义，保持数学严谨性。\n" + kb_text
+
         user_prompt = f"""对话历史：
 {history}
 
@@ -59,6 +71,7 @@ class DiagnosticianAgent(BaseAgent):
 {profile}
 
 当前关注概念：{state.current_concept or "未指定"}
+{kb_text}
 
 请诊断学生的知识盲区。返回JSON。"""
 
