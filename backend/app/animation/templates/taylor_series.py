@@ -48,8 +48,8 @@ class {self.scene_class_name}(Scene):
         # Terms display
         term_labels = VGroup()
         for n in range(max_terms):
-            label = MathTex(
-                "T_" + str(n+1) + ": \\frac{{z^{" + str(n+1) + "}}}{" + str(n+1) + "}",
+            label = Text(
+                "T" + str(n+1) + ": z^" + str(n+1) + "/" + str(n+1),
                 font_size=20, color=WHITE
             )
             label.scale(0.7)

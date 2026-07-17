@@ -67,8 +67,8 @@ class {self.scene_class_name}(ThreeDScene):
 
         # ——— Riemann surface: spiral height as z orbits origin ———
         # Parametric curves showing the spiral nature of Ln(z)
-        radii = [0.5, 1.0, 1.5, 2.0, 2.5]
-        colors = [BLUE, TEAL, GREEN, YELLOW, ORANGE]
+        radii = [0.8, 1.5, 2.2]
+        colors = [BLUE, GREEN, ORANGE]
         spirals = VGroup()
 
         for r, color in zip(radii, colors):
@@ -97,7 +97,7 @@ class {self.scene_class_name}(ThreeDScene):
         trail.add_updater(update_trail)
         self.add(trail, dot)
 
-        for angle in np.linspace(0, 4 * PI, 200):
+        for angle in np.linspace(0, 4 * PI, 60):
             x = 1.5 * np.cos(angle)
             y = 1.5 * np.sin(angle)
             z = angle  # height = argument
