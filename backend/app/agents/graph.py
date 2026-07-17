@@ -287,6 +287,26 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
     is_direct_question = _is_direct_math_question(user_msg)
     is_resource_request = _is_resource_request(user_msg, bool(state.messages))
     is_animation_request = _is_animation_request(user_msg)
+    is_diagnose_request = _is_diagnose_request(user_msg)
+
+    # Explicit diagnose request → go straight to diagnostician
+    if is_diagnose_request:
+        import re as re_diag
+        concept = _extract_concept_from_question(user_msg)
+        # Strip diagnose-specific wording
+        concept = re_diag.sub(
+            r"请(检测|诊断|评估)(我(对|的))?|的(掌握|理解)(程度|情况|水平)?|检测一下|诊断一下",
+            "", concept,
+        )
+        if concept and len(concept) >= 2:
+            logger.info(f"Diagnose request: concept='{concept}'")
+            return {
+                "current_state": AgentState.PROFILE_CHECK,
+                "_has_profile": has_profile,
+                "_is_direct_question": False,
+                "_is_resource_request": False,
+                "current_concept": concept,
+            }
 
     # Manual animation request → skip coaching, go straight to animation
     if is_animation_request:
@@ -375,6 +395,22 @@ def _looks_like_new_question(text: str, has_history: bool = False) -> bool:
     # First message: check if it looks like a domain-specific question
     # Short ambiguous first messages are allowed through
     return len(text) > 15
+
+
+def _is_diagnose_request(text: str) -> bool:
+    """Check if user is explicitly requesting a diagnostic assessment."""
+    patterns = [
+        r"检测.*掌握",
+        r"诊断.*掌握",
+        r"检测.*理解",
+        r"请.*检测",
+        r"请.*诊断",
+        r"评估.*掌握",
+    ]
+    for pat in patterns:
+        if re.search(pat, text):
+            return True
+    return False
 
 
 def _is_animation_request(text: str) -> bool:
