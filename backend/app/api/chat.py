@@ -170,7 +170,7 @@ async def chat_stream(payload: dict):
                                 "event": "profile_progress",
                                 "data": json.dumps({
                                     "assessed": len(assessed),
-                                    "total_concepts": 17,
+                                    "total_concepts": 19,
                                     "concepts": [{
                                         "id": c["concept_id"],
                                         "score": c["score"],

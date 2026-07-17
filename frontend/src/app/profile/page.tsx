@@ -33,6 +33,8 @@ const CONCEPT_NAMES: Record<string, string> = {
   "complex-6.2": "留数与留数定理",
   "complex-6.3": "留数在实积分中的应用",
   "complex-7.1": "共形映射与Mobius变换",
+  "complex-8.1": "傅里叶变换",
+  "complex-8.2": "拉普拉斯变换",
 };
 
 const ERROR_TYPE_LABELS: Record<string, string> = {
@@ -51,6 +53,7 @@ const CHAPTER_MAP: { label: string; concepts: string[] }[] = [
   { label: "级数展开", concepts: ["complex-5.1", "complex-5.2"] },
   { label: "留数定理", concepts: ["complex-6.1", "complex-6.2", "complex-6.3"] },
   { label: "共形映射", concepts: ["complex-7.1"] },
+  { label: "积分变换", concepts: ["complex-8.1", "complex-8.2"] },
 ];
 
 function buildRadarData(mastery: { concept_id: string; score: number }[]) {

@@ -14,6 +14,7 @@ export default function RadarChart({ data, size = 280 }: RadarProps) {
     { label: "级数展开", value: 0 },
     { label: "留数定理", value: 0 },
     { label: "共形映射", value: 0 },
+    { label: "积分变换", value: 0 },
   ];
   const cx = size / 2, cy = size / 2, r = size * 0.38;
   const n = chartData.length;
