@@ -6,9 +6,17 @@ interface RadarProps {
 }
 
 export default function RadarChart({ data, size = 280 }: RadarProps) {
-  if (data.length === 0) return null;
+  const chartData = data.length > 0 ? data : [
+    { label: "复数与复平面", value: 0 },
+    { label: "解析函数", value: 0 },
+    { label: "初等复函数", value: 0 },
+    { label: "复积分", value: 0 },
+    { label: "级数展开", value: 0 },
+    { label: "留数定理", value: 0 },
+    { label: "共形映射", value: 0 },
+  ];
   const cx = size / 2, cy = size / 2, r = size * 0.38;
-  const n = data.length;
+  const n = chartData.length;
   const angleStep = (2 * Math.PI) / n;
 
   const getPoint = (i: number, val: number) => {
@@ -30,11 +38,11 @@ export default function RadarChart({ data, size = 280 }: RadarProps) {
   });
 
   const dataPts = Array.from({ length: n }, (_, i) => {
-    const p = getPoint(i, data[i].value);
+    const p = getPoint(i, chartData[i].value);
     return `${p.x},${p.y}`;
   }).join(" ");
 
-  const labels = data.map((d, i) => {
+  const labels = chartData.map((d, i) => {
     const p = getPoint(i, 1.15);
     return (
       <text key={`label-${i}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
