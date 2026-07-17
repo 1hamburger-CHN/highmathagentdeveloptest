@@ -27,70 +27,26 @@ const changelog: ChangeEntry[] = [
   },
   {
     date: "2026-05-27",
-    title: "v2.0 — Manim 数学动画子系统",
+    title: "v2.0 — 数学动画 + 图片理解 + 持久化",
     icon: <Film className="w-4 h-4" />,
     items: [
       "上线 3 个数学动画：留数定理、共形映射、围道积分",
+      "支持图片上传分析：拍照上传数学题目，AI 识别后辅导",
       "数学公式全平台 KaTeX 渲染，告别纯文本拼凑",
       "聊天支持流式输出，逐字显示回复内容",
-    ],
-  },
-  {
-    date: "2026-05-25",
-    title: "领域校验与智能边界控制",
-    icon: <Sparkles className="w-4 h-4" />,
-    items: [
-      "资源生成增加两级领域校验：概念在复变函数知识库内直接生成，在数学领域但不在知识库则询问是否搜索，非数学概念直接拒绝",
-      "普通提问同样受领域控制：非知识库数学概念不再走苏格拉底追问，改为引导确认后生成",
-      "知识库概念匹配从字符重叠升级为 jieba 分词匹配，识别更精准（如'柯西积分公式'可匹配'Cauchy积分公式与高阶导数公式'）",
-      "修复节点 ID 泄露问题：后台 ID（complex-2.2）不再显示给用户，自动解析为可读标题",
-      "JSON 解析增强：支持 4 级兜底（直接解析、LaTeX 反斜杠修复、提取包围文本、补全截断 JSON），降低'内容为空'错误率",
-      "通用数学关键词扩充 30+ 术语（不等式/定律/引理/概率/矩阵等），准确区分数学与非数学概念",
+      "对话历史持久化：跨设备保存，刷新不丢失，支持加载/清除",
+      "知识库覆盖全部 19 个复变函数概念，自动判断概念是否在范围内",
     ],
   },
   {
     date: "2026-05-24",
-    title: "Spark 图片理解 + 前端图片上传",
-    icon: <MessageCircle className="w-4 h-4" />,
-    items: [
-      "接入星火图片理解 API（WebSocket wss://spark-api.../v2.1/image），HMAC-SHA256 鉴权",
-      "前端聊天输入框新增图片上传按钮，支持拍照/选图，base64 预览，发送前可移除",
-      "用户上传图片后，后端先调星火图片 API 分析内容，再将结果喂入苏格拉底教练继续辅导",
-      "图片在用户消息气泡内显示缩略图",
-    ],
-  },
-  {
-    date: "2026-05-24",
-    title: "上下文感知 + 学习画像进度条",
-    icon: <MessageCircle className="w-4 h-4" />,
-    items: [
-      "Safety 过滤层上下文感知：检测助手是否在提问，用户回复为合理回答时自动放行，不再拦截为无意义消息",
-      "Coach Prompt 优化：学生回答你的问题时自然承接对话，不僵硬引导回数学",
-      "聊天页新增学习画像进度条，实时显示已评估概念数 (X/17)，SSE 推送更新",
-      "思维导图修复：标签内方括号自动转全角符号，LaTeX 公式自动剥离，Mermaid 解析不再报错",
-      "分层练习题改为用户主动要求才生成，不再自动弹出",
-    ],
-  },
-  {
-    date: "2026-05-24",
-    title: "复变函数内容转向",
+    title: "学习资源生成 + 复变函数内容转向",
     icon: <BookOpen className="w-4 h-4" />,
     items: [
-      "知识库完全重写：高等数学极限与连续 → 复变函数，17 个知识节点覆盖 7 章",
-      "所有 Agent Prompt 重构：Diagnostician / Coach / Profile Builder 知识树全面更新",
-      "前端全页面文案替换：首页、聊天、画像、知识树、更新日志",
-      "Safety Pipeline 关键词和问候语适配复变函数领域",
-    ],
-  },
-  {
-    date: "2026-05-24",
-    title: "Railway 部署优化",
-    icon: <Zap className="w-4 h-4" />,
-    items: [
-      "嵌入模型切换：BGE-M3 (2GB) → MiniLM-L6-v2 (80MB)，适配 Railway 512MB 免费档",
-      "容器启动自动重建知识库索引，重启不再丢数据",
-      "索引放入后台线程，避免启动超时被健康检查 kill",
-      "ChromaDB + sentence-transformers + jieba 依赖补全",
+      "支持直接请求生成思维导图、分层练习题、教学讲义",
+      "Mermaid 思维导图支持 SVG 渲染、拖拽平移、滚轮缩放",
+      "知识库完全重写为复变函数，19 个知识节点覆盖 8 章",
+      "所有页面和 Agent 全面转向复变函数领域",
     ],
   },
   {
@@ -98,32 +54,8 @@ const changelog: ChangeEntry[] = [
     title: "LaTeX 数学公式渲染",
     icon: <Sparkles className="w-4 h-4" />,
     items: [
-      "所有 Agent 强制使用 $...$ / $$...$$ LaTeX 格式输出数学公式",
-      "前端 KaTeX 实时渲染数学符号，告别纯文本拼凑",
-      "新增 safe_json_parse 自动修复 LLM 忘记转义 LaTeX 反斜杠的问题",
-      "Streaming 和历史消息 CSS 颜色统一，不再出现紫色文本",
-    ],
-  },
-  {
-    date: "2026-05-22",
-    title: "学习资源生成系统",
-    icon: <BookOpen className="w-4 h-4" />,
-    items: [
-      "支持直接请求生成思维导图、分层练习题、教学讲义",
-      "Mermaid 思维导图支持 SVG 渲染、鼠标拖拽平移、滚轮缩放",
-      "生成思维导图后自动追问要不要详细讲解",
-      "资源内容走 Markdown 渲染，KaTeX 公式正确显示",
-    ],
-  },
-  {
-    date: "2026-05-21",
-    title: "持久化与用户系统",
-    icon: <Database className="w-4 h-4" />,
-    items: [
-      "接入 Turso (libSQL) 远程数据库，会话和画像跨设备持久化",
-      "新老用户自动识别：新用户构建学习画像，老用户加载历史对话",
-      "「加载历史对话」和「清除全部记录」按钮上线",
-      "每条消息增加「复制」按钮，支持一键复制回答",
+      "教练和资源生成的所有数学内容均使用 LaTeX 格式输出",
+      "前端 KaTeX 实时渲染，数学符号不再出现纯文本乱码",
     ],
   },
   {
@@ -131,21 +63,19 @@ const changelog: ChangeEntry[] = [
     title: "苏格拉底教练核心引擎",
     icon: <Brain className="w-4 h-4" />,
     items: [
-      "LangGraph 多智能体状态机架构：Coach / Diagnostician / Assessor / Resource Generator / Quality Gate",
-      "L0-L3 四层苏格拉底追问体系（概念讲解→复述→边界追问→反例挑战）",
-      "五类错误诊断：概念/计算/符号/逻辑/前置知识",
-      "Spark API 模型路由，质量把关自动验证数学正确性",
+      "L0-L3 四层苏格拉底追问体系（讲解→复述→边界追问→反例挑战）",
+      "五类错误诊断：概念理解、计算错误、符号使用、逻辑推理、尚未评估",
+      "学习画像页面：知识掌握度、盲区图谱",
     ],
   },
   {
     date: "2026-05-19",
-    title: "项目初始化",
+    title: "项目启动",
     icon: <Zap className="w-4 h-4" />,
     items: [
-      "FastAPI + Next.js + LangGraph 技术栈搭建",
-      "Railway + Nixpacks 自动化部署",
-      "SSE 流式对话，实时显示 Agent 处理节点",
-      "学习画像页面：知识掌握度、盲区图谱、学习行为分析",
+      "苏格拉底教练 v1.0 上线",
+      "聊天对话、学习画像、知识树浏览",
+      "SSE 流式对话，实时显示处理进度",
     ],
   },
 ];
@@ -154,12 +84,8 @@ export default function ChangelogPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50">
       <div className="max-w-3xl mx-auto px-6 py-12">
-        {/* Header */}
         <div className="mb-10">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary-600 transition-colors mb-6"
-          >
+          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary-600 transition-colors mb-6">
             <ArrowLeft className="w-4 h-4" />
             返回首页
           </Link>
@@ -170,20 +96,14 @@ export default function ChangelogPage() {
           </div>
         </div>
 
-        {/* Timeline */}
         <div className="relative">
-          {/* Vertical line */}
           <div className="absolute left-[19px] top-2 bottom-2 w-px bg-primary-200" />
-
           <div className="space-y-8">
             {changelog.map((entry, i) => (
               <div key={i} className="relative pl-12">
-                {/* Timeline dot */}
                 <div className="absolute left-[11px] top-1 w-[17px] h-[17px] rounded-full bg-primary-100 border-2 border-primary-400 flex items-center justify-center">
                   {entry.icon}
                 </div>
-
-                {/* Card */}
                 <div className="bg-white/70 rounded-xl border border-gray-100 shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-xs text-gray-400 font-mono">{entry.date}</span>
@@ -203,7 +123,6 @@ export default function ChangelogPage() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-12 pt-6 border-t border-primary-100 text-center text-xs text-gray-400">
           第十五届中国软件杯 · 科大讯飞出题
         </div>
