@@ -163,6 +163,14 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+@app.middleware("http")
+async def add_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.endswith(".mp4"):
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(generate.router, prefix="/api/generate", tags=["generate"])

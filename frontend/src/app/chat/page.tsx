@@ -60,6 +60,7 @@ export default function ChatPage() {
   const [streamingContent, setStreamingContent] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
+  const [loading, setLoading] = useState(true);
   const [debug, setDebug] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [profileProgress, setProfileProgress] = useState<{ assessed: number; total: number } | null>(null);
@@ -106,7 +107,8 @@ export default function ChatPage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
 
     // Check if there's saved history
     fetch(`${API_BASE}/api/sessions/${uid}/latest`)
@@ -511,8 +513,19 @@ export default function ChatPage() {
           </div>
         )}
 
+        {/* Loading skeleton */}
+        {loading && messages.length === 0 && !streamingContent && (
+          <div className="flex h-full flex-col items-center justify-center gap-4 px-6">
+            <div className="w-full max-w-md space-y-4">
+              <div className="h-16 rounded-xl bg-gray-200 animate-pulse" />
+              <div className="h-16 rounded-xl bg-gray-200 animate-pulse" />
+              <div className="h-16 rounded-xl bg-gray-200 animate-pulse" />
+            </div>
+          </div>
+        )}
+
         {/* Empty state */}
-        {messages.length === 0 && !streamingContent && (
+        {!loading && messages.length === 0 && !streamingContent && (
           <div className="flex h-full flex-col items-center justify-center text-gray-400 gap-3">
             <BookOpen className="w-12 h-12 text-primary-200" />
             <p className="text-lg">开始你的数学探索吧...</p>

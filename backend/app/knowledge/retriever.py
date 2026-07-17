@@ -1,3 +1,6 @@
+import hashlib
+import time
+
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 
@@ -12,6 +15,8 @@ class HybridRetriever:
     """
 
     def __init__(self):
+        self._search_cache: dict = {}
+        self._cache_ttl: int = 300  # 5 min
         self.client = chromadb.PersistentClient(
             path=settings.chroma_persist_dir,
             settings=ChromaSettings(anonymized_telemetry=False),
@@ -46,12 +51,25 @@ class HybridRetriever:
         except Exception:
             self.exercise_collection = None
 
-    def search(self, query: str, top_k: int = 5) -> list[dict]:
+    def _do_search(self, query: str, top_k: int = 5) -> list[dict]:
         try:
             results = self.collection.query(query_texts=[query], n_results=top_k)
             return self._format_results(results)
         except Exception:
             return self._keyword_fallback(query, top_k)
+
+    def search(self, query: str, top_k: int = 5) -> list[dict]:
+        cache_key = hashlib.md5(f"{query}:{top_k}".encode()).hexdigest()
+        now = time.time()
+        if cache_key in self._search_cache:
+            entry = self._search_cache[cache_key]
+            if now - entry["ts"] < self._cache_ttl:
+                return entry["results"]
+        results = self._do_search(query, top_k)
+        self._search_cache[cache_key] = {"results": results, "ts": now}
+        # Prune old entries (>cache_ttl old)
+        self._search_cache = {k: v for k, v in self._search_cache.items() if now - v["ts"] < self._cache_ttl}
+        return results
 
     def _keyword_fallback(self, query: str, top_k: int) -> list[dict]:
         """Keyword match fallback when ChromaDB is unavailable."""
