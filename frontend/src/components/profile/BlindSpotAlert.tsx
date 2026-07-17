@@ -4,7 +4,7 @@ import Link from "next/link";
 
 const ERROR_LABELS: Record<string, string> = {
   concept: "概念理解", calculation: "计算错误", symbol: "符号使用",
-  logic: "逻辑推理", prerequisite: "前置缺失",
+  logic: "逻辑推理", prerequisite: "尚未评估",
 };
 const CONCEPT_NAMES: Record<string, string> = {
   "complex-1.1": "复数定义与运算", "complex-1.2": "几何表示与棣莫弗公式",
@@ -16,6 +16,7 @@ const CONCEPT_NAMES: Record<string, string> = {
   "complex-5.2": "洛朗级数", "complex-6.1": "孤立奇点分类",
   "complex-6.2": "留数与留数定理", "complex-6.3": "留数在实积分中的应用",
   "complex-7.1": "共形映射与Mobius变换",
+  "complex-8.1": "傅里叶变换", "complex-8.2": "拉普拉斯变换",
 };
 
 interface BlindSpot { concept_id: string; error_type: string; frequency: number; }
@@ -30,26 +31,28 @@ export default function BlindSpotAlert({ spots }: { spots: BlindSpot[] }) {
         <h3 className="font-semibold text-amber-900">需要关注的盲区</h3>
       </div>
       <div className="space-y-2">
-        {sorted.slice(0, 3).map((bs, i) => (
-          <div key={i} className="flex items-center justify-between bg-white/60 rounded-lg px-3 py-2">
-            <div>
-              <span className="font-medium text-amber-800 text-sm">
-                {CONCEPT_NAMES[bs.concept_id] || bs.concept_id}
-              </span>
-              <span className="text-amber-600 text-xs ml-2">
-                · {ERROR_LABELS[bs.error_type] || bs.error_type}
-              </span>
-              {bs.frequency > 1 && (
-                <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-                  ×{bs.frequency}
+        {sorted.slice(0, 3).map((bs, i) => {
+          const name = CONCEPT_NAMES[bs.concept_id] || bs.concept_id;
+          const diagnoseUrl = `/chat?diagnose=${encodeURIComponent(name)}`;
+          return (
+            <div key={i} className="flex items-center justify-between bg-white/60 rounded-lg px-3 py-2">
+              <div>
+                <span className="font-medium text-amber-800 text-sm">{name}</span>
+                <span className="text-amber-600 text-xs ml-2">
+                  · {ERROR_LABELS[bs.error_type] || bs.error_type}
                 </span>
-              )}
+                {bs.frequency > 1 && (
+                  <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                    ×{bs.frequency}
+                  </span>
+                )}
+              </div>
+              <Link href={diagnoseUrl} className="text-xs text-primary-600 hover:underline flex items-center gap-0.5 whitespace-nowrap">
+                去诊断 <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
-            <Link href="/chat" className="text-xs text-primary-600 hover:underline flex items-center gap-0.5">
-              去练习 <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

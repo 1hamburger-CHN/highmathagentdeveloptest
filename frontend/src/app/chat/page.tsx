@@ -186,6 +186,20 @@ export default function ChatPage() {
       .catch(() => {});
   }, []);
 
+  // Auto-send diagnose request when arriving from profile blind spot
+  useEffect(() => {
+    if (!userId || !sessionId || loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const concept = params.get("diagnose");
+    if (!concept) return;
+    // Remove param from URL to prevent re-trigger on refresh
+    const url = new URL(window.location.href);
+    url.searchParams.delete("diagnose");
+    window.history.replaceState({}, "", url.toString());
+    // Auto-send
+    handleSend(`请检测我对${concept}的掌握程度`);
+  }, [userId, sessionId, loading]);
+
   // --- load saved history ---
   const handleLoadHistory = useCallback(async () => {
     if (!userId) return;
