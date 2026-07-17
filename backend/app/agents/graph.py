@@ -303,9 +303,18 @@ def _clean_animation_concept(concept: str) -> str:
 
 
 def _is_resource_request(text: str) -> bool:
-    """Check if user is explicitly asking for a learning resource."""
+    """Check if user is explicitly asking for a learning resource.
+
+    Excludes conversational follow-ups like "给我一个例子" or "能给我看看".
+    """
+    # Conversational phrases that are NOT resource requests
+    _conversational = ["给我一个例子", "给我看例子", "能给我看看", "给我看看"]
+    if any(kw in text for kw in _conversational):
+        return False
+
     resource_keywords = [
-        "生成", "帮我做", "帮我画", "帮我写", "帮我整理", "给我",
+        "生成", "帮我做", "帮我画", "帮我写", "帮我整理",
+        "给我生成", "给我做", "给我写", "给我整理",
         "思维导图", "脑图", "导图", "知识图谱",
         "讲义", "课件", "教程", "笔记", "总结", "归纳",
         "练习题", "习题", "题目", "出题", "试卷",
