@@ -1,8 +1,29 @@
 """Animation API endpoints."""
 
+from pathlib import Path
+
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/animation", tags=["animation"])
+
+
+@router.get("/list")
+async def list_animations():
+    """List rendered Manim animations."""
+    anim_dir = Path("static/animations")
+    if not anim_dir.exists():
+        return {"animations": []}
+    animations = []
+    for mp4 in sorted(anim_dir.glob("*.mp4"), key=lambda p: p.stat().st_mtime, reverse=True):
+        template_name = mp4.name.split("_")[0]
+        animations.append({
+            "name": mp4.name,
+            "url": f"/animations/{mp4.name}",
+            "template": template_name,
+            "size_kb": round(mp4.stat().st_size / 1024),
+            "created_at": mp4.stat().st_mtime,
+        })
+    return {"animations": animations}
 
 
 @router.post("/generate")
