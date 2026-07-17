@@ -5,7 +5,7 @@ import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
 import {
   Send, Loader2, Brain, BookOpen, Sparkles, History, Trash2,
   Copy, Check, Image as ImageIcon, X, ChevronDown, ChevronUp,
-  Video, FileText, MessageSquare, HelpCircle, Lightbulb, Bookmark, TrendingUp,
+  Video, FileText, MessageSquare, HelpCircle, Lightbulb, Bookmark, TrendingUp, Sigma,
 } from "lucide-react";
 
 type Message = {
@@ -107,7 +107,35 @@ export default function ChatPage() {
   const prevAssessedRef = useRef(0);
   const [showProfileToast, setShowProfileToast] = useState(false);
   const [imageData, setImageData] = useState<string | null>(null);  // base64 data URL
+  const [showSymbols, setShowSymbols] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertSymbol = (latex: string) => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const before = input.slice(0, start);
+    const after = input.slice(end);
+    const text = `$${latex}$ `;
+    setInput(before + text + after);
+    // Restore cursor after insertion
+    setTimeout(() => {
+      ta.focus();
+      const pos = start + text.length;
+      ta.setSelectionRange(pos, pos);
+    }, 0);
+  };
+
+  const MATH_SYMBOLS = [
+    { group: "算符", items: ["\\sum", "\\prod", "\\int", "\\iint", "\\oint", "\\lim", "\\partial", "\\nabla"] },
+    { group: "希腊字母", items: ["\\alpha", "\\beta", "\\gamma", "\\delta", "\\theta", "\\lambda", "\\pi", "\\sigma", "\\omega", "\\Gamma", "\\Delta", "\\Omega"] },
+    { group: "关系", items: ["=", "\\neq", "\\approx", "\\equiv", "\\leq", "\\geq", "\\to", "\\Rightarrow", "\\in", "\\subset"] },
+    { group: "集合/逻辑", items: ["\\mathbb{C}", "\\mathbb{R}", "\\mathbb{N}", "\\forall", "\\exists", "\\infty", "\\emptyset", "\\in"] },
+    { group: "括号", items: ["\\left(\\right)", "\\left[\\right]", "\\{ \\}", "|", "\\|"] },
+    { group: "常用", items: ["z_0", "z_1", "z^n", "e^{i\\theta}", "\\frac{}{}", "\\sqrt{}", "\\bar{z}", "f(z)", "\\operatorname{Res}", "\\oint_C"] },
+  ];
 
   // Collapsible reasoning state — set of message indices that are expanded
   const [expandedReasoning, setExpandedReasoning] = useState<Set<number>>(new Set());
@@ -782,7 +810,41 @@ export default function ChatPage() {
           >
             <ImageIcon className="w-5 h-5" />
           </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowSymbols(!showSymbols)}
+              disabled={streaming}
+              className={`rounded-xl border px-3 py-3 transition-colors disabled:opacity-40 ${
+                showSymbols ? "border-primary-400 bg-primary-50 text-primary-600" : "border-gray-300 text-gray-500 hover:bg-gray-50 hover:border-primary-300"
+              }`}
+              title="数学符号"
+            >
+              <Sigma className="w-5 h-5" />
+            </button>
+            {showSymbols && (
+              <div className="absolute bottom-full left-0 mb-2 bg-white rounded-2xl shadow-xl border border-gray-200 p-4 w-[420px] max-h-[320px] overflow-y-auto z-50">
+                {MATH_SYMBOLS.map((group) => (
+                  <div key={group.group} className="mb-3 last:mb-0">
+                    <p className="text-[10px] font-medium text-gray-400 uppercase mb-1.5">{group.group}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {group.items.map((sym) => (
+                        <button
+                          key={sym}
+                          onClick={() => insertSymbol(sym)}
+                          className="px-2 py-1 rounded-lg bg-gray-50 hover:bg-primary-100 hover:text-primary-700 text-xs text-gray-700 font-mono transition-colors"
+                          title={`$${sym}$`}
+                        >
+                          {sym}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
