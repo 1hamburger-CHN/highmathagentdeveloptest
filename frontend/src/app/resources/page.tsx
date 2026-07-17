@@ -19,19 +19,23 @@ const TABS = [
   { key: "reading", label: "拓展阅读", icon: BookOpen },
 ];
 
-function fixLatexEnvs(content: string): string {
-  // If content has lots of LaTeX but no display math delimiters, wrap it
-  const latexCmdCount = (content.match(/\\[a-zA-Z]{2,}/g) || []).length;
-  const hasDisplayMath = /\$\$/.test(content);
-  if (latexCmdCount > 5 && !hasDisplayMath) {
-    // Wrap the whole thing — it's clearly math content
-    return `$$\n${content}\n$$`;
+function fixLatexEnvs(content: string, rtype: string): string {
+  // For math-heavy resource types, wrap the content in $$ if needed
+  if (rtype === "exercise" || rtype === "lecture") {
+    // Remove existing $$ if any, then re-wrap cleanly
+    let c = content.replace(/\$\$/g, "");
+    // Wrap each equation block
+    c = c.replace(/\\begin\{aligned\}[\s\S]*?\\end\{aligned\}/g, (m) => `$$\n${m}\n$$`);
+    c = c.replace(/\\begin\{cases\}[\s\S]*?\\end\{cases\}/g, (m) => `$$\n${m}\n$$`);
+    // Wrap lines with LaTeX commands but no delimiters
+    c = c.split("\n").map(line => {
+      const t = line.trim();
+      if (/\$/.test(t) || !/\\[a-zA-Z]{2,}/.test(t)) return line;
+      return `$${t}$`;
+    }).join("\n");
+    return c;
   }
-  // Auto-wrap \begin...\end blocks without $$
-  let c = content;
-  c = c.replace(/(?<!\$\$)\n?(\\begin\{(aligned|cases|bmatrix|array|gathered)\})/g, "\n$$\n$1");
-  c = c.replace(/(\\end\{(aligned|cases|bmatrix|array|gathered)\})(?!\s*\$\$)/g, "$1\n$$\n");
-  return c;
+  return content;
 }
 
 const CONCEPTS = [
@@ -147,7 +151,7 @@ export default function ResourcesPage() {
                   {r.type === "mindmap" ? (
                     <MermaidBlock code={r.content} />
                   ) : (
-                    <StreamingMarkdown content={fixLatexEnvs(r.content)} />
+                    <StreamingMarkdown content={fixLatexEnvs(r.content, r.type)} />
                   )}
                   {isLong && !isExpanded && (
                     <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
