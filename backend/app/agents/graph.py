@@ -187,7 +187,7 @@ def profile_check_node(state: TutorState) -> dict[str, Any]:
             # Fall through to normal detection (pending implicitly cleared)
 
     is_direct_question = _is_direct_math_question(user_msg)
-    is_resource_request = _is_resource_request(user_msg)
+    is_resource_request = _is_resource_request(user_msg, bool(state.messages))
     is_animation_request = _is_animation_request(user_msg)
 
     # Manual animation request → skip coaching, go straight to animation
@@ -302,26 +302,36 @@ def _clean_animation_concept(concept: str) -> str:
     return concept.strip()
 
 
-def _is_resource_request(text: str) -> bool:
+def _is_resource_request(text: str, has_history: bool = False) -> bool:
     """Check if user is explicitly asking for a learning resource.
 
-    Excludes conversational follow-ups like "给我一个例子" or "能给我看看".
+    When there's conversation history, only match explicit creation requests
+    to avoid false positives from normal math discussion.
     """
     # Conversational phrases that are NOT resource requests
     _conversational = ["给我一个例子", "给我看例子", "能给我看看", "给我看看"]
     if any(kw in text for kw in _conversational):
         return False
 
-    resource_keywords = [
-        "生成", "帮我做", "帮我画", "帮我写", "帮我整理",
-        "给我生成", "给我做", "给我写", "给我整理",
-        "思维导图", "脑图", "导图", "知识图谱",
-        "讲义", "课件", "教程", "笔记", "总结", "归纳",
-        "练习题", "习题", "题目", "出题", "试卷",
-        "阅读材料", "拓展", "资料",
-        "介绍", "概述", "概览", "入门",
-    ]
-    return any(kw in text for kw in resource_keywords)
+    # Explicit creation verbs — always trigger resource generation
+    _creation_verbs = ["生成", "做", "写", "制作", "创建", "帮我生成", "给我生成", "给我做"]
+    if any(kw in text for kw in _creation_verbs):
+        return True
+
+    # Without conversation history, descriptive keywords also trigger
+    # (user is starting fresh and asking for materials)
+    if not has_history:
+        _intro_keywords = [
+            "思维导图", "脑图", "导图", "知识图谱",
+            "讲义", "课件", "教程", "笔记", "总结", "归纳",
+            "练习题", "习题", "题目", "出题", "试卷",
+            "阅读材料", "拓展", "资料",
+            "介绍", "概述", "概览", "入门",
+        ]
+        if any(kw in text for kw in _intro_keywords):
+            return True
+
+    return False
 
 
 def _is_out_of_domain_confirmation(text: str) -> bool:
