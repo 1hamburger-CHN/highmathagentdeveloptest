@@ -148,6 +148,21 @@ class ResourceGeneratorAgent(BaseAgent):
             if not concept or len(concept) < 2:
                 concept = user_request
 
+        # Strip resource type keywords from concept to get the actual topic
+        # e.g. "共形映射的思维导图" → "共形映射", "留数定理练习题" → "留数定理"
+        _resource_type_strip_patterns = [
+            r"的?(思维导图|脑图|导图|知识图谱|知识地图)$",
+            r"的?(练习题|习题|题目|试卷|练习)$",
+            r"的?(讲义|课件|教程|笔记|总结|归纳)$",
+            r"的?(阅读材料|拓展阅读|拓展|资料)$",
+            r"的?(资源|材料)$",
+            r"的?(介绍|概述|概览|入门)$",
+        ]
+        for pattern in _resource_type_strip_patterns:
+            concept = re.sub(pattern, "", concept)
+        # Also strip trailing 的/之 if they're now dangling
+        concept = re.sub(r"的$|之$", "", concept)
+
         # --- Detect resource-type-only requests (no specific concept) ---
         _resource_type_keywords = [
             "练习题", "习题", "题目", "讲义", "课件", "教程", "笔记",
