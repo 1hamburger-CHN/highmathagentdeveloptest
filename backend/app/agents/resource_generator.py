@@ -196,6 +196,7 @@ class ResourceGeneratorAgent(BaseAgent):
 
         # --- Enrich with knowledge base search results ---
         enrichment_parts = []
+        sources: list[dict] = []
         if self.retriever and concept:
             # 1. Textbook
             try:
@@ -206,6 +207,7 @@ class ResourceGeneratorAgent(BaseAgent):
                         "【教材参考】（哈工大《复变函数与积分变换》教材）\n"
                         + "\n---\n".join(passages)
                     )
+                    sources.append({"type": "textbook", "source": "哈工大《复变函数与积分变换》教材"})
             except Exception as e:
                 logger.warning(f"Textbook search failed: {e}")
 
@@ -219,6 +221,7 @@ class ResourceGeneratorAgent(BaseAgent):
                             "【讲义参考】（哈工大课堂讲义）\n"
                             + "\n---\n".join(passages)
                         )
+                        sources.append({"type": "handouts", "source": "哈工大复变课堂讲义"})
             except Exception as e:
                 logger.warning(f"Handout search failed: {e}")
 
@@ -232,6 +235,7 @@ class ResourceGeneratorAgent(BaseAgent):
                             "【习题参考】（薪火复变综合训练题库）\n"
                             + "\n---\n".join(passages)
                         )
+                        sources.append({"type": "exercises", "source": "薪火复变综合训练题库"})
             except Exception as e:
                 logger.warning(f"Exercise search failed: {e}")
 
@@ -299,7 +303,13 @@ class ResourceGeneratorAgent(BaseAgent):
         if not messages:
             messages.append({"role": "assistant", "content": "资源生成完成，但内容为空。请再试一次。"})
 
+        # Append source references to the last message
+        if sources and messages:
+            ref_lines = "\n\n---\n\n📚 **参考来源**\n" + "\n".join(f"- {s['source']}" for s in sources)
+            messages[-1]["content"] += ref_lines
+
         return {
             "generated_resources": resources,
+            "sources": sources,
             "messages": messages,
         }

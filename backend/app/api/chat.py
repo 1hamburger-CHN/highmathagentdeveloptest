@@ -204,6 +204,11 @@ async def chat_stream(payload: dict):
                                 "event": "resources",
                                 "data": json.dumps(node_output["generated_resources"], ensure_ascii=False),
                             }
+                        if node_output.get("sources"):
+                            yield {
+                                "event": "reference",
+                                "data": json.dumps({"sources": node_output["sources"]}, ensure_ascii=False),
+                            }
                     last_node_output = node_output
 
             yield {
