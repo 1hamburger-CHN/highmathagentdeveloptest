@@ -119,38 +119,18 @@ graph LR
 
 
 def _normalize_latex_delimiters(text: str) -> str:
-    """Ensure all LaTeX math has proper $ or $$ delimiters for KaTeX rendering."""
-    lines = text.split("\n")
+    """Ensure all LaTeX math has proper $ delimiters."""
     result = []
-    in_math_block = False
-    for line in lines:
-        stripped = line.strip()
-        # Already has delimiters
-        if stripped.startswith("$") or stripped.startswith("\\begin{"):
-            if stripped.startswith("\\begin{aligned}") or stripped.startswith("\\begin{cases}"):
-                result.append("$$\n" + stripped)
-                in_math_block = True
-            elif stripped.startswith("\\end{aligned}") or stripped.startswith("\\end{cases}"):
-                result.append(stripped + "\n$$")
-                in_math_block = False
-            else:
-                result.append(line)
-            continue
-        if in_math_block:
+    for line in text.split("\n"):
+        t = line.strip()
+        if not t or t.startswith("$") or t.startswith("```"):
             result.append(line)
             continue
-        # Naked LaTeX — wrap as inline or display
-        has_latex_cmd = bool(re.search(r"\\[a-zA-Z]{2,}", stripped))
-        has_dollar = "$" in stripped
-        if has_latex_cmd and not has_dollar:
-            # Display math if it has &= or starts with common display commands
-            if "&=" in stripped or stripped.startswith(("\\int", "\\sum", "\\prod", "\\oint", "\\frac")):
-                result.append(f"$$\n{stripped}\n$$")
-            else:
-                result.append(f"${stripped}$")
-        elif not has_latex_cmd and not has_dollar and stripped and len(stripped) > 3:
-            # Plain text line — might be text between equations, keep as-is
+        if "$" in t:  # already has delimiters
             result.append(line)
+            continue
+        if re.search(r"\\[a-zA-Z]{2,}|[_^]\{|\\begin\{|\\end\{", t):
+            result.append(f"${t}$")
         else:
             result.append(line)
     return "\n".join(result)

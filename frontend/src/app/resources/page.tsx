@@ -21,19 +21,22 @@ const TABS = [
 
 function fixLatexEnvs(content: string, rtype: string): string {
   if (rtype !== "exercise" && rtype !== "lecture") return content;
-  let c = content;
-  // First, remove $$ and scattered $ that break aligned/cases blocks
-  c = c.replace(/\$\$/g, "");
-  // Remove single $ that wrap individual lines (keeps inline math like $formula$)
-  c = c.replace(/^\$\s*$/gm, ""); // standalone $ lines
-  // Merge split aligned blocks: $\begin{aligned}$ → \begin{aligned}
-  c = c.replace(/\$\\begin\{aligned\}\$/g, "\\begin{aligned}");
-  c = c.replace(/\$\\end\{aligned\}\$/g, "\\end{aligned}");
-  c = c.replace(/\$\\begin\{cases\}\$/g, "\\begin{cases}");
-  c = c.replace(/\$\\end\{cases\}\$/g, "\\end{cases}");
-  // Now wrap the whole aligned/cases block in $$
-  c = c.replace(/\\begin\{aligned\}[\s\S]*?\\end\{aligned\}/g, (m) => `$$\n${m}\n$$`);
-  c = c.replace(/\\begin\{cases\}[\s\S]*?\\end\{cases\}/g, (m) => `$$\n${m}\n$$`);
+  let c = content.replace(/\$\$/g, "");
+  // Process each line
+  c = c.split("\n").map(line => {
+    const t = line.trim();
+    if (!t) return line;
+    if (t.startsWith("$") || t.startsWith("```")) return line;
+    // Already has inline delimiters
+    if (/\$[^$]+\$/.test(t)) return line;
+    // Has LaTeX commands, subscripts, superscripts, or math operators
+    const hasMath = /\\[a-zA-Z]{2,}|[_^]\{|\\begin\{|\\end\{|\\oint|\\int|\\sum|\\frac/.test(t);
+    if (hasMath) return `$${t}$`;
+    return line;
+  }).join("\n");
+  // Merge consecutive $...$ lines into one $$ block
+  c = c.replace(/(\$\n)+/g, "$$\n");
+  c = c.replace(/(\n\$)+/g, "\n$$");
   return c;
 }
 
