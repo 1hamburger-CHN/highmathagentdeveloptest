@@ -137,6 +137,7 @@ export default function ProfilePage() {
                 ) : (
                   <p className="text-sm text-gray-400 py-4 text-center">完成诊断后将显示这里</p>
                 )}
+              </div>
             </SectionCard>
 
             {/* Knowledge Heatmap */}
