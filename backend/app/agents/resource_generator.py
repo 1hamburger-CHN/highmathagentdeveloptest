@@ -256,7 +256,7 @@ class ResourceGeneratorAgent(BaseAgent):
                         "【教材参考】（哈工大《复变函数与积分变换》教材）\n"
                         + "\n---\n".join(passages)
                     )
-                    sources.append({"type": "textbook", "source": "哈工大《复变函数与积分变换》教材"})
+                    sources.append({"type": "textbook", "source": f"哈工大《复变函数与积分变换》教材 · {display_concept}", "concept": display_concept})
             except Exception as e:
                 logger.warning(f"Textbook search failed: {e}")
 
@@ -270,7 +270,7 @@ class ResourceGeneratorAgent(BaseAgent):
                             "【讲义参考】（哈工大课堂讲义）\n"
                             + "\n---\n".join(passages)
                         )
-                        sources.append({"type": "handouts", "source": "哈工大复变课堂讲义"})
+                        sources.append({"type": "handouts", "source": f"哈工大复变课堂讲义 · {display_concept}", "concept": display_concept})
             except Exception as e:
                 logger.warning(f"Handout search failed: {e}")
 
@@ -284,7 +284,7 @@ class ResourceGeneratorAgent(BaseAgent):
                             "【习题参考】（薪火复变综合训练题库）\n"
                             + "\n---\n".join(passages)
                         )
-                        sources.append({"type": "exercises", "source": "薪火复变综合训练题库"})
+                        sources.append({"type": "exercises", "source": f"薪火复变综合训练题库 · {display_concept}", "concept": display_concept})
             except Exception as e:
                 logger.warning(f"Exercise search failed: {e}")
 
@@ -356,6 +356,20 @@ class ResourceGeneratorAgent(BaseAgent):
         if sources and messages:
             ref_lines = "\n\n---\n\n📚 **参考来源**\n" + "\n".join(f"- {s['source']}" for s in sources)
             messages[-1]["content"] += ref_lines
+
+        # Persist to DB for resource center
+        import hashlib
+        uid = getattr(state, "user_id", "") or "anonymous"
+        for r in resources:
+            rtype = r.get("type", "")
+            rtitle = r.get("title", "")
+            rcontent = r.get("content", "")
+            rid = hashlib.md5(f"{uid}:{r.get('type')}:{r.get('title')}".encode()).hexdigest()[:12]
+            try:
+                from app.models.db_models import save_resource
+                save_resource(rid, uid, rtype, rtitle, rcontent, concept, json.dumps(sources, ensure_ascii=False))
+            except Exception:
+                pass
 
         return {
             "generated_resources": resources,

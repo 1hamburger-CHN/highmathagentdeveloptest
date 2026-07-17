@@ -45,6 +45,8 @@ def init_db():
         _execute_raw("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT DEFAULT '', profile_json TEXT DEFAULT '{}')")
         _execute_raw("CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT, messages_json TEXT DEFAULT '[]')")
         _execute_raw("CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)")
+        _execute_raw("CREATE TABLE IF NOT EXISTS resources (id TEXT PRIMARY KEY, user_id TEXT, type TEXT, title TEXT, content TEXT, concept_id TEXT, sources_json TEXT DEFAULT '[]', created_at TEXT)")
+        _execute_raw("CREATE INDEX IF NOT EXISTS idx_resources_user_id ON resources(user_id)")
         _available = True
         logger.info("Turso database ready")
     except Exception as e:
@@ -133,3 +135,38 @@ def delete_sessions_for_user(user_id: str) -> int:
     except Exception as e:
         logger.error(f"delete_sessions_for_user failed: {e}")
         return 0
+
+
+# --- Resource helpers ---
+
+def save_resource(resource_id: str, user_id: str, rtype: str, title: str, content: str, concept_id: str = "", sources_json: str = "[]"):
+    if not _available:
+        return
+    import datetime
+    now = datetime.datetime.utcnow().isoformat()
+    _execute(
+        "INSERT OR REPLACE INTO resources (id, user_id, type, title, content, concept_id, sources_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [resource_id, user_id, rtype, title, content, concept_id, sources_json, now],
+    )
+
+
+def list_resources(user_id: str) -> list[dict]:
+    if not _available:
+        return []
+    try:
+        result = _execute(
+            "SELECT type, title, content, concept_id, sources_json, created_at FROM resources WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
+            [user_id],
+        )
+        rows = result.get("rows", []) if result else []
+        return [
+            {
+                "type": r[0]["value"], "title": r[1]["value"], "content": r[2]["value"],
+                "concept": r[3]["value"], "sources": json.loads(r[4]["value"]) if r[4].get("value") else [],
+                "created_at": r[5]["value"],
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logger.error(f"list_resources failed: {e}")
+        return []
