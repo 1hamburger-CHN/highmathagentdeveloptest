@@ -6,6 +6,7 @@ from app.animation.templates.contour_integration import ContourIntegrationTempla
 from app.animation.templates.cr_equations import CREquationsTemplate
 from app.animation.templates.taylor_series import TaylorSeriesTemplate
 from app.animation.templates.laurent_series import LaurentSeriesTemplate
+from app.animation.templates.pole_classification import PoleClassificationTemplate
 
 ALL_TEMPLATES = [
     ResidueTheoremTemplate,
@@ -14,4 +15,5 @@ ALL_TEMPLATES = [
     CREquationsTemplate,
     TaylorSeriesTemplate,
     LaurentSeriesTemplate,
+    PoleClassificationTemplate,
 ]
