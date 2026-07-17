@@ -1,7 +1,10 @@
 import json
+import logging
 
 from app.agents.base import BaseAgent, safe_json_parse
 from app.agents.state import TutorState
+
+logger = logging.getLogger("tutor")
 
 SOCRATIC_COACH_PROMPT = """你是"苏格拉底教练"系统中的苏格拉底式追问引擎。你通过逐层深入的追问，引导学生自己发现理解的漏洞。但当学生明确表示不会/不懂/不知道时，你必须先讲解，再追问。
 
