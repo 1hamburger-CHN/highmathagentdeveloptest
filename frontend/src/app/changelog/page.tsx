@@ -12,8 +12,22 @@ interface ChangeEntry {
 
 const changelog: ChangeEntry[] = [
   {
+    date: "2026-07-17",
+    title: "v3.0 — 7 个新动画 + 画像全面升级 + 聊天体验优化",
+    icon: <Sparkles className="w-4 h-4" />,
+    items: [
+      "数学动画从 3 个扩展到 10 个，新增 C-R 方程、泰勒级数、洛朗级数、奇点分类、分支切割、黎曼球面、复平面变换",
+      "动画页面支持中文讲解面板、多视频标注示例编号、点击卡片播放",
+      "学习画像全新改版：雷达图展示 7 章掌握度、知识热力图 19 概念三色标识、盲区图谱点击去诊断",
+      "画像评分改为实际回答质量驱动——正确回答逐步加分，只看不回答不评分",
+      "资源中心上线：讲义/练习题/思维导图/拓展阅读分类浏览，生成时标注参考来源",
+      "数学符号输入面板：Σ 按钮支持积分、求和、希腊字母等符号，输入时实时预览渲染",
+      "快捷操作按钮：教练讲解后出现追问/例子/练习按钮",
+    ],
+  },
+  {
     date: "2026-05-27",
-    title: "v2.0 正式版 — Manim 数学动画子系统",
+    title: "v2.0 — Manim 数学动画子系统",
     icon: <Film className="w-4 h-4" />,
     items: [
       "基于 Manim Community v0.20.1 的模板库 + LLM 参数提取混合架构，自动生成复变函数数学动画",
@@ -156,7 +170,7 @@ export default function ChangelogPage() {
           <h1 className="text-3xl font-bold text-primary-900 mb-2">更新日志</h1>
           <p className="text-gray-500">苏格拉底教练 — 多智能体复变函数辅导系统</p>
           <div className="mt-3 inline-flex rounded-md bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">
-            v2.0
+            v3.0
           </div>
         </div>
 
