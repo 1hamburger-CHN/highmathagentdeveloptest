@@ -85,5 +85,7 @@ class TemplateSelector:
                                    "radius: float — contour radius",
             "CREquations": "function: str — complex function (e.g. \"z**2\", \"z**3\")\n"
                            "point: str — evaluation point (e.g. \"1+i\", \"0\")",
+            "TaylorSeries": "function: str — analytic function (e.g. \"exp(z)\", \"sin(z)\")\n"
+                           "terms: int — number of Taylor terms (default 5)",
         }
         return hints.get(template.template_name, "params: dict — template-specific parameters")
