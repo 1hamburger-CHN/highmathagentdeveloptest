@@ -30,14 +30,6 @@ const NODE_LABELS: Record<string, { label: string; desc: string; icon: JSX.Eleme
   quality_gate: { label: "质量把关", desc: "数学符号验证与内容安全检查", icon: <Sparkles className="w-3 h-3" /> },
 };
 
-// Status bar steps mapping
-const STEPS = [
-  { key: "diagnose", label: "诊断中", nodes: ["build_profile", "diagnose"] },
-  { key: "coach", label: "追问 L2", nodes: ["coach"] },
-  { key: "generate", label: "生成资源", nodes: ["generate"] },
-  { key: "assess", label: "评估", nodes: ["assess", "quality_gate"] },
-];
-
 // Quick action definitions for coach messages
 // Check if a coach message contains teaching content (math, explanations)
 function isTeachingMessage(msg: Message): boolean {
@@ -524,34 +516,14 @@ export default function ChatPage() {
         </div>
       </header>
 
-      {/* Status Bar — step indicator */}
-      {streaming && (
+      {/* Status Bar — shows current agent activity */}
+      {streaming && activeNode && NODE_LABELS[activeNode] && (
         <div className="border-b bg-gray-50 px-6 py-2">
-          <div className="flex items-center justify-center gap-1 max-w-xl mx-auto">
-            {STEPS.map((step, idx) => {
-              const isActive = idx === activeStepIndex;
-              const isPast = activeStepIndex >= 0 && idx < activeStepIndex;
-              return (
-                <div key={step.key} className="flex items-center gap-1">
-                  {idx > 0 && (
-                    <div className={`w-6 h-px ${isActive || isPast ? "bg-primary-400" : "bg-gray-300"}`} />
-                  )}
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary-100 text-primary-700 ring-1 ring-primary-300"
-                        : isPast
-                        ? "bg-primary-50 text-primary-500"
-                        : "bg-white text-gray-400 border border-gray-200"
-                    }`}
-                  >
-                    {isPast && <Check className="w-3 h-3" />}
-                    {isActive && <Loader2 className="w-3 h-3 animate-spin" />}
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
+          <div className="flex items-center justify-center max-w-xl mx-auto">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 ring-1 ring-primary-200">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              {NODE_LABELS[activeNode].label}
+            </span>
           </div>
         </div>
       )}
