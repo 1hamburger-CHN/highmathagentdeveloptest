@@ -643,7 +643,8 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
             user_msg = m.get("content", "").strip()
             break
     _is_question = any(c in user_msg for c in ["?", "？", "什么是", "怎么", "为何", "为什么"])
-    _is_answer = len(user_msg) < 80 and not _is_question
+    _is_new_topic = any(c in user_msg[:20] for c in ["什么是", "怎么", "为何", "为什么"])
+    _is_answer = not _is_new_topic
 
     confidence = result.get("coach_confidence", state.coach_confidence)
     concept = state.current_concept
