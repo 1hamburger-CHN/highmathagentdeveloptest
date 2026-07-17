@@ -110,15 +110,12 @@ export default function ProfilePage() {
           <div className="grid gap-6">
             {/* Knowledge Mastery */}
             <SectionCard icon={<TrendingUp className="w-5 h-5" />} title="知识掌握度">
-              {profile.knowledge_mastery?.length > 0 ? (
-                <div className="space-y-6">
-                  {/* Radar chart: chapter-level overview */}
-                  {radarData.length > 0 && (
-                    <div className="flex justify-center">
-                      <RadarChart data={radarData} />
-                    </div>
-                  )}
-                  {/* Per-concept progress bars */}
+              <div className="space-y-6">
+                {/* Radar chart: chapter-level overview */}
+                <div className="flex justify-center">
+                  <RadarChart data={radarData} />
+                </div>
+                {profile.knowledge_mastery?.length > 0 ? (
                   <div className="space-y-3">
                     {profile.knowledge_mastery.map((km) => (
                       <div key={km.concept_id} className="flex items-center gap-3">
@@ -137,10 +134,9 @@ export default function ProfilePage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              ) : (
-                <EmptyHint text="完成诊断后将显示各概念的掌握程度" />
-              )}
+                ) : (
+                  <p className="text-sm text-gray-400 py-4 text-center">完成诊断后将显示这里</p>
+                )}
             </SectionCard>
 
             {/* Knowledge Heatmap */}
