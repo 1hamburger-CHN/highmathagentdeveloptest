@@ -29,6 +29,23 @@ function formatSize(kb: number): string {
   return `${kb} KB`;
 }
 
+const TEMPLATE_NAMES: Record<string, string> = {
+  ResidueTheorem: "留数定理",
+  ConformalMapping: "共形映射",
+  ContourIntegration: "围道积分",
+  CREquations: "C-R 方程",
+  TaylorSeries: "泰勒级数",
+  LaurentSeries: "洛朗级数",
+  PoleClassification: "奇点分类",
+  BranchCut: "分支切割",
+  RiemannSphere: "黎曼球面",
+  ComplexPlaneTransform: "复平面变换",
+};
+
+function formatTemplate(template: string): string {
+  return TEMPLATE_NAMES[template] || template;
+}
+
 export default function AnimationsPage() {
   const [animations, setAnimations] = useState<Animation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +133,7 @@ export default function AnimationsPage() {
                     ) : (
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     )}
-                    <span className="font-semibold text-gray-900">{template}</span>
+                    <span className="font-semibold text-gray-900">{formatTemplate(template)}</span>
                     <span className="text-xs text-gray-400">({items.length})</span>
                   </div>
                 </button>
