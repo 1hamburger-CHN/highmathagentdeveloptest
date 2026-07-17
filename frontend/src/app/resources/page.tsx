@@ -20,22 +20,21 @@ const TABS = [
 ];
 
 function fixLatexEnvs(content: string, rtype: string): string {
-  // For math-heavy resource types, wrap the content in $$ if needed
-  if (rtype === "exercise" || rtype === "lecture") {
-    // Remove existing $$ if any, then re-wrap cleanly
-    let c = content.replace(/\$\$/g, "");
-    // Wrap each equation block
-    c = c.replace(/\\begin\{aligned\}[\s\S]*?\\end\{aligned\}/g, (m) => `$$\n${m}\n$$`);
-    c = c.replace(/\\begin\{cases\}[\s\S]*?\\end\{cases\}/g, (m) => `$$\n${m}\n$$`);
-    // Wrap lines with LaTeX commands but no delimiters
-    c = c.split("\n").map(line => {
-      const t = line.trim();
-      if (/\$/.test(t) || !/\\[a-zA-Z]{2,}/.test(t)) return line;
-      return `$${t}$`;
-    }).join("\n");
-    return c;
-  }
-  return content;
+  if (rtype !== "exercise" && rtype !== "lecture") return content;
+  let c = content;
+  // First, remove $$ and scattered $ that break aligned/cases blocks
+  c = c.replace(/\$\$/g, "");
+  // Remove single $ that wrap individual lines (keeps inline math like $formula$)
+  c = c.replace(/^\$\s*$/gm, ""); // standalone $ lines
+  // Merge split aligned blocks: $\begin{aligned}$ → \begin{aligned}
+  c = c.replace(/\$\\begin\{aligned\}\$/g, "\\begin{aligned}");
+  c = c.replace(/\$\\end\{aligned\}\$/g, "\\end{aligned}");
+  c = c.replace(/\$\\begin\{cases\}\$/g, "\\begin{cases}");
+  c = c.replace(/\$\\end\{cases\}\$/g, "\\end{cases}");
+  // Now wrap the whole aligned/cases block in $$
+  c = c.replace(/\\begin\{aligned\}[\s\S]*?\\end\{aligned\}/g, (m) => `$$\n${m}\n$$`);
+  c = c.replace(/\\begin\{cases\}[\s\S]*?\\end\{cases\}/g, (m) => `$$\n${m}\n$$`);
+  return c;
 }
 
 const CONCEPTS = [
