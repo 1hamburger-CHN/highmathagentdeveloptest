@@ -704,7 +704,7 @@ export default function ChatPage() {
                     {m.image && (
                       <img src={m.image} alt="uploaded" className="max-w-full rounded-lg mb-2 max-h-60 object-contain" />
                     )}
-                    <p className="whitespace-pre-wrap">{m.content}</p>
+                    <div className="prose prose-sm max-w-none text-white prose-p:text-white prose-strong:text-white"><StreamingMarkdown content={m.content} /></div>
                   </div>
                 )}
               </div>
