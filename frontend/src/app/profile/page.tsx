@@ -146,7 +146,6 @@ export default function ProfilePage() {
             {/* Knowledge Heatmap */}
             <SectionCard icon={<Target className="w-5 h-5" />} title="知识热力图">
                 <KnowledgeHeatmap mastery={profile.knowledge_mastery || []} />
-              )}
             </SectionCard>
 
             {/* Blind Spots */}
