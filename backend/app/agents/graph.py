@@ -496,6 +496,24 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
     # --- Progressive profile update from coaching ---
     confidence = result.get("coach_confidence", state.coach_confidence)
     concept = state.current_concept
+
+    # Resolve concept: try aliases and domain matching if not already a complex- ID
+    if concept and not concept.startswith("complex-"):
+        coach_target = result.get("current_concept", "")
+        if coach_target and coach_target.startswith("complex-"):
+            concept = coach_target
+        else:
+            resolved = _retriever.resolve_concept_name(concept)
+            if resolved != concept:
+                concept = resolved
+            else:
+                alias_title = _retriever._concept_aliases.get(concept)
+                if alias_title:
+                    for nid, ntitle in _retriever._id_to_title.items():
+                        if ntitle == alias_title:
+                            concept = nid
+                            break
+
     if concept and concept.startswith("complex-"):
         profile = dict(state.profile) if state.profile else {}
         existing_mastery = {m["concept_id"]: m for m in profile.get("knowledge_mastery", [])}

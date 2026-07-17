@@ -5,7 +5,7 @@ import StreamingMarkdown from "@/components/chat/StreamingMarkdown";
 import {
   Send, Loader2, Brain, BookOpen, Sparkles, History, Trash2,
   Copy, Check, Image as ImageIcon, X, ChevronDown, ChevronUp,
-  Video, FileText, MessageSquare, HelpCircle, Lightbulb, Bookmark,
+  Video, FileText, MessageSquare, HelpCircle, Lightbulb, Bookmark, TrendingUp,
 } from "lucide-react";
 
 type Message = {
@@ -104,6 +104,8 @@ export default function ChatPage() {
   const [debug, setDebug] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [profileProgress, setProfileProgress] = useState<{ assessed: number; total: number } | null>(null);
+  const prevAssessedRef = useRef(0);
+  const [showProfileToast, setShowProfileToast] = useState(false);
   const [imageData, setImageData] = useState<string | null>(null);  // base64 data URL
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,6 +120,17 @@ export default function ChatPage() {
       return next;
     });
   }, []);
+
+  // Show toast when profile progress increases
+  useEffect(() => {
+    if (profileProgress && profileProgress.assessed > prevAssessedRef.current) {
+      setShowProfileToast(true);
+      prevAssessedRef.current = profileProgress.assessed;
+      const timer = setTimeout(() => setShowProfileToast(false), 2500);
+      return () => clearTimeout(timer);
+    }
+    if (profileProgress) prevAssessedRef.current = profileProgress.assessed;
+  }, [profileProgress]);
 
   const handleCopy = useCallback((text: string, index: number) => {
     // navigator.clipboard requires HTTPS; fall back to execCommand for HTTP
@@ -530,6 +543,16 @@ export default function ChatPage() {
       {debug && (
         <div className="bg-yellow-100 px-4 py-1 text-xs text-yellow-800 font-mono">
           DEBUG: {debug}
+        </div>
+      )}
+
+      {/* Profile update toast */}
+      {showProfileToast && (
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-10 animate-in fade-in slide-in-from-top-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 ring-1 ring-green-300 shadow-sm">
+            <TrendingUp className="w-3 h-3" />
+            学习画像已更新
+          </span>
         </div>
       )}
 
