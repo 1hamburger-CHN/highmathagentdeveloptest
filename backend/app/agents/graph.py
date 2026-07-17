@@ -103,7 +103,7 @@ def route_coach(state: TutorState) -> str:
         return "animation_render"
     if getattr(state, "_animation_pending", False):
         return "animation_render"
-    if state.coach_confidence > 0.7:
+    if state.coach_confidence > 0.5:
         return "assess"
     # Only generate resources when user explicitly requests them
     if getattr(state, "_is_resource_request", False):
@@ -450,8 +450,38 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
     result = await _socratic_coach.run(state)
     result["current_state"] = AgentState.COACH
 
-    # Trigger animation when student is struggling with a diagnosed concept
+    # --- Progressive profile update from coaching ---
     confidence = result.get("coach_confidence", state.coach_confidence)
+    concept = state.current_concept
+    if concept and concept.startswith("complex-"):
+        profile = dict(state.profile) if state.profile else {}
+        existing_mastery = {m["concept_id"]: m for m in profile.get("knowledge_mastery", [])}
+
+        # Map coach_confidence to progressive score (0.1–0.9)
+        # Coach confidence reflects the student's current understanding level
+        progressive_score = max(0.1, min(0.9, confidence))
+
+        if concept not in existing_mastery:
+            existing_mastery[concept] = {
+                "concept_id": concept, "score": progressive_score, "confidence": 0.5
+            }
+        else:
+            # Only update if new score is higher (progress is monotonic upward)
+            existing_mastery[concept]["score"] = max(
+                existing_mastery[concept].get("score", 0), progressive_score
+            )
+            existing_mastery[concept]["confidence"] = max(
+                existing_mastery[concept].get("confidence", 0), 0.5
+            )
+
+        profile["knowledge_mastery"] = list(existing_mastery.values())
+        result["profile"] = profile
+        logger.info(
+            f"Profile updated: {concept} → score={existing_mastery[concept]['score']:.2f} "
+            f"(coach confidence={confidence:.2f})"
+        )
+
+    # Trigger animation when student is struggling with a diagnosed concept
     has_blind_spot = bool(state.blind_spots and any(
         bs.get("concept_id", "").startswith("complex-") for bs in state.blind_spots
     ))
