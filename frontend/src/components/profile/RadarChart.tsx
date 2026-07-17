@@ -53,7 +53,7 @@ export default function RadarChart({ data, size = 280 }: RadarProps) {
   });
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width={size} height={size} viewBox={`-20 -20 ${size + 40} ${size + 40}`}>
       {rings}{axes}
       <polygon points={dataPts} fill="rgba(168,85,247,0.2)" stroke="#a855f7" strokeWidth="2" />
       {labels}
