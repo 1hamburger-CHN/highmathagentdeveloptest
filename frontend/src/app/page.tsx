@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Brain, BookOpen, MessageCircle, TrendingUp, FileText } from "lucide-react";
+import { Brain, BookOpen, MessageCircle, TrendingUp, FileText, Library } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -33,6 +33,13 @@ export default function LandingPage() {
           >
             <Brain className="w-5 h-5" />
             我的画像
+          </Link>
+          <Link
+            href="/resources"
+            className="inline-flex items-center gap-2 rounded-xl border border-primary-300 px-8 py-3.5 text-lg font-semibold text-primary-700 hover:bg-primary-50 transition-colors"
+          >
+            <Library className="w-5 h-5" />
+            资源中心
           </Link>
         </div>
 
