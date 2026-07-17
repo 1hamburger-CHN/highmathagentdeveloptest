@@ -83,5 +83,7 @@ class TemplateSelector:
             "ContourIntegration": "contour: str — \"circle\" or \"semicircle\"\n"
                                    "integrand: str — the integrand function\n"
                                    "radius: float — contour radius",
+            "CREquations": "function: str — complex function (e.g. \"z**2\", \"z**3\")\n"
+                           "point: str — evaluation point (e.g. \"1+i\", \"0\")",
         }
         return hints.get(template.template_name, "params: dict — template-specific parameters")
