@@ -145,10 +145,7 @@ export default function ProfilePage() {
 
             {/* Knowledge Heatmap */}
             <SectionCard icon={<Target className="w-5 h-5" />} title="知识热力图">
-              {profile.knowledge_mastery?.length > 0 ? (
-                <KnowledgeHeatmap mastery={profile.knowledge_mastery} />
-              ) : (
-                <EmptyHint text="完成诊断后将显示知识热力图" />
+                <KnowledgeHeatmap mastery={profile.knowledge_mastery || []} />
               )}
             </SectionCard>
 
