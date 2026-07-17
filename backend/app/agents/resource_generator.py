@@ -146,6 +146,38 @@ class ResourceGeneratorAgent(BaseAgent):
             if not concept or len(concept) < 2:
                 concept = user_request
 
+        # --- Detect resource-type-only requests (no specific concept) ---
+        _resource_type_keywords = [
+            "练习题", "习题", "题目", "讲义", "课件", "教程", "笔记",
+            "思维导图", "脑图", "导图", "知识图谱", "资源", "材料",
+            "练习", "总结", "归纳", "阅读材料", "拓展阅读",
+        ]
+        _concept_is_resource_type = concept and any(kw in concept for kw in _resource_type_keywords)
+        _concept_too_vague = not concept or len(concept) < 3
+
+        if (_concept_is_resource_type or _concept_too_vague) and user_request:
+            # If we have context from prior coaching, use it
+            context_concept = state.current_concept
+            if self.retriever and context_concept:
+                context_concept = self.retriever.resolve_concept_name(context_concept)
+            if context_concept and not _concept_is_resource_type:
+                # Concept from prior coaching exists — use it directly
+                concept = context_concept
+                logger.info(f"Using prior coaching concept: '{concept}'")
+            else:
+                # No context — ask the user
+                logger.info(f"Resource type request without specific concept: '{concept}'")
+                return {
+                    "messages": [{
+                        "role": "assistant",
+                        "content": (
+                            "好的！你想针对哪个知识点生成呢？比如：\n"
+                            "- C-R 方程\n- 留数定理\n- 泰勒级数\n- 共形映射\n"
+                            "告诉我具体概念，我来为你生成。"
+                        ),
+                    }],
+                }
+
         # --- Domain validation (KB check → math check) ---
         allow_out_of_domain = getattr(state, "_allow_out_of_domain", False)
         # Resolve node IDs like "complex-2.2" to human-readable titles

@@ -39,6 +39,22 @@ const STEPS = [
 ];
 
 // Quick action definitions for coach messages
+// Check if a coach message contains teaching content (math, explanations)
+function isTeachingMessage(msg: Message): boolean {
+  if (msg.role !== "coach") return false;
+  const c = msg.content;
+  if (c.length < 50) return false; // too short to be teaching
+  // Has math, code, or explanation patterns
+  const teachingPatterns = [
+    /\$/, /\\frac/, /\\sum/, /\\int/, /\\lim/, // LaTeX math
+    /证明/, /定理/, /定义/, /公式/, /推导/, // Chinese teaching terms
+    /例如/, /比如/, /注意/, /关键/, // explanation cues
+    /```/, // code blocks (mermaid)
+    /当/, /其中/, /因此/, /所以/, /即/, // reasoning
+  ];
+  return teachingPatterns.some(p => p.test(c));
+}
+
 const QUICK_ACTIONS = [
   { label: "追问为什么", fill: "为什么？", icon: <HelpCircle className="w-3.5 h-3.5" /> },
   { label: "给我看例子", fill: "能给我一个例子吗？", icon: <Lightbulb className="w-3.5 h-3.5" /> },
@@ -234,13 +250,16 @@ export default function ChatPage() {
   }, []);
 
   // --- send message ---
-  const handleSend = async () => {
-    if ((!input.trim() && !imageData) || streaming) return;
-    const userMessage = input.trim() || "请分析这张图片";
+  const handleSend = async (overrideMessage?: string) => {
+    const msgToSend = overrideMessage || input.trim();
+    if ((!msgToSend && !imageData) || streaming) return;
+    const userMessage = msgToSend || "请分析这张图片";
     const img = imageData;
-    setInput("");
-    setImageData(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!overrideMessage) {
+      setInput("");
+      setImageData(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
 
     setMessages((prev) => [...prev, { role: "user", content: userMessage, image: img || undefined }]);
     setStreaming(true);
@@ -660,13 +679,13 @@ export default function ChatPage() {
                 </div>
               )}
 
-              {/* Quick action buttons — below coach messages */}
-              {m.role === "coach" && !streaming && (
+              {/* Quick action buttons — below teaching coach messages */}
+              {isTeachingMessage(m) && !streaming && (
                 <div className="flex gap-1.5 mt-1.5">
                   {QUICK_ACTIONS.map((action) => (
                     <button
                       key={action.label}
-                      onClick={() => setInput(action.fill)}
+                      onClick={() => handleSend(action.fill)}
                       className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs text-gray-500 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50 transition-colors"
                     >
                       {action.icon}
