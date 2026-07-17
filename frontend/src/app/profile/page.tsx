@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Brain, Target, Activity, ArrowLeft, TrendingUp, AlertTriangle } from "lucide-react";
+import { Brain, Target, ArrowLeft, TrendingUp, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import RadarChart from "@/components/profile/RadarChart";
 import KnowledgeHeatmap from "@/components/profile/KnowledgeHeatmap";
@@ -158,35 +158,6 @@ export default function ProfilePage() {
               )}
             </SectionCard>
 
-            {/* Behavior */}
-            <SectionCard icon={<Activity className="w-5 h-5" />} title="学习行为">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500">回答风格</span>
-                  <p className="font-medium text-gray-800 mt-0.5">
-                    {!profile.behavior?.response_style
-                      ? "暂无数据"
-                      : profile.behavior.response_style === "exploratory"
-                      ? "探索型"
-                      : profile.behavior.response_style === "impulsive"
-                      ? "冲动型"
-                      : "谨慎型"}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-gray-500">资源偏好</span>
-                  <p className="font-medium text-gray-800 mt-0.5">
-                    {!profile.behavior?.resource_preference
-                      ? "暂无数据"
-                      : profile.behavior.resource_preference === "visual"
-                      ? "可视化"
-                      : profile.behavior.resource_preference === "interactive"
-                      ? "互动式"
-                      : "文本型"}
-                  </p>
-                </div>
-              </div>
-            </SectionCard>
           </div>
         )}
       </div>

@@ -564,7 +564,17 @@ async def diagnose_node(state: TutorState) -> dict[str, Any]:
                     )
 
     profile["knowledge_mastery"] = list(existing_mastery.values())
-    profile["blind_spots"] = blind
+    # Normalize blind spots concept IDs before storing
+    normalized_blind = []
+    for bs in blind:
+        raw_cid = bs.get("concept_id", "")
+        normalized_cid = _normalize_concept_id(raw_cid)
+        if normalized_cid:
+            bs["concept_id"] = normalized_cid
+            normalized_blind.append(bs)
+        else:
+            logger.warning(f"Dropping blind spot with unknown ID: '{raw_cid}'")
+    profile["blind_spots"] = normalized_blind
     result["profile"] = profile
 
     return result
