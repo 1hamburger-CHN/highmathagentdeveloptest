@@ -10,7 +10,8 @@ from app.animation.templates import ALL_TEMPLATES
 class TestTemplateSelector:
     def test_match_exact_concept_id(self):
         selector = TemplateSelector(MagicMock())
-        template = selector.match("complex-6.1")
+        # complex-6.2 is unique to ResidueTheorem (complex-6.1 is also claimed by PoleClassification)
+        template = selector.match("complex-6.2")
         assert template is not None
         assert template.template_name == "ResidueTheorem"
 
@@ -37,8 +38,8 @@ class TestTemplateSelector:
         router.get_model.return_value = model
 
         selector = TemplateSelector(router)
-        template = selector.match("complex-6.1")
-        request = AnimationRequest(concept_id="complex-6.1", wrong_model="test")
+        template = selector.match("complex-6.2")
+        request = AnimationRequest(concept_id="complex-6.2", wrong_model="test")
 
         params = await selector.extract_params(template, request)
         assert params is not None
@@ -62,3 +63,11 @@ class TestTemplateSelector:
         params = await selector.extract_params(template, request)
         assert params is not None
         assert params["function"] == "z**2"
+
+    def test_new_templates_registered(self):
+        from app.animation.templates import ALL_TEMPLATES
+        template_names = {t().template_name for t in ALL_TEMPLATES}
+        expected = {"CREquations", "TaylorSeries", "LaurentSeries", "PoleClassification",
+                    "ResidueTheorem", "ConformalMapping", "ContourIntegration"}
+        missing = expected - template_names
+        assert not missing, f"Missing templates: {missing}"
