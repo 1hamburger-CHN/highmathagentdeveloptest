@@ -636,17 +636,32 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
     result["current_state"] = AgentState.COACH
 
     # --- Progressive profile update from coaching ---
+    # Only update when student is ANSWERING, not asking new questions
+    user_msg = ""
+    for m in reversed(state.messages):
+        if m.get("role") == "user":
+            user_msg = m.get("content", "").strip()
+            break
+    _is_question = any(c in user_msg for c in ["?", "？", "什么是", "怎么", "为何", "为什么"])
+    _is_answer = len(user_msg) < 80 and not _is_question
+
     confidence = result.get("coach_confidence", state.coach_confidence)
     concept = state.current_concept
 
-    # Normalize concept: LLM may output non-standard IDs
-    coach_target = result.get("current_concept", "")
-    raw_concept = concept or coach_target or ""
-    normalized_concept = _normalize_concept_id(raw_concept)
-    if normalized_concept:
-        concept = normalized_concept
+    if _is_question:
+        logger.info(f"Profile: skipping update — user is asking, not answering")
+    elif not _is_answer:
+        logger.info(f"Profile: skipping update — message too long for answer")
 
-    if concept and concept.startswith("complex-"):
+    if _is_answer and concept:
+        # Normalize concept: LLM may output non-standard IDs
+        coach_target = result.get("current_concept", "")
+        raw_concept = concept or coach_target or ""
+        normalized_concept = _normalize_concept_id(raw_concept)
+        if normalized_concept:
+            concept = normalized_concept
+
+    if _is_answer and concept and concept.startswith("complex-"):
         profile = dict(state.profile) if state.profile else {}
         existing_mastery = {m["concept_id"]: m for m in profile.get("knowledge_mastery", [])}
 
