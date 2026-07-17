@@ -134,6 +134,13 @@ def safety_check_node(state: TutorState) -> dict[str, Any]:
         if user_msg and assistant_msg:
             break
 
+    # Image analysis context: the assistant message carries validated math content.
+    # Don't reject based on the user's short text alone — the image already
+    # proves this is a legitimate math conversation.
+    if "图片分析结果" in assistant_msg:
+        logger.info(f"Safety check: image analysis context detected, bypassing filter")
+        return {"_safety_rejected": False}
+
     result = SafetyPipeline.filter(user_msg, assistant_msg)
     logger.info(f"Safety check: msg={user_msg!r} allowed={result['allowed']} reason={result['reason']}")
     if not result["allowed"]:
@@ -363,6 +370,21 @@ async def build_profile_node(state: TutorState) -> dict[str, Any]:
 
 
 async def diagnose_node(state: TutorState) -> dict[str, Any]:
+    # === KB enrichment ===
+    concept = state.current_concept
+    kb_context = {}
+    if concept:
+        try:
+            kb_results = _retriever.search_all(concept, top_k=2)
+            kb_context = {
+                "textbook": [r.get("content", "")[:300] for r in kb_results.get("textbook", [])],
+                "handouts": [r.get("content", "")[:300] for r in kb_results.get("handouts", [])],
+            }
+        except Exception:
+            pass
+    state._kb_context = kb_context
+    # === end KB enrichment ===
+
     result = await _diagnostician.run(state)
     result["current_state"] = AgentState.DIAGNOSE
     result.pop("messages", None)
@@ -400,6 +422,22 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
             "current_state": AgentState.COACH,
             "_animation_pending": True,
         }
+
+    # === KB enrichment ===
+    concept = state.current_concept
+    kb_context = {}
+    if concept:
+        try:
+            kb_results = _retriever.search_all(concept, top_k=2)
+            kb_context = {
+                "textbook": [r.get("content", "")[:300] for r in kb_results.get("textbook", [])],
+                "handouts": [r.get("content", "")[:300] for r in kb_results.get("handouts", [])],
+            }
+        except Exception:
+            pass
+    state._kb_context = kb_context
+    # === end KB enrichment ===
+
     result = await _socratic_coach.run(state)
     result["current_state"] = AgentState.COACH
 

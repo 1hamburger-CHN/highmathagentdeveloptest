@@ -46,3 +46,4 @@ class TutorState:
     _should_generate_resource: bool = False  # coach explicitly requests resource generation
     animation_resource: dict | None = None  # rendered AnimationResource
     _sse_queue: object | None = None  # asyncio.Queue for SSE heartbeat events
+    _kb_context: dict | None = None  # KB retrieval results for Coach/Diagnostician

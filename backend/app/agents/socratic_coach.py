@@ -107,6 +107,18 @@ class SocraticCoachAgent(BaseAgent):
         blind_spots = json.dumps(state.blind_spots, ensure_ascii=False)
         behavior = state.profile.get("behavior", {}) if state.profile else {}
 
+        kb_context = getattr(state, "_kb_context", {}) or {}
+        kb_text = ""
+        if kb_context:
+            textbook = kb_context.get("textbook", [])
+            handouts = kb_context.get("handouts", [])
+            if textbook:
+                kb_text += "\n## 教材参考（哈工大《复变函数与积分变换》）\n" + "\n---\n".join(textbook)
+            if handouts:
+                kb_text += "\n## 讲义参考（哈工大复变课堂讲义）\n" + "\n---\n".join(handouts)
+            if kb_text:
+                kb_text = "\n请确保你的追问基于以上教材定义，保持数学严谨性。" + kb_text
+
         user_prompt = f"""对话历史：
 {history}
 
@@ -114,6 +126,7 @@ class SocraticCoachAgent(BaseAgent):
 当前概念：{state.current_concept}
 当前层级：L{state.coach_level}
 学生风格：{behavior.get('response_style', 'cautious')}
+{kb_text}
 
 请生成下一轮追问。返回JSON。"""
 
