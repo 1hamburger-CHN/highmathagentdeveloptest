@@ -19,6 +19,18 @@ const TABS = [
   { key: "reading", label: "拓展阅读", icon: BookOpen },
 ];
 
+function fixLatexEnvs(content: string): string {
+  // Auto-wrap naked \begin{...}...\end{...} blocks with $$ delimiters
+  // LLMs sometimes output aligned/cases/etc. without wrapping them in $$
+  return content
+    .replace(/(?<!\$\$)\n?(\\begin\{aligned\})/g, "\n$$\n$1")
+    .replace(/(\\end\{aligned\})(?!\s*\$\$)/g, "$1\n$$\n")
+    .replace(/(?<!\$\$)\n?(\\begin\{cases\})/g, "\n$$\n$1")
+    .replace(/(\\end\{cases\})(?!\s*\$\$)/g, "$1\n$$\n")
+    .replace(/(?<!\$\$)\n?(\\begin\{bmatrix\})/g, "\n$$\n$1")
+    .replace(/(\\end\{bmatrix\})(?!\s*\$\$)/g, "$1\n$$\n");
+}
+
 const CONCEPTS = [
   "复数定义与运算", "C-R方程", "调和函数", "指数与对数函数",
   "复积分定义与性质", "Cauchy-Goursat定理", "Cauchy积分与高阶导数",
@@ -132,7 +144,7 @@ export default function ResourcesPage() {
                   {r.type === "mindmap" ? (
                     <MermaidBlock code={r.content} />
                   ) : (
-                    <StreamingMarkdown content={r.content} />
+                    <StreamingMarkdown content={fixLatexEnvs(r.content)} />
                   )}
                   {isLong && !isExpanded && (
                     <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
