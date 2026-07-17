@@ -1,5 +1,6 @@
 """LangGraph Supervisor state graph for the Socratic Tutor system."""
 import logging
+import re
 from typing import Any
 
 from langgraph.graph import END, StateGraph
