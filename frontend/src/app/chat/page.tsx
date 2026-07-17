@@ -856,12 +856,12 @@ export default function ChatPage() {
                     <div className="flex flex-wrap gap-1">
                       {group.items.map((sym) => (
                         <button
-                          key={sym}
-                          onClick={() => insertSymbol(sym)}
-                          className="px-2 py-1 rounded-lg bg-gray-50 hover:bg-primary-100 hover:text-primary-700 text-xs text-gray-700 font-mono transition-colors"
-                          title={`$${sym}$`}
+                          key={sym.latex}
+                          onClick={() => insertSymbol(sym.latex)}
+                          className="px-2 py-1 rounded-lg bg-gray-50 hover:bg-primary-100 hover:text-primary-700 text-sm text-gray-700 transition-colors"
+                          title={`$${sym.latex}$`}
                         >
-                          {sym}
+                          {sym.label}
                         </button>
                       ))}
                     </div>
