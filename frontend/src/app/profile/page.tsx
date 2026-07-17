@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Brain, Target, Activity, ArrowLeft, TrendingUp, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import RadarChart from "@/components/profile/RadarChart";
+import KnowledgeHeatmap from "@/components/profile/KnowledgeHeatmap";
+import BlindSpotAlert from "@/components/profile/BlindSpotAlert";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -40,6 +43,26 @@ const ERROR_TYPE_LABELS: Record<string, string> = {
   prerequisite: "前置缺失",
 };
 
+const CHAPTER_MAP: { label: string; concepts: string[] }[] = [
+  { label: "复数与复平面", concepts: ["complex-1.1", "complex-1.2", "complex-1.3"] },
+  { label: "解析函数", concepts: ["complex-2.1", "complex-2.2", "complex-2.3"] },
+  { label: "初等复函数", concepts: ["complex-3.1", "complex-3.2"] },
+  { label: "复积分", concepts: ["complex-4.1", "complex-4.2", "complex-4.3"] },
+  { label: "级数展开", concepts: ["complex-5.1", "complex-5.2"] },
+  { label: "留数定理", concepts: ["complex-6.1", "complex-6.2", "complex-6.3"] },
+  { label: "共形映射", concepts: ["complex-7.1"] },
+];
+
+function buildRadarData(mastery: { concept_id: string; score: number }[]) {
+  const scoreMap = Object.fromEntries(mastery.map((m) => [m.concept_id, m.score]));
+  return CHAPTER_MAP.map((ch) => {
+    const avg = ch.concepts.length > 0
+      ? ch.concepts.reduce((sum, cid) => sum + (scoreMap[cid] || 0), 0) / ch.concepts.length
+      : 0;
+    return { label: ch.label, value: avg };
+  });
+}
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,6 +74,11 @@ export default function ProfilePage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const radarData = useMemo(
+    () => (profile?.knowledge_mastery ? buildRadarData(profile.knowledge_mastery) : []),
+    [profile],
+  );
 
   if (loading) {
     return (
@@ -80,47 +108,51 @@ export default function ProfilePage() {
             {/* Knowledge Mastery */}
             <SectionCard icon={<TrendingUp className="w-5 h-5" />} title="知识掌握度">
               {profile.knowledge_mastery?.length > 0 ? (
-                <div className="space-y-3">
-                  {profile.knowledge_mastery.map((km) => (
-                    <div key={km.concept_id} className="flex items-center gap-3">
-                      <span className="w-32 text-sm text-gray-700 truncate">
-                        {CONCEPT_NAMES[km.concept_id] || km.concept_id}
-                      </span>
-                      <div className="flex-1 h-2.5 rounded-full bg-gray-200 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-primary-500 transition-all"
-                          style={{ width: `${km.score * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-sm text-gray-500 w-12 text-right">
-                        {Math.round(km.score * 100)}%
-                      </span>
+                <div className="space-y-6">
+                  {/* Radar chart: chapter-level overview */}
+                  {radarData.length > 0 && (
+                    <div className="flex justify-center">
+                      <RadarChart data={radarData} />
                     </div>
-                  ))}
+                  )}
+                  {/* Per-concept progress bars */}
+                  <div className="space-y-3">
+                    {profile.knowledge_mastery.map((km) => (
+                      <div key={km.concept_id} className="flex items-center gap-3">
+                        <span className="w-32 text-sm text-gray-700 truncate">
+                          {CONCEPT_NAMES[km.concept_id] || km.concept_id}
+                        </span>
+                        <div className="flex-1 h-2.5 rounded-full bg-gray-200 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-primary-500 transition-all"
+                            style={{ width: `${km.score * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm text-gray-500 w-12 text-right">
+                          {Math.round(km.score * 100)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <EmptyHint text="完成诊断后将显示各概念的掌握程度" />
               )}
             </SectionCard>
 
+            {/* Knowledge Heatmap */}
+            <SectionCard icon={<Target className="w-5 h-5" />} title="知识热力图">
+              {profile.knowledge_mastery?.length > 0 ? (
+                <KnowledgeHeatmap mastery={profile.knowledge_mastery} />
+              ) : (
+                <EmptyHint text="完成诊断后将显示知识热力图" />
+              )}
+            </SectionCard>
+
             {/* Blind Spots */}
             <SectionCard icon={<AlertTriangle className="w-5 h-5" />} title="盲区图谱">
               {profile.blind_spots?.length > 0 ? (
-                <div className="space-y-2">
-                  {profile.blind_spots.map((bs, i) => (
-                    <div key={i} className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm">
-                      <span className="font-medium text-amber-800">
-                        {CONCEPT_NAMES[bs.concept_id] || bs.concept_id}
-                      </span>
-                      <span className="text-amber-600">
-                        · {ERROR_TYPE_LABELS[bs.error_type] || bs.error_type}
-                      </span>
-                      {bs.frequency > 1 && (
-                        <span className="text-amber-400 text-xs">×{bs.frequency}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <BlindSpotAlert spots={profile.blind_spots} />
               ) : (
                 <EmptyHint text="尚未发现明显盲区" />
               )}
