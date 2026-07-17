@@ -56,10 +56,10 @@ const CHAPTER_MAP: { label: string; concepts: string[] }[] = [
 function buildRadarData(mastery: { concept_id: string; score: number }[]) {
   const scoreMap = Object.fromEntries(mastery.map((m) => [m.concept_id, m.score]));
   return CHAPTER_MAP.map((ch) => {
-    const avg = ch.concepts.length > 0
-      ? ch.concepts.reduce((sum, cid) => sum + (scoreMap[cid] || 0), 0) / ch.concepts.length
+    const max = ch.concepts.length > 0
+      ? Math.max(...ch.concepts.map((cid) => scoreMap[cid] || 0))
       : 0;
-    return { label: ch.label, value: avg };
+    return { label: ch.label, value: max };
   });
 }
 
