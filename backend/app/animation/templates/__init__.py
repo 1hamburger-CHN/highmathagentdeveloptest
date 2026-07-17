@@ -5,6 +5,7 @@ from app.animation.templates.conformal_mapping import ConformalMappingTemplate
 from app.animation.templates.contour_integration import ContourIntegrationTemplate
 from app.animation.templates.cr_equations import CREquationsTemplate
 from app.animation.templates.taylor_series import TaylorSeriesTemplate
+from app.animation.templates.laurent_series import LaurentSeriesTemplate
 
 ALL_TEMPLATES = [
     ResidueTheoremTemplate,
@@ -12,4 +13,5 @@ ALL_TEMPLATES = [
     ContourIntegrationTemplate,
     CREquationsTemplate,
     TaylorSeriesTemplate,
+    LaurentSeriesTemplate,
 ]

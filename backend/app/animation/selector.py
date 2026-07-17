@@ -87,5 +87,8 @@ class TemplateSelector:
                            "point: str — evaluation point (e.g. \"1+i\", \"0\")",
             "TaylorSeries": "function: str — analytic function (e.g. \"exp(z)\", \"sin(z)\")\n"
                            "terms: int — number of Taylor terms (default 5)",
+            "LaurentSeries": "function: str — complex function (e.g. \"1/(z*(z-1))\", \"exp(1/z)\")\n"
+                             "inner_radius: float — radius of inner exclusion circle (default 0.5)\n"
+                             "outer_radius: float — radius of outer boundary circle (default 2.0)",
         }
         return hints.get(template.template_name, "params: dict — template-specific parameters")
