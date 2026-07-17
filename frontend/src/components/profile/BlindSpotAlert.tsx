@@ -39,6 +39,11 @@ export default function BlindSpotAlert({ spots }: { spots: BlindSpot[] }) {
               <span className="text-amber-600 text-xs ml-2">
                 · {ERROR_LABELS[bs.error_type] || bs.error_type}
               </span>
+              {bs.frequency > 1 && (
+                <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                  ×{bs.frequency}
+                </span>
+              )}
             </div>
             <Link href="/chat" className="text-xs text-primary-600 hover:underline flex items-center gap-0.5">
               去练习 <ArrowRight className="w-3 h-3" />

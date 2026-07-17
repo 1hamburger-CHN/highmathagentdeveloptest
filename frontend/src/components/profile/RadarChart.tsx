@@ -6,6 +6,7 @@ interface RadarProps {
 }
 
 export default function RadarChart({ data, size = 280 }: RadarProps) {
+  if (data.length === 0) return null;
   const cx = size / 2, cy = size / 2, r = size * 0.38;
   const n = data.length;
   const angleStep = (2 * Math.PI) / n;
@@ -46,7 +47,7 @@ export default function RadarChart({ data, size = 280 }: RadarProps) {
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       {rings}{axes}
-      <polygon points={dataPts} fill="rgba(59,130,246,0.2)" stroke="#3b82f6" strokeWidth="2" />
+      <polygon points={dataPts} fill="rgba(168,85,247,0.2)" stroke="#a855f7" strokeWidth="2" />
       {labels}
     </svg>
   );
