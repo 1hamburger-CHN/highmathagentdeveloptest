@@ -436,8 +436,6 @@ export default function ChatPage() {
     }
   };
 
-  // --- compute active step index for status bar ---
-  const activeStepIndex = STEPS.findIndex((s) => activeNode && s.nodes.includes(activeNode));
 
   // --- helper to get bubble style classes ---
   const getBubbleStyle = (role: Message["role"]) => {
