@@ -129,12 +129,39 @@ export default function ChatPage() {
   };
 
   const MATH_SYMBOLS = [
-    { group: "算符", items: ["\\sum", "\\prod", "\\int", "\\iint", "\\oint", "\\lim", "\\partial", "\\nabla"] },
-    { group: "希腊字母", items: ["\\alpha", "\\beta", "\\gamma", "\\delta", "\\theta", "\\lambda", "\\pi", "\\sigma", "\\omega", "\\Gamma", "\\Delta", "\\Omega"] },
-    { group: "关系", items: ["=", "\\neq", "\\approx", "\\equiv", "\\leq", "\\geq", "\\to", "\\Rightarrow", "\\in", "\\subset"] },
-    { group: "集合/逻辑", items: ["\\mathbb{C}", "\\mathbb{R}", "\\mathbb{N}", "\\forall", "\\exists", "\\infty", "\\emptyset", "\\in"] },
-    { group: "括号", items: ["\\left(\\right)", "\\left[\\right]", "\\{ \\}", "|", "\\|"] },
-    { group: "常用", items: ["z_0", "z_1", "z^n", "e^{i\\theta}", "\\frac{}{}", "\\sqrt{}", "\\bar{z}", "f(z)", "\\operatorname{Res}", "\\oint_C"] },
+    { group: "算符", items: [
+        { label: "∑", latex: "\\sum" }, { label: "∏", latex: "\\prod" },
+        { label: "∫", latex: "\\int" }, { label: "∬", latex: "\\iint" },
+        { label: "∮", latex: "\\oint" }, { label: "lim", latex: "\\lim" },
+        { label: "∂", latex: "\\partial" }, { label: "∇", latex: "\\nabla" },
+    ]},
+    { group: "希腊字母", items: [
+        { label: "α", latex: "\\alpha" }, { label: "β", latex: "\\beta" },
+        { label: "γ", latex: "\\gamma" }, { label: "δ", latex: "\\delta" },
+        { label: "θ", latex: "\\theta" }, { label: "λ", latex: "\\lambda" },
+        { label: "π", latex: "\\pi" }, { label: "σ", latex: "\\sigma" },
+        { label: "ω", latex: "\\omega" }, { label: "Γ", latex: "\\Gamma" },
+        { label: "Δ", latex: "\\Delta" }, { label: "Ω", latex: "\\Omega" },
+    ]},
+    { group: "关系", items: [
+        { label: "≠", latex: "\\neq" }, { label: "≈", latex: "\\approx" },
+        { label: "≡", latex: "\\equiv" }, { label: "≤", latex: "\\leq" },
+        { label: "≥", latex: "\\geq" }, { label: "→", latex: "\\to" },
+        { label: "⇒", latex: "\\Rightarrow" }, { label: "∈", latex: "\\in" },
+        { label: "⊂", latex: "\\subset" },
+    ]},
+    { group: "集合", items: [
+        { label: "ℂ", latex: "\\mathbb{C}" }, { label: "ℝ", latex: "\\mathbb{R}" },
+        { label: "ℕ", latex: "\\mathbb{N}" }, { label: "∀", latex: "\\forall" },
+        { label: "∃", latex: "\\exists" }, { label: "∞", latex: "\\infty" },
+        { label: "∅", latex: "\\emptyset" },
+    ]},
+    { group: "常用", items: [
+        { label: "z₀", latex: "z_0" }, { label: "zⁿ", latex: "z^n" },
+        { label: "eⁱᶿ", latex: "e^{i\\theta}" }, { label: "z̄", latex: "\\bar{z}" },
+        { label: "∮Cf", latex: "\\oint_C" }, { label: "Res", latex: "\\operatorname{Res}" },
+        { label: "√x", latex: "\\sqrt{}" }, { label: "a/b", latex: "\\frac{}{}" },
+    ]},
   ];
 
   // Collapsible reasoning state — set of message indices that are expanded
