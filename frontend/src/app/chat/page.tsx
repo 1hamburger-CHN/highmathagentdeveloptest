@@ -527,13 +527,13 @@ export default function ChatPage() {
   const getBubbleStyle = (role: Message["role"]) => {
     switch (role) {
       case "user":
-        return "bg-primary-600 text-white";
+        return "bg-primary-600 text-white shadow-sm";
       case "system":
-        return "bg-red-50 text-red-700 text-sm";
+        return "bg-red-100 text-red-800 border border-red-200 text-sm";
       case "animation":
-        return "bg-gray-900 text-gray-100";
+        return "bg-gray-900 text-gray-100 border-t-2 border-t-indigo-400";
       case "resource":
-        return "bg-white border border-gray-200 shadow-sm";
+        return "bg-emerald-50 border border-emerald-200 shadow-sm";
       case "coach":
       default:
         return "bg-gray-100 text-gray-900 border-l-2 border-l-gray-300";

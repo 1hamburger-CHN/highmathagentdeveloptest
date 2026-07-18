@@ -185,14 +185,19 @@ async def chat_stream(payload: dict):
                                 role = msg.get("role", "assistant")
                                 plaintext = msg.get("plaintext", False)
                                 full_transcript.append({"role": role, "content": content})
+                                sse_data: dict = {
+                                    "role": role,
+                                    "content": content,
+                                    "node": node_name,
+                                    "plaintext": plaintext,
+                                }
+                                # Pass through resource/animation metadata fields
+                                for field in ("resourceType", "title"):
+                                    if msg.get(field):
+                                        sse_data[field] = msg[field]
                                 yield {
                                     "event": "message",
-                                    "data": json.dumps({
-                                        "role": role,
-                                        "content": content,
-                                        "node": node_name,
-                                        "plaintext": plaintext,
-                                    }, ensure_ascii=False),
+                                    "data": json.dumps(sse_data, ensure_ascii=False),
                                 }
                         if node_output.get("assessment_result"):
                             yield {

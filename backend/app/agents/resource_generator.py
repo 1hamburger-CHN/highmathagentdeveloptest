@@ -136,6 +136,17 @@ def _normalize_latex_delimiters(text: str) -> str:
     return "\n".join(result)
 
 
+def _resource_type_label(rtype: str) -> str:
+    """Map resource type slug to display label."""
+    return {
+        "intro": "介绍",
+        "lecture": "讲义",
+        "exercise": "练习题",
+        "mindmap": "思维导图",
+        "reading": "拓展阅读",
+    }.get(rtype, "学习资源")
+
+
 class ResourceGeneratorAgent(BaseAgent):
     def __init__(self, model_router, retriever=None):
         super().__init__("resource_generator", model_router)
@@ -357,8 +368,10 @@ class ResourceGeneratorAgent(BaseAgent):
                 else:
                     footer = ""
                 messages.append({
-                    "role": "assistant",
+                    "role": "resource",
                     "content": f"### {title}\n```mermaid\n{content}\n```\n\n{footer}",
+                    "resourceType": "思维导图",
+                    "title": title,
                 })
             elif rtype == "intro":
                 md_parts.append(f"## {title}\n\n{content}")
@@ -367,7 +380,15 @@ class ResourceGeneratorAgent(BaseAgent):
 
         if md_parts:
             text = "\n\n---\n\n".join(md_parts)
-            messages.append({"role": "assistant", "content": text})
+            # Use the first resource's type as the badge label
+            first_type = resources[0].get("type", "") if resources else ""
+            first_title = resources[0].get("title", "") if resources else ""
+            messages.append({
+                "role": "resource",
+                "content": text,
+                "resourceType": _resource_type_label(first_type),
+                "title": first_title,
+            })
 
         if not messages:
             messages.append({"role": "assistant", "content": "资源生成完成，但内容为空。请再试一次。"})
