@@ -730,6 +730,23 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
         profile["knowledge_mastery"] = list(existing_mastery.values())
         # Persist current_concept for next API call (otherwise lost between requests)
         profile["_current_concept"] = result.get("current_concept") or concept
+
+        # --- Auto-clear blind spots when mastery exceeds 90% ---
+        blind_spots = profile.get("blind_spots", [])
+        if blind_spots:
+            cleared = []
+            kept = []
+            for bs in blind_spots:
+                cid = bs.get("concept_id", "")
+                score = existing_mastery.get(cid, {}).get("score", 0) if cid else 0
+                if score >= 0.9:
+                    cleared.append(cid)
+                else:
+                    kept.append(bs)
+            if cleared:
+                profile["blind_spots"] = kept
+                logger.info(f"Blind spots cleared (mastery≥90%): {cleared}")
+
         result["profile"] = profile
         logger.info(
             f"Profile updated: {concept} → score={existing_mastery[concept]['score']:.2f} "
