@@ -25,6 +25,8 @@ def repair_latex_json(text: str) -> str:
     """
     # First: fix \\b followed by a letter — must be LaTeX, not JSON backspace
     text = re.sub(r"(?<!\\)\\b(?=[a-zA-Z])", r"\\\\b", text)
+    # \\r is JSON carriage return (0x0D) — but \\rho, \\rightarrow etc. are LaTeX
+    text = re.sub(r"(?<!\\)\\r(?=[a-zA-Z])", r"\\\\r", text)
     # Then: fix all other LaTeX commands (2+ letters after backslash)
     text = re.sub(r"(?<!\\)\\([a-zA-Z]{2,})", r"\\\\\1", text)
     return text
