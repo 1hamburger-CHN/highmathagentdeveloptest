@@ -674,32 +674,31 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
         if normalized_concept:
             concept = normalized_concept
 
+    # Analyze coach feedback for quality signals (must be defined outside if-block
+    # for animation trigger below)
+    coach_msg = result.get("messages", [{}])
+    coach_text = ""
+    if coach_msg:
+        coach_text = coach_msg[0].get("content", "") if isinstance(coach_msg, list) else ""
+    _excellent = any(kw in coach_text for kw in [
+        "完全正确", "非常准确", "很到位", "非常棒", "非常清晰",
+        "你分析得很好", "理解很透彻", "非常到位",
+    ])
+    _good = any(kw in coach_text for kw in [
+        "正确", "很好", "不错", "很好", "对了", "准确",
+        "可以", "说得对", "说得很好", "总结得很",
+    ]) and not _excellent
+    _partial = any(kw in coach_text for kw in [
+        "差不多", "接近", "再想想", "不对", "不太",
+        "不是", "不满足", "有问题", "有偏差", "不完全",
+    ])
+    _is_hint = any(kw in coach_text for kw in [
+        "提示", "试试", "再算", "换个角度",
+    ])
+
     if _is_answer and concept and concept.startswith("complex-"):
         profile = dict(state.profile) if state.profile else {}
         existing_mastery = {m["concept_id"]: m for m in profile.get("knowledge_mastery", [])}
-
-        # Score based on coach's actual feedback, not LLM's subjective confidence
-        coach_msg = result.get("messages", [{}])
-        coach_text = ""
-        if coach_msg:
-            coach_text = coach_msg[0].get("content", "") if isinstance(coach_msg, list) else ""
-
-        # Analyze coach feedback for quality signals
-        _excellent = any(kw in coach_text for kw in [
-            "完全正确", "非常准确", "很到位", "非常棒", "非常清晰",
-            "你分析得很好", "理解很透彻", "非常到位",
-        ])
-        _good = any(kw in coach_text for kw in [
-            "正确", "很好", "不错", "很好", "对了", "准确",
-            "可以", "说得对", "说得很好", "总结得很",
-        ]) and not _excellent
-        _partial = any(kw in coach_text for kw in [
-            "差不多", "接近", "再想想", "不对", "不太",
-            "不是", "不满足", "有问题", "有偏差", "不完全",
-        ])
-        _is_hint = any(kw in coach_text for kw in [
-            "提示", "试试", "再算", "换个角度",
-        ])
 
         # Determine score increment based on feedback quality
         if _excellent:
