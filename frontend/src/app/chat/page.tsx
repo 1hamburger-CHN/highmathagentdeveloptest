@@ -705,7 +705,7 @@ export default function ChatPage() {
                     )}
                   </div>
                 ) : m.role === "resource" ? (
-                  <div className="w-full max-w-[420px]">
+                  <div className={`w-full ${m.resourceType === "思维导图" ? "max-w-[90vw]" : "max-w-[600px]"}`}>
                     <div className="flex items-center gap-1.5 mb-2">
                       <Bookmark className="w-4 h-4 text-primary-500" />
                       <span className="text-xs font-medium text-primary-700">
