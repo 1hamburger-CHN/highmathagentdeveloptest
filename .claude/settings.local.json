@@ -664,7 +664,19 @@
       "Bash(npx -y bun C:/Users/31622/.claude/skills/baoyu-imagine/scripts/main.ts --batchfile batch.json --jobs 3)",
       "Bash(npx -y bun C:/Users/31622/.claude/skills/baoyu-imagine/scripts/main.ts --promptfiles prompts/01-slide-cover.md --image 01-slide-cover.png --ar 16:9)",
       "Bash(npx -y bun C:/Users/31622/.claude/skills/baoyu-slide-deck/scripts/merge-to-pptx.ts .)",
-      "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 30 2>&1\")"
+      "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 30 2>&1\")",
+      "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 40 2>&1 | grep -E 'image|spark|token|truncat|finish_reason|max_tokens|chars in'\")",
+      "Bash(scp d:/mathagentdevelop/backend/app/core/spark_image.py root@82.156.84.213:/opt/mathagent/backend/app/core/)",
+      "Bash(git commit -m 'fix: wrap \\\\begin{env}...\\\\end{env} blocks in __TRACKED_VAR__ before individual commands *)",
+      "Bash(tar --warning=no-file-changed -czf socratic-coach-source.tar.gz --exclude=.git --exclude=node_modules --exclude=.next --exclude=__pycache__ --exclude=.venv --exclude=*.pyc --exclude=out --exclude=out.tar.gz --exclude=*.tar.gz --exclude=chroma_data --exclude=.claude --exclude=.gstack --exclude=.superpowers --exclude=frontend/.env.local --exclude=slide-deck/socratic-coach/*.png --exclude=slide-deck/socratic-coach/*.pptx '--exclude=slide-deck/socratic-coach/~$*' .)",
+      "Bash(rm socratic-coach-source.tar.gz)",
+      "Bash(tar --warning=no-file-changed -czf - --exclude=.git --exclude=node_modules --exclude=.next --exclude=__pycache__ --exclude=.venv --exclude=*.pyc --exclude=out --exclude=out.tar.gz --exclude=*.tar.gz --exclude=*.zip --exclude=chroma_data --exclude=.claude --exclude=.gstack --exclude=.superpowers --exclude=frontend/.env.local --exclude=slide-deck/socratic-coach/*.png --exclude=slide-deck/socratic-coach/*.pptx '--exclude=slide-deck/socratic-coach/~$*' --exclude=.baoyu-skills .)",
+      "Bash(gzip -d)",
+      "Bash(powershell -Command 'Compress-Archive -Path @\\( *)",
+      "Bash(taskkill //F //FI \"WINDOWTITLE eq *Compress*\")",
+      "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 50 2>&1 | grep -E 'image|error|Error|exception|truncat|finish|coach|Agent\\\\['\")",
+      "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 30 2>&1 | grep -E 'Safety|safety|profile_check|coach|diagnostician|out.of.domain|not.in.domain|Agent\\\\['\")",
+      "Bash(git commit -m 'fix: coach must not call image OCR content '\\\\''你的解答'\\\\'' *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\31622\\.ssh",

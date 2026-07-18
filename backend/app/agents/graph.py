@@ -241,7 +241,7 @@ def safety_check_node(state: TutorState) -> dict[str, Any]:
     # Image analysis bypass — check messages for image context markers
     _has_image_context = (
         "图片分析结果" in assistant_msg
-        or "OCR识别结果" in str(user_msg)  # image flow embeds analysis in user message
+        or "图片OCR结果" in assistant_msg
     )
     if _has_image_context:
         logger.info(f"Safety check: image analysis context detected, bypassing filter")

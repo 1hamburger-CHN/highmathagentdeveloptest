@@ -86,15 +86,11 @@ async def chat_stream(payload: dict):
             # Feed analysis into normal coaching pipeline
             # CRITICAL: the analysis below is AI-generated OCR output, NOT the student's own work.
             # The coach must NOT say things like "你的解答" or "你给出的" about this content.
-            inner_transcript = history + [{
-                "role": "user",
-                "content": (
-                    '学生上传了一张图片，以下是图片中内容的OCR识别结果'
-                    '（注意：这是图片里的原始内容，不是学生自己写的。'
-                    '如果图片中有错误请温和地指出并纠正，直接开始教学，'
-                    '绝对不要说「你的解答」「你给出的」「你说过」这类话）：\n\n' + analysis
-                ),
-            }]
+            inner_transcript = history + [
+                {"role": "user", "content": "请帮我辅导这张图片里的内容"},
+                {"role": "assistant", "content": f"[图片OCR结果，非学生所写]\n\n{analysis}"},
+                {"role": "user", "content": "好的，请基于图片内容开始苏格拉底式辅导，直接教学，不要寒暄"},
+            ]
             accumulated = existing_profile
 
             async for event in _tutor_graph.astream(
