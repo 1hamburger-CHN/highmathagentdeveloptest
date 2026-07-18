@@ -80,9 +80,13 @@ async def chat_stream(payload: dict):
             }
 
             # Feed analysis into normal coaching pipeline
-            inner_prompt = f"学生上传了一张图片，图片内容分析如下：\n\n{analysis}\n\n学生的原始问题是：{user_message}\n\n请基于图片内容进行苏格拉底式辅导。"
+            # IMPORTANT: image analysis is system context, NOT user or assistant speech.
+            # The coach must not confuse "图片分析结果" with something the student said.
             inner_transcript = history + [{"role": "user", "content": user_message}]
-            inner_transcript.append({"role": "assistant", "content": f"图片分析结果：{analysis}"})
+            inner_transcript.append({
+                "role": "system",
+                "content": f"[系统] 以下是对学生上传图片的OCR/分析结果，仅供你参考，请勿将其当作学生说的话。图片内容：\n\n{analysis}",
+            })
             accumulated = existing_profile
 
             async for event in _tutor_graph.astream(
