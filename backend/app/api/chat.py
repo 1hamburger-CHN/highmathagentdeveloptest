@@ -70,23 +70,25 @@ async def chat_stream(payload: dict):
             analysis = await spark_image_chat(image_data, user_message)
             logger.info(f"Image analysis result: {analysis[:100]}...")
 
+            # Normalize LaTeX delimiters for KaTeX rendering
+            from app.agents.resource_generator import _normalize_latex_delimiters
+            analysis_normalized = _normalize_latex_delimiters(analysis)
+
             yield {
                 "event": "message",
                 "data": json.dumps({
                     "role": "assistant",
-                    "content": f"图片分析结果：\n\n{analysis}\n\n正在基于图片内容进行辅导...",
+                    "content": f"图片分析结果：\n\n{analysis_normalized}\n\n正在基于图片内容进行辅导...",
                     "node": "image_analysis",
                 }, ensure_ascii=False),
             }
 
             # Feed analysis into normal coaching pipeline
-            # IMPORTANT: image analysis is system context, NOT user or assistant speech.
-            # The coach must not confuse "图片分析结果" with something the student said.
-            inner_transcript = history + [{"role": "user", "content": user_message}]
-            inner_transcript.append({
-                "role": "system",
-                "content": f"[系统] 以下是对学生上传图片的OCR/分析结果，仅供你参考，请勿将其当作学生说的话。图片内容：\n\n{analysis}",
-            })
+            # Format as user message so coach knows this is material to tutor about
+            inner_transcript = history + [{
+                "role": "user",
+                "content": f"（学生上传了一张图片。图片的OCR/分析结果如下，请基于此内容进行苏格拉底式辅导，直接开始教学，不要寒暄打招呼）\n\n{analysis}",
+            }]
             accumulated = existing_profile
 
             async for event in _tutor_graph.astream(
