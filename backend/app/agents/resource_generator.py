@@ -123,7 +123,13 @@ def _normalize_latex_delimiters(text: str) -> str:
 
     Wraps bare LaTeX commands (\\frac, \\lim, etc.), superscripts/subscripts,
     and variable-expression pairs (z=0, x\\to 0) in $ delimiters.
+    Also ensures $$ display math is on its own line (remark-math requirement).
     """
+    # Pre-process: ensure $$ formulas are on their own line
+    # remark-math requires display math to start at beginning of line
+    text = re.sub(r'([^\n])\$\$', r'\1\n$$', text)  # line break before $$
+    text = re.sub(r'\$\$([^\n])', r'$$\n\1', text)  # line break after $$
+
     result = []
     for line in text.split("\n"):
         t = line.strip()
