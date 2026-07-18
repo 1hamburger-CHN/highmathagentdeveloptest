@@ -116,6 +116,7 @@ export default function ChatPage() {
   const [profileProgress, setProfileProgress] = useState<{
     assessed: number; total: number; concepts: { id: string; score: number }[];
   } | null>(null);
+  const lastProfileJsonRef = useRef("");
   const prevScoresRef = useRef<Record<string, number>>({});
   const [showProfileToast, setShowProfileToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -192,28 +193,32 @@ export default function ChatPage() {
   // Show toast when profile progress increases
   useEffect(() => {
     if (profileProgress) {
-      // Check if any concept score increased (not just new concepts)
-      const concepts = profileProgress.concepts || [];
-      let updatedName = "";
-      let maxDelta = 0;
-      for (const c of concepts) {
-        const prev = prevScoresRef.current[c.id] || 0;
-        const delta = c.score - prev;
-        if (delta > maxDelta) {
-          maxDelta = delta;
-          updatedName = TOAST_CONCEPT_NAMES[c.id] || c.id;
+      // Compare profile snapshot — show toast whenever anything changes
+      const snapshot = JSON.stringify(profileProgress.concepts || []);
+      if (snapshot !== lastProfileJsonRef.current && lastProfileJsonRef.current !== "") {
+        // Find which concept changed the most
+        const concepts = profileProgress.concepts || [];
+        let updatedName = "";
+        let maxDelta = 0;
+        for (const c of concepts) {
+          const prev = prevScoresRef.current[c.id] || 0;
+          const delta = c.score - prev;
+          if (delta > maxDelta) { maxDelta = delta; updatedName = TOAST_CONCEPT_NAMES[c.id] || c.id; }
+          prevScoresRef.current[c.id] = c.score;
         }
-        prevScoresRef.current[c.id] = c.score;
-      }
-      if (maxDelta > 0.01) {
         setToastMessage(
-          updatedName
+          updatedName && maxDelta > 0.01
             ? `${updatedName} ↑ ${Math.round(maxDelta * 100)}%`
             : "学习画像已更新",
         );
         setShowProfileToast(true);
-        const timer = setTimeout(() => setShowProfileToast(false), 2500);
+        const timer = setTimeout(() => setShowProfileToast(false), 3000);
         return () => clearTimeout(timer);
+      }
+      lastProfileJsonRef.current = snapshot;
+      // Sync scores ref even on first load
+      for (const c of (profileProgress.concepts || [])) {
+        prevScoresRef.current[c.id] = c.score;
       }
     }
   }, [profileProgress]);
