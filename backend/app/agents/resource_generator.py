@@ -119,20 +119,53 @@ graph LR
 
 
 def _normalize_latex_delimiters(text: str) -> str:
-    """Ensure all LaTeX math has proper $ delimiters."""
+    """Ensure all LaTeX math has proper $ delimiters for KaTeX rendering.
+
+    Wraps bare LaTeX commands (\\frac, \\lim, etc.), superscripts/subscripts,
+    and variable-expression pairs (z=0, x\\to 0) in $ delimiters.
+    """
     result = []
     for line in text.split("\n"):
         t = line.strip()
         if not t or t.startswith("$") or t.startswith("```"):
             result.append(line)
             continue
-        if "$" in t:  # already has delimiters
+        if "$" in t or "\\(" in t:  # already delimited
             result.append(line)
             continue
-        if re.search(r"\\[a-zA-Z]{2,}|[_^]\{|\\begin\{|\\end\{", t):
-            result.append(f"${t}$")
-        else:
-            result.append(line)
+
+        # Standalone math display line (starts with LaTeX command)
+        if re.match(r'^\\(?:lim|frac|sum|int|prod|oint|begin|end|displaystyle)', t):
+            result.append(f"$${t}$$")
+            continue
+
+        # Inline: wrap bare LaTeX commands with their braces: \frac{...}{...}, \lim_{...}, etc.
+        processed = re.sub(
+            r'(\\[a-zA-Z]{2,}(?:\{[^}]*\})+)',
+            r'$\1$', t,
+        )
+        # Wrap bare LaTeX commands without braces: \to, \neq, \bar, etc.
+        processed = re.sub(
+            r'(?<![$\\])(\\[a-zA-Z]{2,})(?![a-zA-Z{])',
+            r'$\1$', processed,
+        )
+        # Wrap superscript/subscript expressions: e^{i\theta}, x^2, z_0
+        processed = re.sub(
+            r'(?<![$\\])([a-zA-Z](?:_\{[^}]+\}|\^\{[^}]+\}|_[0-9a-zA-Z]+|\^[0-9a-zA-Z]+))',
+            r'$\1$', processed,
+        )
+        # Wrap "var = number" patterns: z=0, x=0
+        processed = re.sub(
+            r'(?<![$\w])([a-z])=(-?\d+(?:\.\d+)?)',
+            r'$\1=\2$', processed,
+        )
+        # Wrap "var \to value": x \to 0, r \to 0, z \to z_0
+        processed = re.sub(
+            r'(?<![$\w])([a-z])\s*(\\to)\s*(-?[a-zA-Z0-9_\\{}]+)',
+            r'$\1 \2 \3$', processed,
+        )
+
+        result.append(processed)
     return "\n".join(result)
 
 

@@ -450,8 +450,18 @@ def _is_resource_request(text: str, has_history: bool = False) -> bool:
     if any(kw in text for kw in _conversational):
         return False
 
-    # Explicit creation verbs — always trigger resource generation
-    _creation_verbs = ["生成", "做", "写", "制作", "创建", "帮我生成", "给我生成", "给我做"]
+    # Explicit creation verbs — trigger resource generation
+    # NOTE: "写" and "做" are too common in math answers (写出/做成).
+    # Only match them when part of explicit resource phrases.
+    _creation_verbs = ["生成", "制作", "创建", "帮我生成", "给我生成"]
+    # "做" / "写" only count with resource-related objects
+    _creation_phrases = [
+        "帮我做", "给我做", "做一个", "做个",
+        "帮我写", "给我写", "写一个", "写个",
+        "出题", "出一题", "出几题", "来一题",
+    ]
+    if any(kw in text for kw in _creation_phrases):
+        return True
     if any(kw in text for kw in _creation_verbs):
         return True
 
