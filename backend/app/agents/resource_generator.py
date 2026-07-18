@@ -134,6 +134,15 @@ def _normalize_latex_delimiters(text: str) -> str:
     text = re.sub(r'([^\n])\$\$', r'\1\n$$', text)
     text = re.sub(r'\$\$([^\n])', r'$$\n\1', text)
 
+    # Pre-process: wrap \begin{env}...\end{env} blocks in $$...$$
+    # (must happen BEFORE individual command wrapping, which would break environments)
+    text = re.sub(
+        r'(\\begin\{[a-zA-Z*]+\}.*?\\end\{[a-zA-Z*]+\})',
+        lambda m: f'$${m.group(1)}$$' if '$' not in m.group(1) else m.group(1),
+        text,
+        flags=re.DOTALL,
+    )
+
     # Split into alternating segments: [bare, $math$, bare, $math$, ...]
     parts = re.split(r'(\$[^$]+\$|\$\$[^$]+\$\$)', text)
 
@@ -147,14 +156,16 @@ def _normalize_latex_delimiters(text: str) -> str:
             continue
 
         # Bare text: wrap unescaped LaTeX commands and math patterns
-        # Only wrap if the pattern spans a complete math expression
         processed = part
         # LaTeX commands with braces: \frac{...}{...}, \lim_{...}, \operatorname{...}
+        # EXCLUDE \begin and \end — they're handled above as whole environments
         processed = re.sub(
             r'(\\[a-zA-Z]{2,}(?:\{[^{}]*\})+)',
-            r'$\1$', processed,
+            lambda m: m.group(0) if m.group(1).startswith(('\\begin', '\\end'))
+            else f'${m.group(1)}$',
+            processed,
         )
-        # Bare LaTeX commands: \to, \neq, \bar, \infty, \partial, \quad
+        # Bare LaTeX commands (exclude \begin and \end)
         processed = re.sub(
             r'(?<![$\\])(\\(?:to|neq|bar|infty|partial|quad|cdot|times|div|pm|mp|geq|leq|gg|ll|sim|approx|equiv|propto|perp|parallel|angle|triangle|forall|exists|nabla|in|notin|subset|supset|cup|cap|setminus|wedge|vee|oplus|otimes|circ|mapsto|implies|iff|ldots|cdots|vdots|ddots|alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega|mathbb|mathcal|mathfrak|mathrm|mathbf|mathit|mathsf|mathtt|operatorname|text|textbf|textit|overline|underline|hat|tilde|vec|dot|ddot|widehat|widetilde|prime|ell|hbar|imath|jmath|Re|Im|arg|det|dim|exp|gcd|hom|inf|ker|lg|lim|liminf|limsup|ln|log|max|min|Pr|sec|sin|arcsin|sinh|sup|tan|arctan|tanh|cos|arccos|cosh|cot|csc|coth|deg))(?![a-zA-Z{])',
             r'$\1$', processed,
