@@ -81,11 +81,14 @@ class DiagnosticianAgent(BaseAgent):
         except json.JSONDecodeError:
             result = {"blind_spots": [], "mastered_concepts": [], "current_level": "L1", "summary": "无法完成诊断"}
 
+        # Determine current_concept: prefer blind spot → mastered → existing
+        _diag_concept = state.current_concept
+        if result.get("blind_spots"):
+            _diag_concept = result["blind_spots"][0].get("concept_id", "") or _diag_concept
+        elif result.get("mastered_concepts"):
+            _diag_concept = result["mastered_concepts"][0] if result["mastered_concepts"] else _diag_concept
+
         return {
             "blind_spots": result.get("blind_spots", []),
-            "current_concept": (
-                result["blind_spots"][0]["concept_id"]
-                if result.get("blind_spots")
-                else state.current_concept
-            ),
+            "current_concept": _diag_concept,
         }
