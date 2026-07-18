@@ -238,7 +238,14 @@ def safety_check_node(state: TutorState) -> dict[str, Any]:
     # Image analysis context: the assistant message carries validated math content.
     # Don't reject based on the user's short text alone — the image already
     # proves this is a legitimate math conversation.
-    if "图片分析结果" in assistant_msg:
+    # Image analysis bypass — check also system messages (image context is injected as system)
+    _has_image_context = "图片分析结果" in assistant_msg
+    if not _has_image_context:
+        for m in reversed(state.messages):
+            if m.get("role") == "system" and "图片分析结果" in str(m.get("content", "")):
+                _has_image_context = True
+                break
+    if _has_image_context:
         logger.info(f"Safety check: image analysis context detected, bypassing filter")
         return {"_safety_rejected": False}
 
