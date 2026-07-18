@@ -13,7 +13,7 @@ interface Props {
 export default function StreamingMarkdown({ content }: Props) {
   return (
     <ReactMarkdown
-      remarkPlugins={[remarkMath]}
+      remarkPlugins={[[remarkMath, { singleDollarTextMath: false }]]}
       rehypePlugins={[rehypeKatex]}
       components={{
         code({ className, children, ...props }) {

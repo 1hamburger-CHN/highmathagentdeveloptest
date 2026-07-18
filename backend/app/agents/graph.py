@@ -737,13 +737,16 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
             f"(coach feedback: excellent={_excellent} good={_good} partial={_partial})"
         )
 
-    # Trigger animation when student is struggling with a diagnosed concept
+    # Trigger animation only when student is clearly struggling:
+    # coach explicitly gave up explaining AND there's a confirmed blind spot
     has_blind_spot = bool(state.blind_spots and any(
         bs.get("concept_id", "").startswith("complex-") for bs in state.blind_spots
     ))
-    if confidence < 0.3 and has_blind_spot:
+    # Only trigger if coach has LOW confidence AND feedback was negative/partial
+    _student_struggling = (_partial or _is_hint) and not _excellent and not _good
+    if confidence < 0.25 and has_blind_spot and _student_struggling:
         result["_animation_pending"] = True
-        logger.info(f"Animation triggered: confidence={confidence:.2f}")
+        logger.info(f"Animation triggered: confidence={confidence:.2f} partial={_partial}")
 
     return result
 
