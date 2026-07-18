@@ -104,7 +104,7 @@ async def spark_image_chat(
             "chat": {
                 "domain": "image",
                 "temperature": 0.5,
-                "max_tokens": 2048,
+                "max_tokens": 8192,
             }
         },
         "payload": {
