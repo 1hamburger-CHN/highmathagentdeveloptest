@@ -6,6 +6,7 @@ import Link from "next/link";
 import RadarChart from "@/components/profile/RadarChart";
 import KnowledgeHeatmap from "@/components/profile/KnowledgeHeatmap";
 import BlindSpotAlert from "@/components/profile/BlindSpotAlert";
+import ProfileSummaryCard from "@/components/profile/ProfileSummaryCard";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -13,6 +14,10 @@ type Profile = {
   knowledge_mastery: { concept_id: string; score: number; confidence: number }[];
   blind_spots: { concept_id: string; error_type: string; frequency: number }[];
   behavior: { response_style: string; resource_preference: string };
+  _stats?: {
+    total_resources: number;
+    resource_counts: Record<string, number>;
+  };
 };
 
 const CONCEPT_NAMES: Record<string, string> = {
@@ -156,6 +161,15 @@ export default function ProfilePage() {
                 <EmptyHint text="尚未发现明显盲区" />
               )}
             </SectionCard>
+
+            {/* Learning Overview — behavior + stats */}
+            <ProfileSummaryCard
+              knowledgeMastery={profile.knowledge_mastery || []}
+              blindSpots={profile.blind_spots || []}
+              behavior={profile.behavior}
+              resourceStats={profile._stats}
+              conceptNames={CONCEPT_NAMES}
+            />
 
           </div>
         )}

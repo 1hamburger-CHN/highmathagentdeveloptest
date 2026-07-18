@@ -5,7 +5,10 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.models.db_models import delete_sessions_for_user, delete_user, get_user, upsert_user
+from app.models.db_models import (
+    count_resources_by_type, count_total_resources,
+    delete_sessions_for_user, delete_user, get_user, upsert_user,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,12 @@ async def get_profile(user_id: str):
         if not user:
             return {"user_id": user_id, "profile": None, "is_new": True}
         profile_data = json.loads(user["profile_json"]) if user.get("profile_json") else {}
+        # Attach resource usage stats for the summary card
+        resource_counts = count_resources_by_type(user_id)
+        profile_data["_stats"] = {
+            "total_resources": count_total_resources(user_id),
+            "resource_counts": resource_counts,
+        }
         return {"user_id": user_id, "profile": profile_data, "is_new": False}
     except Exception as e:
         logger.error(f"Failed to load profile for {user_id}: {e}")

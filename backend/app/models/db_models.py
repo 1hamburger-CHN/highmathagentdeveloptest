@@ -192,3 +192,35 @@ def delete_all_resources(user_id: str) -> int:
     except Exception as e:
         logger.error(f"delete_all_resources failed: {e}")
         return 0
+
+
+def count_resources_by_type(user_id: str) -> dict:
+    """Count resources grouped by type for a user. Returns {type: count, ...}."""
+    if not _available:
+        return {}
+    try:
+        result = _execute(
+            "SELECT type, COUNT(*) as cnt FROM resources WHERE user_id = ? GROUP BY type",
+            [user_id],
+        )
+        rows = result.get("rows", []) if result else []
+        return {r[0]["value"]: r[1]["value"] for r in rows}
+    except Exception as e:
+        logger.error(f"count_resources_by_type failed: {e}")
+        return {}
+
+
+def count_total_resources(user_id: str) -> int:
+    """Count total resources for a user."""
+    if not _available:
+        return 0
+    try:
+        result = _execute(
+            "SELECT COUNT(*) as cnt FROM resources WHERE user_id = ?",
+            [user_id],
+        )
+        rows = result.get("rows", []) if result else []
+        return rows[0][0]["value"] if rows else 0
+    except Exception as e:
+        logger.error(f"count_total_resources failed: {e}")
+        return 0
