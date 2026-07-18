@@ -88,8 +88,12 @@ async def chat_stream(payload: dict):
             # The coach must NOT say things like "你的解答" or "你给出的" about this content.
             inner_transcript = history + [
                 {"role": "user", "content": "请帮我辅导这张图片里的内容"},
-                {"role": "assistant", "content": f"[图片OCR结果，非学生所写]\n\n{analysis}"},
-                {"role": "user", "content": "好的，请基于图片内容开始苏格拉底式辅导，直接教学，不要寒暄"},
+                {"role": "assistant", "content": f"[以下为图片OCR文字，来源于图片本身，与学生无关]\n\n{analysis}"},
+                {"role": "user", "content": (
+                    "请基于以上图片内容进行辅导。要求：1）直接讲解和纠正图片中的错误，"
+                    "不要进行苏格拉底式追问；2）不要使用「你说的」「你做的」「你写的」「你给出的」"
+                    "等将图片内容归因于我的话术；3）对图片中正确的内容予以肯定，对错误内容温和纠正并给出正确解法"
+                )},
             ]
             accumulated = existing_profile
 
