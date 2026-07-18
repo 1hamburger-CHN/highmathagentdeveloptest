@@ -89,8 +89,10 @@ async def chat_stream(payload: dict):
             inner_transcript = history + [{
                 "role": "user",
                 "content": (
-                    f"学生上传了一张图片，以下是图片中内容的OCR识别结果（注意：这是图片里的原始内容，不是学生自己写的。"
-                    f"如果图片中有错误，请温和地指出并纠正，直接开始教学，绝对不要说"你的解答""你给出的""你说过"这类话）：\n\n{analysis}"
+                    '学生上传了一张图片，以下是图片中内容的OCR识别结果'
+                    '（注意：这是图片里的原始内容，不是学生自己写的。'
+                    '如果图片中有错误请温和地指出并纠正，直接开始教学，'
+                    '绝对不要说「你的解答」「你给出的」「你说过」这类话）：\n\n' + analysis
                 ),
             }]
             accumulated = existing_profile
