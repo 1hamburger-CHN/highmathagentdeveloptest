@@ -124,7 +124,13 @@ def _normalize_latex_delimiters(text: str) -> str:
     Strategy: split text into $...$ blocks and bare-text blocks.
     Only wrap bare-text blocks — never touch already-delimited content.
     """
-    # Pre-process: ensure $$ display math starts on its own line
+    # Pre-process: convert \(...\) → $...$ and \[...\] → $$...$$
+    # (Spark/DeepSeek often output LaTeX with these delimiters, KaTeX needs $)
+    text = re.sub(r'\\\[', '$$', text)
+    text = re.sub(r'\\\]', '$$', text)
+    text = re.sub(r'\\\(', '$', text)
+    text = re.sub(r'\\\)', '$', text)
+    # Ensure $$ display math starts on its own line
     text = re.sub(r'([^\n])\$\$', r'\1\n$$', text)
     text = re.sub(r'\$\$([^\n])', r'$$\n\1', text)
 
