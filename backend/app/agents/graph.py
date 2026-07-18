@@ -35,10 +35,12 @@ try:
     for node in _nodes:
         _valid_concept_ids.add(node.id)
         _concept_id_to_title[node.id] = node.title
+    # Ensure retriever's curriculum cache is loaded before accessing _id_to_title
+    _retriever._load_curriculum_cache()
     # Build alias → ID map from retriever's aliases
     for alias, title in _retriever._concept_aliases.items():
-        if title in _retriever._id_to_title.values():
-            for nid, ntitle in _retriever._id_to_title.items():
+        if title in (_retriever._id_to_title or {}).values():
+            for nid, ntitle in (_retriever._id_to_title or {}).items():
                 if ntitle == title:
                     _alias_to_id[alias] = nid
                     break
