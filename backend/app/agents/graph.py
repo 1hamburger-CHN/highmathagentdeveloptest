@@ -717,6 +717,8 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
             )
 
         profile["knowledge_mastery"] = list(existing_mastery.values())
+        # Persist current_concept for next API call (otherwise lost between requests)
+        profile["_current_concept"] = result.get("current_concept") or concept
         result["profile"] = profile
         logger.info(
             f"Profile updated: {concept} → score={existing_mastery[concept]['score']:.2f} "

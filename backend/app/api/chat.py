@@ -143,6 +143,7 @@ async def chat_stream(payload: dict):
         current_state=AgentState.INIT,
         messages=list(full_transcript),
         profile=existing_profile,
+        current_concept=(existing_profile or {}).get("_current_concept", "") if existing_profile else "",
     )
 
     # Restore pending out-of-domain concept from previous turn
@@ -261,6 +262,7 @@ async def chat_send(payload: dict):
         current_state=AgentState.INIT,
         messages=list(full_transcript),
         profile=existing_profile,
+        current_concept=(existing_profile or {}).get("_current_concept", "") if existing_profile else "",
     )
 
     _pending = _extract_pending_out_of_domain_concept(full_transcript)
