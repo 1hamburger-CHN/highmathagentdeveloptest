@@ -47,3 +47,4 @@ class TutorState:
     animation_resource: dict | None = None  # rendered AnimationResource
     _sse_queue: object | None = None  # asyncio.Queue for SSE heartbeat events
     _kb_context: dict | None = None  # KB retrieval results for Coach/Diagnostician
+    _lecture_mode: bool = False  # image analysis: explain directly, no Socratic questions

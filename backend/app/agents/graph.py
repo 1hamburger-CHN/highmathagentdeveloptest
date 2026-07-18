@@ -634,6 +634,12 @@ async def coach_node(state: TutorState) -> dict[str, Any]:
             "_animation_pending": True,
         }
 
+    # Image analysis lecture mode — explain, correct errors, don't question
+    if getattr(state, "_lecture_mode", False):
+        result = await _socratic_coach.run_lecture(state)
+        result["current_state"] = AgentState.COACH
+        return result
+
     # === KB enrichment ===
     concept = state.current_concept
     kb_context = {}

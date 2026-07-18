@@ -104,6 +104,7 @@ async def chat_stream(payload: dict):
                     current_state=AgentState.INIT,
                     messages=inner_transcript,
                     profile=existing_profile,
+                    _lecture_mode=True,  # image requests: explain, don't question
                 ),
                 stream_mode="updates",
             ):

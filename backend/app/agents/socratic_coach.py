@@ -165,3 +165,40 @@ class SocraticCoachAgent(BaseAgent):
             "_should_generate_resource": result.get("should_generate_resource", False),
             "messages": [{"role": "assistant", "content": result.get("message", "")}],
         }
+
+    async def run_lecture(self, state: TutorState) -> dict:
+        """Lecture mode for image analysis — explain, correct errors, NO Socratic questions."""
+        history = json.dumps(state.messages[-6:] if state.messages else [], ensure_ascii=False)
+
+        system = """你是复变函数辅导专家。学生上传了一张图片，你需要基于图片的OCR内容进行讲解。
+
+核心规则：
+1. 直接讲解和纠正图片中的错误，绝对不要进行苏格拉底式追问
+2. 绝对不要使用「你说的」「你做的」「你写的」「你给出的」「你的解答」等话术
+3. 图片OCR内容来自图片本身，不是学生写的——用「图片中显示」「图片里提到」等中性表述
+4. 对图片中正确的内容予以肯定，对错误内容温和纠正并给出正确解法
+5. 讲解要清晰、严谨、有条理"""
+
+        user_prompt = f"""对话历史（最后的assistant消息包含图片OCR内容）：
+{history}
+
+请直接讲解，给出完整的分析和正确解法。返回JSON。"""
+
+        response = await self.generate(system, user_prompt)
+        try:
+            result = safe_json_parse(response)
+        except json.JSONDecodeError:
+            result = {
+                "message": response if isinstance(response, str) else "抱歉，图片分析遇到问题，请再试一次。",
+                "target_concept": "",
+                "confidence": 0.5,
+                "should_assess": False,
+            }
+
+        return {
+            "coach_level": 0,
+            "coach_confidence": 0.7,
+            "current_concept": result.get("target_concept", state.current_concept),
+            "_should_generate_resource": False,
+            "messages": [{"role": "assistant", "content": result.get("message", "")}],
+        }
