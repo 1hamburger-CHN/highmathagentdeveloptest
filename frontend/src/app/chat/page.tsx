@@ -30,6 +30,16 @@ const NODE_LABELS: Record<string, { label: string; desc: string; icon: JSX.Eleme
   quality_gate: { label: "质量把关", desc: "数学符号验证与内容安全检查", icon: <Sparkles className="w-3 h-3" /> },
 };
 
+const TOAST_CONCEPT_NAMES: Record<string, string> = {
+  "complex-1.1": "复数运算", "complex-1.2": "几何表示", "complex-1.3": "n次方根",
+  "complex-2.1": "极限与连续", "complex-2.2": "C-R方程", "complex-2.3": "调和函数",
+  "complex-3.1": "指数与对数", "complex-3.2": "幂函数与三角",
+  "complex-4.1": "复积分", "complex-4.2": "Cauchy定理", "complex-4.3": "积分公式",
+  "complex-5.1": "泰勒级数", "complex-5.2": "洛朗级数",
+  "complex-6.1": "奇点分类", "complex-6.2": "留数定理", "complex-6.3": "实积分应用",
+  "complex-7.1": "共形映射",
+};
+
 // Quick action definitions for coach messages
 // Check if a coach message contains teaching content (math, explanations)
 function isTeachingMessage(msg: Message): boolean {
@@ -103,9 +113,12 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [debug, setDebug] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [profileProgress, setProfileProgress] = useState<{ assessed: number; total: number } | null>(null);
-  const prevAssessedRef = useRef(0);
+  const [profileProgress, setProfileProgress] = useState<{
+    assessed: number; total: number; concepts: { id: string; score: number }[];
+  } | null>(null);
+  const prevScoresRef = useRef<Record<string, number>>({});
   const [showProfileToast, setShowProfileToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const [imageData, setImageData] = useState<string | null>(null);  // base64 data URL
   const [showSymbols, setShowSymbols] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -178,13 +191,31 @@ export default function ChatPage() {
 
   // Show toast when profile progress increases
   useEffect(() => {
-    if (profileProgress && profileProgress.assessed > prevAssessedRef.current) {
-      setShowProfileToast(true);
-      prevAssessedRef.current = profileProgress.assessed;
-      const timer = setTimeout(() => setShowProfileToast(false), 2500);
-      return () => clearTimeout(timer);
+    if (profileProgress) {
+      // Check if any concept score increased (not just new concepts)
+      const concepts = profileProgress.concepts || [];
+      let updatedName = "";
+      let maxDelta = 0;
+      for (const c of concepts) {
+        const prev = prevScoresRef.current[c.id] || 0;
+        const delta = c.score - prev;
+        if (delta > maxDelta) {
+          maxDelta = delta;
+          updatedName = TOAST_CONCEPT_NAMES[c.id] || c.id;
+        }
+        prevScoresRef.current[c.id] = c.score;
+      }
+      if (maxDelta > 0.01) {
+        setToastMessage(
+          updatedName
+            ? `${updatedName} ↑ ${Math.round(maxDelta * 100)}%`
+            : "学习画像已更新",
+        );
+        setShowProfileToast(true);
+        const timer = setTimeout(() => setShowProfileToast(false), 2500);
+        return () => clearTimeout(timer);
+      }
     }
-    if (profileProgress) prevAssessedRef.current = profileProgress.assessed;
   }, [profileProgress]);
 
   const handleCopy = useCallback((text: string, index: number) => {
@@ -223,7 +254,7 @@ export default function ChatPage() {
           const km = (data.profile as Record<string, unknown>).knowledge_mastery as Array<{ score: number }> | undefined;
           if (km) {
             const assessed = km.filter((c) => c.score > 0).length;
-            setProfileProgress({ assessed, total: 19 });
+            setProfileProgress({ assessed, total: 19, concepts: [] });
           }
         }
       })
@@ -449,9 +480,11 @@ export default function ChatPage() {
     }
     // Profile progress update
     if (data.assessed !== undefined) {
+      const concepts = (data.concepts as Array<{ id: string; score: number }>) || [];
       setProfileProgress({
         assessed: data.assessed as number,
         total: data.total_concepts as number,
+        concepts,
       });
     }
     // Rationale (reasoning process) for coach messages
@@ -501,10 +534,13 @@ export default function ChatPage() {
       // Persist updated profile from backend
       if (data.profile) {
         setProfile(data.profile as Record<string, unknown>);
-        const km = (data.profile as Record<string, unknown>).knowledge_mastery as Array<{ score: number }> | undefined;
+        const km = (data.profile as Record<string, unknown>).knowledge_mastery as Array<{ concept_id: string; score: number }> | undefined;
         if (km) {
           const assessed = km.filter((c) => c.score > 0).length;
-          setProfileProgress({ assessed, total: 19 });
+          const concepts = assessed > 0
+            ? km.filter(c => c.score > 0).map(c => ({ id: c.concept_id, score: c.score }))
+            : [];
+          setProfileProgress({ assessed, total: 19, concepts });
         }
       }
       setDebug("");
@@ -624,7 +660,7 @@ export default function ChatPage() {
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-10 animate-in fade-in slide-in-from-top-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 ring-1 ring-green-300 shadow-sm">
             <TrendingUp className="w-3 h-3" />
-            学习画像已更新
+            {toastMessage || "学习画像已更新"}
           </span>
         </div>
       )}
