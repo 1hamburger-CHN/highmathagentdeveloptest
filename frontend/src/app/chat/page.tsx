@@ -684,7 +684,7 @@ export default function ChatPage() {
           >
             <div className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-3 break-words overflow-x-auto ${getBubbleStyle(m.role)}`}
+                className={`${m.role === "resource" || m.role === "animation" ? "max-w-[92%]" : "max-w-[75%]"} rounded-2xl px-4 py-3 break-words overflow-x-auto ${getBubbleStyle(m.role)}`}
               >
                 {m.role === "animation" ? (
                   <div className="w-full max-w-[400px]">
@@ -705,7 +705,7 @@ export default function ChatPage() {
                     )}
                   </div>
                 ) : m.role === "resource" ? (
-                  <div className={`w-full ${m.resourceType === "思维导图" ? "max-w-[90vw]" : "max-w-[600px]"}`}>
+                  <div className="w-full">
                     <div className="flex items-center gap-1.5 mb-2">
                       <Bookmark className="w-4 h-4 text-primary-500" />
                       <span className="text-xs font-medium text-primary-700">

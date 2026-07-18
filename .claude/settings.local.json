@@ -653,7 +653,18 @@
       "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 60 2>&1 | grep -i 'resource\\\\|generat\\\\|_is_resource\\\\|写\\\\|出题\\\\|做个'\")",
       "Bash(ssh root@82.156.84.213 \"docker ps --format '{{.Names}} {{.Status}}' && docker logs mathagent-backend-1 --tail 5 2>&1\")",
       "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 30 2>&1 | grep -i 'profile_progress\\\\|Profile updated\\\\|coach feedback'\")",
-      "Bash(ssh root@82.156.84.213 \"docker exec mathagent-frontend-1 sh -c 'rm -rf /usr/share/nginx/html/_next /usr/share/nginx/html/*.html /usr/share/nginx/html/*.txt' && cd /tmp && tar -xzf out.tar.gz && docker cp out/. mathagent-frontend-1:/usr/share/nginx/html/\")"
+      "Bash(ssh root@82.156.84.213 \"docker exec mathagent-frontend-1 sh -c 'rm -rf /usr/share/nginx/html/_next /usr/share/nginx/html/*.html /usr/share/nginx/html/*.txt' && cd /tmp && tar -xzf out.tar.gz && docker cp out/. mathagent-frontend-1:/usr/share/nginx/html/\")",
+      "WebFetch(domain:skills.sh)",
+      "WebFetch(domain:github.com)",
+      "Read(//c/Users/31622/**)",
+      "Read(//c/Users/31622/.claude/skills/baoyu-slide-deck/references/**)",
+      "Read(//c/Users/31622/.claude/skills/baoyu-slide-deck/references/styles/**)",
+      "Bash(mkdir -p \"$HOME/.baoyu-skills/baoyu-imagine\" && echo \"done\")",
+      "Bash(set DASHSCOPE_API_KEY=sk-26dd6a85694f42b8aabe0f4a53293151)",
+      "Bash(npx -y bun C:/Users/31622/.claude/skills/baoyu-imagine/scripts/main.ts --batchfile batch.json --jobs 3)",
+      "Bash(npx -y bun C:/Users/31622/.claude/skills/baoyu-imagine/scripts/main.ts --promptfiles prompts/01-slide-cover.md --image 01-slide-cover.png --ar 16:9)",
+      "Bash(npx -y bun C:/Users/31622/.claude/skills/baoyu-slide-deck/scripts/merge-to-pptx.ts .)",
+      "Bash(ssh root@82.156.84.213 \"docker logs mathagent-backend-1 --tail 30 2>&1\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\31622\\.ssh",
@@ -661,7 +672,8 @@
       "C:\\Users\\31622\\Desktop\\112",
       "d:\\饰品监控",
       "D:\\复变函数智能体-可执行",
-      "D:\\"
+      "D:\\",
+      "C:\\Users\\31622\\.baoyu-skills"
     ]
   }
 }
