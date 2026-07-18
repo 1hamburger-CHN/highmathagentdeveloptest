@@ -119,60 +119,50 @@ graph LR
 
 
 def _normalize_latex_delimiters(text: str) -> str:
-    """Ensure all LaTeX math has proper $ delimiters for KaTeX rendering.
+    """Ensure LaTeX math has proper $ delimiters for KaTeX rendering.
 
-    Wraps bare LaTeX commands (\\frac, \\lim, etc.), superscripts/subscripts,
-    and variable-expression pairs (z=0, x\\to 0) in $ delimiters.
-    Also ensures $$ display math is on its own line (remark-math requirement).
+    Strategy: split text into $...$ blocks and bare-text blocks.
+    Only wrap bare-text blocks — never touch already-delimited content.
     """
-    # Pre-process: ensure $$ formulas are on their own line
-    # remark-math requires display math to start at beginning of line
-    text = re.sub(r'([^\n])\$\$', r'\1\n$$', text)  # line break before $$
-    text = re.sub(r'\$\$([^\n])', r'$$\n\1', text)  # line break after $$
+    # Pre-process: ensure $$ display math starts on its own line
+    text = re.sub(r'([^\n])\$\$', r'\1\n$$', text)
+    text = re.sub(r'\$\$([^\n])', r'$$\n\1', text)
+
+    # Split into alternating segments: [bare, $math$, bare, $math$, ...]
+    parts = re.split(r'(\$[^$]+\$|\$\$[^$]+\$\$)', text)
 
     result = []
-    for line in text.split("\n"):
-        t = line.strip()
-        if not t or t.startswith("$") or t.startswith("```"):
-            result.append(line)
+    for part in parts:
+        if not part:
             continue
-        if "$" in t or "\\(" in t:  # already delimited
-            result.append(line)
-            continue
-
-        # Standalone math display line (starts with LaTeX command)
-        if re.match(r'^\\(?:lim|frac|sum|int|prod|oint|begin|end|displaystyle)', t):
-            result.append(f"$${t}$$")
+        # Already-delimited math — leave as-is
+        if part.startswith("$"):
+            result.append(part)
             continue
 
-        # Inline: wrap bare LaTeX commands with their braces: \frac{...}{...}, \lim_{...}, etc.
+        # Bare text: wrap unescaped LaTeX commands and math patterns
+        # Only wrap if the pattern spans a complete math expression
+        processed = part
+        # LaTeX commands with braces: \frac{...}{...}, \lim_{...}, \operatorname{...}
         processed = re.sub(
-            r'(\\[a-zA-Z]{2,}(?:\{[^}]*\})+)',
-            r'$\1$', t,
-        )
-        # Wrap bare LaTeX commands without braces: \to, \neq, \bar, etc.
-        processed = re.sub(
-            r'(?<![$\\])(\\[a-zA-Z]{2,})(?![a-zA-Z{])',
+            r'(\\[a-zA-Z]{2,}(?:\{[^{}]*\})+)',
             r'$\1$', processed,
         )
-        # Wrap superscript/subscript expressions: e^{i\theta}, x^2, z_0
+        # Bare LaTeX commands: \to, \neq, \bar, \infty, \partial, \quad
         processed = re.sub(
-            r'(?<![$\\])([a-zA-Z](?:_\{[^}]+\}|\^\{[^}]+\}|_[0-9a-zA-Z]+|\^[0-9a-zA-Z]+))',
+            r'(?<![$\\])(\\(?:to|neq|bar|infty|partial|quad|cdot|times|div|pm|mp|geq|leq|gg|ll|sim|approx|equiv|propto|perp|parallel|angle|triangle|forall|exists|nabla|in|notin|subset|supset|cup|cap|setminus|wedge|vee|oplus|otimes|circ|mapsto|implies|iff|ldots|cdots|vdots|ddots|alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega|mathbb|mathcal|mathfrak|mathrm|mathbf|mathit|mathsf|mathtt|operatorname|text|textbf|textit|overline|underline|hat|tilde|vec|dot|ddot|widehat|widetilde|prime|ell|hbar|imath|jmath|Re|Im|arg|det|dim|exp|gcd|hom|inf|ker|lg|lim|liminf|limsup|ln|log|max|min|Pr|sec|sin|arcsin|sinh|sup|tan|arctan|tanh|cos|arccos|cosh|cot|csc|coth|deg))(?![a-zA-Z{])',
             r'$\1$', processed,
         )
-        # Wrap "var = number" patterns: z=0, x=0
+        # Superscript/subscript: x^2, z_0, e^{i\theta}, x_{n+1}
         processed = re.sub(
-            r'(?<![$\w])([a-z])=(-?\d+(?:\.\d+)?)',
-            r'$\1=\2$', processed,
+            r'(?<![$\\])([a-zA-Z0-9])([_^])(\{[^{}]*\}|[0-9a-zA-Z]+)',
+            lambda m: f'${m.group(1)}{m.group(2)}{m.group(3)}$'
+            if not re.search(r'[$\\]', m.group(0)) else m.group(0),
+            processed,
         )
-        # Wrap "var \to value": x \to 0, r \to 0, z \to z_0
-        processed = re.sub(
-            r'(?<![$\w])([a-z])\s*(\\to)\s*(-?[a-zA-Z0-9_\\{}]+)',
-            r'$\1 \2 \3$', processed,
-        )
-
         result.append(processed)
-    return "\n".join(result)
+
+    return "".join(result)
 
 
 def _resource_type_label(rtype: str) -> str:
