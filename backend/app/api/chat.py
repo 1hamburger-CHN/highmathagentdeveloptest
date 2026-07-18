@@ -185,6 +185,10 @@ async def chat_stream(payload: dict):
                                 content = msg.get("content", "")
                                 role = msg.get("role", "assistant")
                                 plaintext = msg.get("plaintext", False)
+                                # Normalize LaTeX in coach/assistant messages for KaTeX
+                                if role in ("assistant", "coach") and not plaintext:
+                                    from app.agents.resource_generator import _normalize_latex_delimiters
+                                    content = _normalize_latex_delimiters(content)
                                 full_transcript.append({"role": role, "content": content})
                                 sse_data: dict = {
                                     "role": role,
